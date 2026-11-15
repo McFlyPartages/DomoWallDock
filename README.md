@@ -1,9 +1,18 @@
 # WallDock
 
-**Appli Android de kiosque pour tablette murale Home Assistant, avec l'assistant vocal Jarvis intégré.**
-*Android wall-panel kiosk for Home Assistant, with a built-in voice assistant — [English below](#english).*
+**Transformez votre tablette Android en tableau de bord mural Home Assistant, avec Jarvis intégré.**
 
-Licence GPL v3 · [Dernière version](https://github.com/psycho1807/WallDock/releases/latest) · [Soutenir le projet](#soutenir-le-projet) · ⭐ [WallDock Pro](#walldock-pro)
+*Turn your Android tablet into a Home Assistant wall panel with the built-in Jarvis voice assistant. [English below](#english).*
+
+[![Dernière version gratuite](https://img.shields.io/github/v/release/psycho1807/WallDock?label=WallDock%20gratuit&color=0ea5e9)](https://github.com/psycho1807/WallDock/releases/latest)
+[![Version Pro](https://img.shields.io/badge/WallDock%20Pro-0.18.0--pro-2563eb)](https://github.com/psycho1807/WallDock-Pro-Releases/releases/latest)
+[![Licence GPL-3.0](https://img.shields.io/badge/licence-GPL--3.0-64748b)](LICENSE)
+
+**[Télécharger WallDock gratuit](https://github.com/psycho1807/WallDock/releases/latest)** · **[Découvrir WallDock Pro](#walldock-pro)** · **[Installer avec Obtainium](#installation)** · **[Soutenir le projet](#soutenir-le-projet)**
+
+WallDock est une application Android pensée pour **Home Assistant**, avec kiosque plein écran, intégration native chiffrée, assistant vocal Jarvis, gestion d'écran et commandes depuis HA. La version gratuite reste libre et utilisable sans licence Pro.
+
+> **Versions publiées vérifiées le 15 novembre 2026 :** WallDock gratuit **0.17.2** et WallDock Pro **0.18.0-pro**. Les versions peuvent évoluer ; utilisez les liens « dernière version » ci-dessus.
 
 ---
 
@@ -117,6 +126,14 @@ En résumé : si vous voulez un écran mural Home Assistant avec un assistant vo
 
 ## WallDock Pro
 
+![Présentation conceptuelle WallDock Pro : tablette et tableau de bord domotique](https://raw.githubusercontent.com/psycho1807/WallDock-Pro-Releases/main/cover.png)
+
+*Visuel promotionnel illustratif de l'édition Pro. L'interface réelle dépend de votre configuration Home Assistant.*
+
+**[Télécharger WallDock Pro 0.18.0](https://github.com/psycho1807/WallDock-Pro-Releases/releases/latest)** · **[Voir les nouveautés et les captures](https://github.com/psycho1807/WallDock-Pro-Releases)**
+
+La version Pro 0.18.0 ajoute notamment **SmartFlow Daily** (affichage contextuel matin, jour, soirée et nuit), des **salutations personnalisées avec reconnaissance faciale locale** et des options de **voix française Android pour Jarvis**. Ces nouveautés sont propres à la version Pro, et certaines dépendent de la caméra, des autorisations et des entités disponibles dans Home Assistant.
+
 Une version **Pro** ajoute : mots de réveil au choix et mot personnalisé, interphone entre tablettes, écran de la tablette en direct dans Home Assistant (voir et toucher), kiosque verrouillé, administration à distance (page web + API REST), MQTT, onglets et lecteur PDF.
 
 - 📦 **Télécharger** : [WallDock-Pro-Releases](https://github.com/psycho1807/WallDock-Pro-Releases/releases/latest) — **3 jours d'essai gratuit**, sans rien payer.
@@ -170,7 +187,7 @@ Install the latest APK from [Releases](https://github.com/psycho1807/WallDock/re
 
  The app UI is available in English and French (it follows the tablet language).
 
-**WallDock Pro** adds wake word choice and a custom wake word, intercom between tablets, the live tablet screen in Home Assistant (view and touch), locked kiosk, remote admin page + REST API, MQTT, tabs and PDF viewer. [Download](https://github.com/psycho1807/WallDock-Pro-Releases/releases/latest) (3-day free trial) · [Licence key](https://becasseau.gumroad.com/l/walldock-pro) (one-time €4.99, 3 tablets).
+**WallDock Pro 0.18.0** also features SmartFlow Daily, on-device face-recognition greetings and optional Android French voice settings for Jarvis. It adds wake word choice and a custom wake word, intercom between tablets, the live tablet screen in Home Assistant (view and touch), locked kiosk, remote admin page + REST API, MQTT, tabs and PDF viewer. [Download](https://github.com/psycho1807/WallDock-Pro-Releases/releases/latest) (3-day free trial) · [Licence key](https://becasseau.gumroad.com/l/walldock-pro) (one-time €4.99, 3 tablets).
 
 **Jarvis on your phone:** the [Jarvis card](https://github.com/psycho1807/jarvis-card) brings WallDock's animated ring to any Home Assistant dashboard — tap, speak, and Jarvis answers out loud, in the Companion app (iPhone/Android) or a browser. Install it from HACS / Marketplace as a custom repository (type *Dashboard*).
 
