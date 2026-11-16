@@ -89,6 +89,48 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_MOTION_WAKE, true)
         set(value) = sp.edit().putBoolean(KEY_MOTION_WAKE, value).apply()
 
+    /** Éteindre l'écran après ce délai (minutes) sans mouvement ni toucher ; 0 = jamais. */
+    var motionOffMinutes: Int
+        get() = sp.getInt("motion_off_minutes", 0)
+        set(value) = sp.edit().putInt("motion_off_minutes", value.coerceIn(0, 720)).apply()
+
+    // ---- MQTT : Gladys Assistant (ou tout broker) ----
+    var mqttEnabled: Boolean
+        get() = sp.getBoolean("mqtt_enabled", false)
+        set(value) = sp.edit().putBoolean("mqtt_enabled", value).apply()
+    var mqttHost: String
+        get() = sp.getString("mqtt_host", "") ?: ""
+        set(value) = sp.edit().putString("mqtt_host", value).apply()
+    var mqttPort: Int
+        get() = sp.getInt("mqtt_port", 1883)
+        set(value) = sp.edit().putInt("mqtt_port", value.coerceIn(1, 65535)).apply()
+    var mqttUser: String
+        get() = sp.getString("mqtt_user", "") ?: ""
+        set(value) = sp.edit().putString("mqtt_user", value).apply()
+    var mqttPassword: String
+        get() = sp.getString("mqtt_password", "") ?: ""
+        set(value) = sp.edit().putString("mqtt_password", value).apply()
+
+    // ---- Gestion de la charge (tablette toujours branchée, prise connectée pilotée par MQTT) ----
+    var chargeEnabled: Boolean
+        get() = sp.getBoolean("charge_enabled", false)
+        set(value) = sp.edit().putBoolean("charge_enabled", value).apply()
+    /** Sous ce niveau (%), la charge est demandée. */
+    var chargeLow: Int
+        get() = sp.getInt("charge_low", 30)
+        set(value) = sp.edit().putInt("charge_low", value.coerceIn(5, 95)).apply()
+    /** À partir de ce niveau (%), la charge est arrêtée. */
+    var chargeHigh: Int
+        get() = sp.getInt("charge_high", 80)
+        set(value) = sp.edit().putInt("charge_high", value.coerceIn(10, 100)).apply()
+    /** Dernière décision (charger ou non), gardée entre deux lancements ; null = pas encore décidé. */
+    var chargeWanted: Boolean?
+        get() = if (sp.contains("charge_wanted")) sp.getBoolean("charge_wanted", true) else null
+        set(value) {
+            if (value == null) sp.edit().remove("charge_wanted").apply()
+            else sp.edit().putBoolean("charge_wanted", value).apply()
+        }
+
     /** Sensibilité de « Hey Jarvis » : 0 normale, 1 élevée, 2 très élevée. */
     var jarvisSensitivity: Int
         get() = sp.getInt(KEY_JARVIS_SENSITIVITY, 0)

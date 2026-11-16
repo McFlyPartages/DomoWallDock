@@ -56,7 +56,10 @@ class MotionDetector(
         private set
 
     private var previous: FloatArray? = null
-    private var lastFrameAt = 0L
+    /** Heure (elapsedRealtime) de la dernière image analysée : prouve que la caméra tourne vraiment. */
+    @Volatile
+    var lastFrameAt = 0L
+        private set
     private var lastMotionAt = 0L
     @Volatile
     private var motion = false

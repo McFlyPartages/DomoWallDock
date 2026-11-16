@@ -58,6 +58,16 @@ class SettingsActivity : Activity() {
     private lateinit var jarvisCheck: CheckBox
     private lateinit var onDeviceCheck: CheckBox
     private lateinit var motionCheck: CheckBox
+    private lateinit var motionOffField: EditText
+    private lateinit var mqttCheck: CheckBox
+    private lateinit var mqttHostField: EditText
+    private lateinit var mqttPortField: EditText
+    private lateinit var mqttUserField: EditText
+    private lateinit var mqttPasswordField: EditText
+    private lateinit var mqttStatusText: TextView
+    private lateinit var chargeCheck: CheckBox
+    private lateinit var chargeLowField: EditText
+    private lateinit var chargeHighField: EditText
     private lateinit var jarvisText: TextView
     private lateinit var updateText: TextView
     private val updateListener: (String) -> Unit = { updateText.text = updateLine(it) }
@@ -220,6 +230,39 @@ class SettingsActivity : Activity() {
                 .show()
         })
 
+        // Gladys Assistant (ou tout broker MQTT) : capteurs, commandes et gestion de la charge
+        column.addView(heading(tr(R.string.settings_mqtt_title), 18f))
+        mqttStatusText = label("")
+        column.addView(mqttStatusText)
+        mqttCheck = CheckBox(this)
+        mqttCheck.text = tr(R.string.settings_mqtt_enable)
+        mqttCheck.setTextColor(Color.WHITE)
+        mqttCheck.isChecked = prefs.mqttEnabled
+        column.addView(mqttCheck)
+        column.addView(label(tr(R.string.settings_mqtt_help)))
+        mqttHostField = field(prefs.mqttHost, tr(R.string.settings_mqtt_host), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(mqttHostField)
+        mqttPortField = field(prefs.mqttPort.toString(), "1883", InputType.TYPE_CLASS_NUMBER)
+        column.addView(mqttPortField)
+        mqttUserField = field(prefs.mqttUser, tr(R.string.settings_mqtt_user), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+        column.addView(mqttUserField)
+        mqttPasswordField = field(prefs.mqttPassword, tr(R.string.settings_mqtt_password), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        column.addView(mqttPasswordField)
+
+        column.addView(heading(tr(R.string.settings_charge_title), 18f))
+        chargeCheck = CheckBox(this)
+        chargeCheck.text = tr(R.string.settings_charge_enable)
+        chargeCheck.setTextColor(Color.WHITE)
+        chargeCheck.isChecked = prefs.chargeEnabled
+        column.addView(chargeCheck)
+        column.addView(label(tr(R.string.settings_charge_help)))
+        column.addView(label(tr(R.string.settings_charge_low)))
+        chargeLowField = field(prefs.chargeLow.toString(), "30", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeLowField)
+        column.addView(label(tr(R.string.settings_charge_high)))
+        chargeHighField = field(prefs.chargeHigh.toString(), "80", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeHighField)
+
         column.addView(heading("Jarvis", 18f))
         jarvisText = TextView(this)
         jarvisText.setTextColor(0xFFB0C4E0.toInt())
@@ -242,6 +285,9 @@ class SettingsActivity : Activity() {
         motionCheck.isChecked = prefs.motionEnabled
         column.addView(motionCheck)
         column.addView(label(tr(R.string.settings_motion_help)))
+        column.addView(label(tr(R.string.settings_motion_off)))
+        motionOffField = field(prefs.motionOffMinutes.toString(), "0", InputType.TYPE_CLASS_NUMBER)
+        column.addView(motionOffField)
         column.addView(label(tr(R.string.settings_sensitivity)))
         sensitivityGroup = RadioGroup(this)
         val levels = listOf(
@@ -364,9 +410,25 @@ class SettingsActivity : Activity() {
         updateText.text = updateLine(Updater.status)
         updateJarvisStatus()
         Updater.addListener(updateListener)
+        mqttStatusText.post(mqttStatusRefresh)
+    }
+
+    /** L'état MQTT change tout seul (connexion, erreur) : rafraîchi tant que l'écran est ouvert. */
+    private val mqttStatusRefresh = object : Runnable {
+        override fun run() {
+            val service = ApiService.instance
+            mqttStatusText.text = when (service?.mqttStatus) {
+                "connected" -> tr(R.string.mqtt_connected, service.friendlyName)
+                "connecting" -> tr(R.string.mqtt_connecting)
+                "error" -> tr(R.string.mqtt_error, service.mqttError)
+                else -> tr(R.string.mqtt_off)
+            }
+            mqttStatusText.postDelayed(this, 2_000)
+        }
     }
 
     override fun onPause() {
+        mqttStatusText.removeCallbacks(mqttStatusRefresh)
         Updater.removeListener(updateListener)
         super.onPause()
     }
@@ -456,7 +518,14 @@ class SettingsActivity : Activity() {
         val pin = pinField.text.toString().trim()
         val delay = delayField.text.toString().trim().toIntOrNull() ?: 0
         val saverMinutes = saverField.text.toString().trim().toIntOrNull() ?: 0
+        val chargeLow = chargeLowField.text.toString().trim().toIntOrNull() ?: -1
+        val chargeHigh = chargeHighField.text.toString().trim().toIntOrNull() ?: -1
+        val mqttHost = mqttHostField.text.toString().trim()
         when {
+            mqttCheck.isChecked && mqttHost.isEmpty() -> toast(tr(R.string.error_mqtt_host))
+            chargeCheck.isChecked && !mqttCheck.isChecked -> toast(tr(R.string.error_charge_mqtt))
+            chargeCheck.isChecked && (chargeLow < 5 || chargeHigh > 100 || chargeHigh - chargeLow < 10) ->
+                toast(tr(R.string.error_charge_levels))
             saverCheck.isChecked && saverMinutes < 1 -> toast(tr(R.string.error_saver_delay))
             !(url.startsWith("http://") || url.startsWith("https://")) ->
                 toast(tr(R.string.error_url))
@@ -503,7 +572,19 @@ class SettingsActivity : Activity() {
                 ) {
                     requestPermissions(arrayOf(android.Manifest.permission.CAMERA), MainActivity.REQUEST_CAMERA)
                 }
+                prefs.motionOffMinutes = motionOffField.text.toString().trim().toIntOrNull() ?: 0
                 ApiService.instance?.applyMotionSettings()
+                prefs.mqttEnabled = mqttCheck.isChecked
+                prefs.mqttHost = mqttHost
+                mqttPortField.text.toString().trim().toIntOrNull()?.let { prefs.mqttPort = it }
+                prefs.mqttUser = mqttUserField.text.toString().trim()
+                prefs.mqttPassword = mqttPasswordField.text.toString()
+                prefs.chargeEnabled = chargeCheck.isChecked
+                if (chargeCheck.isChecked) {
+                    prefs.chargeLow = chargeLow
+                    prefs.chargeHigh = chargeHigh
+                }
+                ApiService.instance?.applyMqtt()
                 val level = sensitivityGroup.findViewById<RadioButton>(sensitivityGroup.checkedRadioButtonId)
                 prefs.jarvisSensitivity = (level?.tag as? Int) ?: 0
                 ApiService.instance?.jarvis?.reloadVoiceSettings()

@@ -4,7 +4,7 @@
     <string name="accessibility_label">WallDock – activity detection</string>
     <string name="accessibility_description">Lets WallDock know whether someone is still using the app opened from the dock, so it only goes back to the dashboard after real inactivity. WallDock does not read any content and sends nothing.</string>
     <string name="settings_title">WallDock — settings</string>
-    <string name="settings_ha_address">Home Assistant address</string>
+    <string name="settings_ha_address">Dashboard address (Home Assistant, Gladys Assistant…)</string>
     <string name="settings_pin">Admin code (at least 4 digits)</string>
     <string name="settings_return_delay">Back to the dashboard after (seconds of inactivity)</string>
     <string name="settings_screensaver">Screensaver</string>
@@ -61,7 +61,7 @@
     <string name="ha_connected">✅ Connected to Home Assistant\nDevice: %1$s (%2$s)</string>
     <string name="ha_waiting">⏳ Waiting for Home Assistant\nHome Assistant should offer “%1$s” in Settings → Devices &amp; services.\nOtherwise: Add integration → ESPHome → host %2$s, port 6053.</string>
     <string name="page_failed">The page could not be loaded (%1$s)</string>
-    <string name="offline_title">Home Assistant is not responding</string>
+    <string name="offline_title">The dashboard is not responding</string>
     <string name="offline_retry">Retry now</string>
     <string name="offline_retrying">Retrying…</string>
     <string name="dashboard">Dashboard</string>
@@ -70,7 +70,7 @@
     <string name="dock_settings">Settings</string>
     <string name="cannot_open_app">Cannot open this app</string>
     <string name="overlay_warning">⚠️ “Display over other apps” permission missing: the automatic return will not work. Tap here to grant it.</string>
-    <string name="offline_detail">The dashboard will come back by itself as soon as Home Assistant responds.</string>
+    <string name="offline_detail">The dashboard will come back by itself as soon as the server responds.</string>
     <string name="date_format">EEEE, MMMM d</string>
     <string name="alert_time_left">TIME LEFT</string>
     <string name="alert_ok">OK, got it</string>
@@ -209,7 +209,7 @@
     <string name="motion_camera_error">Camera error %1$d, retrying in 1 min</string>
     <string name="motion_camera_error_text">Camera error (%1$s), retrying in 1 min</string>
     <string name="settings_motion">Motion detection with the front camera</string>
-    <string name="settings_motion_help">Turns the screen on when someone passes and gives a “Motion” sensor to Home Assistant. Images stay on the tablet and are never recorded. Sensitivity can be set from Home Assistant.</string>
+    <string name="settings_motion_help">Turns the screen on when someone passes and gives a “Motion” sensor to Home Assistant and Gladys. Images stay on the tablet and are never recorded. Sensitivity can be set from Home Assistant.</string>
     <string name="sensitivity_low">Low (noisy room, TV nearby: fewer false triggers)</string>
     <string name="sens_short_low">Low</string>
     <string name="entity_battery_temp">Battery temperature</string>
@@ -292,4 +292,24 @@
     <string name="sendspin_error">Port 8928 is already in use</string>
     <string name="entity_last_crash">Last error</string>
     <string name="no_crash">none</string>
+    <string name="settings_motion_off">Turn the screen off after this many minutes without motion or touch (0 = never turn it off)</string>
+    <string name="settings_mqtt_title">Gladys Assistant (MQTT)</string>
+    <string name="settings_mqtt_enable">Connect the tablet to Gladys over MQTT</string>
+    <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “WallDock …”. You get battery, charging, motion, the screen (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
+    <string name="settings_mqtt_host">MQTT broker address (e.g. 192.168.1.10)</string>
+    <string name="settings_mqtt_user">MQTT user (if the broker asks for one)</string>
+    <string name="settings_mqtt_password">MQTT password</string>
+    <string name="mqtt_off">➖ MQTT disabled</string>
+    <string name="mqtt_connecting">⏳ Connecting to the MQTT broker…</string>
+    <string name="mqtt_connected">✅ Connected to the MQTT broker as “%1$s”</string>
+    <string name="mqtt_error">⚠️ MQTT broker unreachable: %1$s (retrying automatically)</string>
+    <string name="error_mqtt_host">Enter the MQTT broker address</string>
+    <string name="settings_charge_title">Battery</string>
+    <string name="settings_charge_enable">Manage charging (tablet always plugged in)</string>
+    <string name="settings_charge_help">A battery kept at 100 % all the time wears out and can swell. WallDock cannot cut charging itself (Android forbids it): it publishes a “Charge wanted” sensor over MQTT, and a Gladys scene turns the charger’s smart plug on or off. If the tablet drops off the network, “Charge wanted” goes back to “yes” by itself so the battery does not run flat.</string>
+    <string name="settings_charge_low">Recharge when the battery falls to (%)</string>
+    <string name="settings_charge_high">Stop charging when it reaches (%)</string>
+    <string name="error_charge_levels">Charge levels: between 5 and 100 %, at least 10 points apart</string>
+    <string name="error_charge_mqtt">Charge management needs the MQTT connection</string>
+    <string name="entity_charge_wanted">Charge wanted</string>
 </resources>

@@ -24,7 +24,9 @@ object SettingsBackup {
     private val SKIPPED = setOf(
         "wakeword_load_in_progress", "wakeword_crashed", "stopword_load_in_progress", "stopword_crashed",
         // La clé de chiffrement est propre au couple tablette / Home Assistant
-        "api_noise_key"
+        "api_noise_key",
+        // Décision de charge en cours : dépend de la batterie de cette tablette
+        "charge_wanted"
     )
 
     fun startExport(activity: Activity) {

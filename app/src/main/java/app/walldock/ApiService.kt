@@ -129,6 +129,56 @@ class ApiService : Service(), EsphomeServer.Handler {
         tr(R.string.motion_sens_low), tr(R.string.motion_sens_medium), tr(R.string.motion_sens_high)
     )
     private var motionDetector: MotionDetector? = null
+    /** Quelqu'un bouge devant la caméra en ce moment. */
+    private var motionActive = false
+    /** Dernier mouvement vu (elapsedRealtime). */
+    private var lastPresence = android.os.SystemClock.elapsedRealtime()
+
+    /** Plus personne devant la tablette depuis le délai réglé : écran éteint (la caméra le rallumera). */
+    private val presenceCheck = object : Runnable {
+        override fun run() {
+            main.postDelayed(this, 10_000)
+            val prefs = Prefs(this@ApiService)
+            val minutes = prefs.motionOffMinutes
+            if (minutes <= 0 || !prefs.motionEnabled || !prefs.motionWakesScreen) return
+            if (!AppState.screenOn || !AppState.dashboardVisible) return
+            val talking = jarvis?.state.let { it == Jarvis.State.LISTENING || it == Jarvis.State.THINKING || it == Jarvis.State.SPEAKING }
+            if (alertOverlay.isShowing || cameraOverlay.isShowing || talking) return
+            val now = android.os.SystemClock.elapsedRealtime()
+            // Sans image récente, la caméra ne pourrait pas rallumer l'écran : on ne l'éteint pas
+            val detector = motionDetector
+            if (detector?.running != true || now - detector.lastFrameAt > 5_000) return
+            if (motionActive) return
+            val seen = maxOf(lastPresence, AppState.lastTouch, AppState.lastInteraction)
+            if (now - seen >= minutes * 60_000L) setScreen(false)
+        }
+    }
+
+    // ---- MQTT (Gladys Assistant) et gestion de la charge ----
+
+    private var mqtt: MqttBridge? = null
+    private var batteryPercent = -1
+
+    /** État de la connexion MQTT pour l'écran des réglages : off, connecting, connected, error. */
+    val mqttStatus: String get() = mqtt?.status ?: "off"
+    val mqttError: String get() = mqtt?.lastError ?: ""
+
+    /** (Re)connecte MQTT selon les réglages et republie la décision de charge. */
+    fun applyMqtt() {
+        val bridge = mqtt ?: return
+        val prefs = Prefs(this)
+        if (!prefs.chargeEnabled) prefs.chargeWanted = null
+        bridge.apply(prefs)
+        updateCharge()
+    }
+
+    private fun updateCharge() {
+        val prefs = Prefs(this)
+        if (!prefs.chargeEnabled || batteryPercent < 0) return
+        val wanted = ChargeControl.wanted(batteryPercent, prefs.chargeLow, prefs.chargeHigh, prefs.chargeWanted)
+        if (wanted != prefs.chargeWanted) prefs.chargeWanted = wanted
+        mqtt?.set(MqttBridge.CHARGE_WANTED, wanted)
+    }
 
     /** Libellés par index enregistré (0 normale, 1 élevée, 2 très élevée, 3 basse). */
     private val sensitivityByIndex get() = listOf(
@@ -254,7 +304,10 @@ class ApiService : Service(), EsphomeServer.Handler {
     private var listenLock: PowerManager.WakeLock? = null
 
     private fun updateListenLock() {
-        val wanted = jarvis?.isRecording == true && Prefs(this).listenScreenOff
+        val prefs = Prefs(this)
+        // Écran éteint : la caméra doit continuer à tourner pour le rallumer quand quelqu'un passe
+        val watching = !AppState.screenOn && prefs.motionEnabled && prefs.motionWakesScreen && motionDetector?.running == true
+        val wanted = (jarvis?.isRecording == true && prefs.listenScreenOff) || watching
         val lock = listenLock ?: getSystemService(PowerManager::class.java)
             ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "walldock:listen")?.also {
                 it.setReferenceCounted(false)
@@ -503,11 +556,20 @@ class ApiService : Service(), EsphomeServer.Handler {
             val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
             val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
             val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            if (level >= 0 && scale > 0) server?.setState(battery, (level * 100f / scale).toInt().toFloat())
+            if (level >= 0 && scale > 0) {
+                batteryPercent = (level * 100f / scale).toInt()
+                server?.setState(battery, batteryPercent.toFloat())
+                mqtt?.set(MqttBridge.BATTERY, batteryPercent.toString())
+            }
             val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
             server?.setState(charging, isCharging)
+            mqtt?.set(MqttBridge.CHARGING, isCharging)
             val temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
-            if (temperature != Int.MIN_VALUE) server?.setState(batteryTemp, temperature / 10f)
+            if (temperature != Int.MIN_VALUE) {
+                server?.setState(batteryTemp, temperature / 10f)
+                mqtt?.set(MqttBridge.BATTERY_TEMPERATURE, (temperature / 10f).toString())
+            }
+            updateCharge()
         }
     }
 
@@ -578,6 +640,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         main.postDelayed(micReport, 5_000)
         main.postDelayed(idleReport, 3_000)
         main.postDelayed(scheduleCheck, 10_000)
+        main.postDelayed(presenceCheck, 30_000)
         Alarms.schedule(this)
         main.postDelayed(wifiReport, 5_000)
         alertOverlay = AlertOverlay(this) { server?.setState(alertShown, false) }
@@ -593,6 +656,18 @@ class ApiService : Service(), EsphomeServer.Handler {
         }
 
         applySendspin()
+
+        val bridge = MqttBridge(deviceName, friendlyName, "${Build.MANUFACTURER} ${Build.MODEL}", object : MqttBridge.Commands {
+            override fun setScreen(on: Boolean) = this@ApiService.setScreen(on)
+            override fun reload() {
+                AppState.controller?.reloadDashboard()
+            }
+            override fun showDashboard() = this@ApiService.showDashboard(home = true)
+        })
+        bridge.set(MqttBridge.SCREEN, AppState.screenOn)
+        bridge.set(MqttBridge.MOTION, false)
+        mqtt = bridge
+        applyMqtt()
 
         Thread {
             try {
@@ -626,6 +701,9 @@ class ApiService : Service(), EsphomeServer.Handler {
         main.removeCallbacks(idleReport)
         listenLock?.let { if (it.isHeld) it.release() }
         main.removeCallbacks(scheduleCheck)
+        main.removeCallbacks(presenceCheck)
+        mqtt?.stop()
+        mqtt = null
         main.removeCallbacks(wifiReport)
         Updater.removeListener(updateListener)
         alertOverlay.close(notify = false)
@@ -693,6 +771,7 @@ class ApiService : Service(), EsphomeServer.Handler {
     /** À appeler quand l'écran est rallumé localement (toucher sur l'écran noir). */
     fun reportScreen() {
         server?.setState(screen, AppState.screenOn)
+        mqtt?.set(MqttBridge.SCREEN, AppState.screenOn)
     }
 
     // ----- Commandes reçues de Home Assistant (fil réseau → fil principal) -----
@@ -806,6 +885,8 @@ class ApiService : Service(), EsphomeServer.Handler {
         val prefs = Prefs(this)
         val detector = motionDetector ?: return
         detector.sensitivity = prefs.motionSensitivity
+        // Le délai d'extinction repart de maintenant
+        lastPresence = android.os.SystemClock.elapsedRealtime()
         if (prefs.motionEnabled) {
             if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 AppState.controller?.requestCameraPermission()
@@ -832,6 +913,9 @@ class ApiService : Service(), EsphomeServer.Handler {
     }
 
     private fun onMotion(present: Boolean) {
+        motionActive = present
+        lastPresence = android.os.SystemClock.elapsedRealtime()
+        mqtt?.set(MqttBridge.MOTION, present)
         server?.setState(motionSensor, present)
         server?.setState(motionStatus, motionStatusText())
         if (!present || !Prefs(this).motionWakesScreen) return
@@ -1222,6 +1306,8 @@ class ApiService : Service(), EsphomeServer.Handler {
         if (!AppState.dashboardVisible) Dashboard.bringToFront(this)
         AppState.controller?.applyScreen()
         server?.setState(screen, on)
+        mqtt?.set(MqttBridge.SCREEN, on)
+        updateListenLock()
     }
 
     @SuppressLint("WakelockTimeout")

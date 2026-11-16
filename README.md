@@ -44,6 +44,14 @@ WallDock est une application Android pensée pour **Home Assistant**, avec kiosq
 - Caméra « Capture d'écran » : ce qu'affiche la tablette, visible dans HA.
 - Réglages modifiables depuis HA (catégorie Configuration de l'appareil) : écoute et sensibilité de Jarvis, écran de veille et sa page, délai de retour, poignée du dock, adresse du tableau de bord, luminosité du système, démarrage automatique, mises à jour automatiques.
 
+**Gladys Assistant** (MQTT, sans Home Assistant)
+- Le tableau de bord peut être celui de [Gladys Assistant](https://gladysassistant.com/) : mettez son adresse (ex. `http://192.168.1.20/dashboard`) à la place de celle de Home Assistant. Jarvis, le calendrier et le lecteur multimédia restent propres à Home Assistant.
+- Réglages → **Gladys Assistant (MQTT)** : adresse du broker, utilisateur et mot de passe (dans Gladys : Intégrations → MQTT → Configuration). La tablette s'annonce toute seule avec la « découverte MQTT » de Home Assistant, que Gladys comprend (Gladys 5.x récent) : Intégrations → MQTT → appareils découverts, ajouter « WallDock … ».
+- Dans Gladys : batterie, température de la batterie, en charge, mouvement, écran (allumer / éteindre), boutons « Recharger » et « Retour au tableau de bord ».
+- **Gestion de la charge** (tablette toujours branchée) : réglages → **Batterie**. Android n'autorise pas une appli à couper la charge ; WallDock publie donc un capteur « Charge demandée » (oui sous le seuil bas, 30 % par défaut ; non au-dessus du seuil haut, 80 % par défaut) et deux scènes Gladys pilotent la prise connectée du chargeur : « Charge demandée » passe à 1 → allumer la prise ; passe à 0 → éteindre la prise. Si la tablette disparaît du réseau (plantage, Wi-Fi coupé), le broker remet tout seul « Charge demandée » à oui (testament MQTT) pour que la batterie ne se vide pas.
+- **Écran éteint quand il n'y a personne** : réglages → détection de mouvement → délai en minutes. L'écran s'éteint après ce délai sans mouvement ni toucher, et la caméra frontale le rallume dès que quelqu'un passe.
+- Sujets MQTT : états sur `walldock/<appareil>/<capteur>`, commandes sur `walldock/<appareil>/screen/set` (`ON` / `OFF`), `…/reload/set` et `…/dashboard/set`.
+
 **Jarvis, assistant vocal** (satellite Assist)
 - « Hey Jarvis » reconnu sur la tablette (modèles openWakeWord) ou par Home Assistant.
 - Visage animé plein écran avec la question et la réponse, conversation qui s'enchaîne.
@@ -175,6 +183,7 @@ Le serveur ESPHome (`app/src/main/java/app/walldock/esphome`) est en Java pur et
 - Motion detection with the front camera (screen wakes up, "Motion" sensor in HA; images never leave the tablet).
 - Full-screen dashboard kiosk, app dock, automatic return to the dashboard, PIN-protected settings, start on boot (power cut), nightly screen schedule, URL whitelist, dashboard zoom (50–200 %), screensaver (clock or any dashboard page), optional system brightness, offline fallback screen, automatic updates from GitHub releases.
 - Monitoring sensors: battery level and temperature, Wi-Fi signal, inactivity time and a screen-activity binary sensor.
+- **Gladys Assistant / MQTT**: the dashboard can be Gladys; the tablet announces itself over MQTT (Home Assistant discovery format, understood by Gladys) with battery, charging, motion, screen switch and two buttons. **Charge management** for always-plugged tablets: a “Charge wanted” sensor with low/high thresholds drives the charger's smart plug through two Gladys scenes (an MQTT last will asks for charging again if the tablet drops off the network). Optional screen-off after N minutes without motion; the front camera wakes it up.
 - Native ESPHome API integration (auto-discovered, **encrypted**: Home Assistant creates the Noise key on its own at the first connection): battery, screen, brightness, volume, current app, open app/page, full-screen alerts with countdown, text-to-speech, sounds.
 - **Jarvis voice assistant**: Assist satellite with on-device "Hey Jarvis" wake word (openWakeWord models) or Home Assistant wake word detection, animated full-screen face, announcements, voice timers, and "Stop" to silence it.
 - **Media player** entity: music, radio, Music Assistant, announcements, pause and volume.
