@@ -1,0 +1,815 @@
+package app.walldock
+
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Uri
+import android.os.Bundle
+import android.provider.Settings
+import android.text.InputType
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.os.Build
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.ScrollView
+import android.widget.TextView
+import java.net.Inet4Address
+
+/** Réglages : adresse HA, code, délai, autorisations et choix des applis du dock. */
+class SettingsActivity : Activity() {
+
+    private lateinit var prefs: Prefs
+    private lateinit var urlField: EditText
+    private lateinit var pinField: EditText
+    private lateinit var delayField: EditText
+    private lateinit var statusText: TextView
+    private lateinit var handleGroup: RadioGroup
+    private lateinit var sensitivityGroup: RadioGroup
+    private lateinit var haStatusText: TextView
+    private lateinit var saverCheck: CheckBox
+    private lateinit var saverField: EditText
+    private lateinit var saverUrlField: EditText
+    private lateinit var immichUrlField: EditText
+    private lateinit var immichKeyField: EditText
+    private lateinit var immichAlbumField: EditText
+    private lateinit var photoSecondsField: EditText
+    private lateinit var photoFolderText: TextView
+    private lateinit var zoomField: EditText
+    private lateinit var systemBrightnessCheck: CheckBox
+    private lateinit var bootCheck: CheckBox
+    private lateinit var listenOffCheck: CheckBox
+    private lateinit var sendspinCheck: CheckBox
+    private lateinit var calendarCheck: CheckBox
+    private lateinit var scheduleCheck: CheckBox
+    private lateinit var sleepField: EditText
+    private lateinit var wakeField: EditText
+    private lateinit var allowedField: EditText
+    private lateinit var updateCheck: CheckBox
+    private lateinit var jarvisCheck: CheckBox
+    private lateinit var onDeviceCheck: CheckBox
+    private lateinit var motionCheck: CheckBox
+    private lateinit var motionOffField: EditText
+    private lateinit var mqttCheck: CheckBox
+    private lateinit var mqttHostField: EditText
+    private lateinit var mqttPortField: EditText
+    private lateinit var mqttUserField: EditText
+    private lateinit var mqttPasswordField: EditText
+    private lateinit var mqttStatusText: TextView
+    private lateinit var chargeCheck: CheckBox
+    private lateinit var chargeLowField: EditText
+    private lateinit var chargeHighField: EditText
+    private lateinit var jarvisText: TextView
+    private lateinit var updateText: TextView
+    private val updateListener: (String) -> Unit = { updateText.text = updateLine(it) }
+
+    private val dockSelection = mutableListOf<String>()
+    private val videoSelection = mutableSetOf<String>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        prefs = Prefs(this)
+        dockSelection.addAll(prefs.dockApps)
+        // Android 13+ (obligatoire à partir d'Android 16) : retour géré par un rappel
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
+                if (!prefs.isConfigured) toast(tr(R.string.settings_save_first)) else finish()
+            }
+        }
+        videoSelection.addAll(prefs.videoApps)
+
+        val column = LinearLayout(this)
+        column.orientation = LinearLayout.VERTICAL
+        column.setPadding(dp(24), dp(24), dp(24), dp(24))
+
+        column.addView(heading(tr(R.string.settings_title), 22f))
+
+        column.addView(label(tr(R.string.settings_ha_address)))
+        urlField = field(prefs.haUrl, "http://homeassistant.local:8123", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(urlField)
+
+        column.addView(label(tr(R.string.settings_pin)))
+        pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+        column.addView(pinField)
+
+        column.addView(label(tr(R.string.settings_return_delay)))
+        delayField = field(prefs.returnSeconds.toString(), "120", InputType.TYPE_CLASS_NUMBER)
+        column.addView(delayField)
+
+        column.addView(label(tr(R.string.settings_screensaver)))
+        saverCheck = CheckBox(this)
+        saverCheck.text = tr(R.string.settings_screensaver_check)
+        saverCheck.setTextColor(Color.WHITE)
+        saverCheck.isChecked = prefs.screensaverEnabled
+        column.addView(saverCheck)
+        column.addView(label(tr(R.string.settings_screensaver_delay)))
+        saverField = field(prefs.screensaverMinutes.toString(), "5", InputType.TYPE_CLASS_NUMBER)
+        column.addView(saverField)
+        column.addView(label(tr(R.string.settings_zoom)))
+        zoomField = field(prefs.zoom.toString(), "100", InputType.TYPE_CLASS_NUMBER)
+        column.addView(zoomField)
+        // Écran de veille photos
+        column.addView(label(tr(R.string.photos_help)))
+        immichUrlField = field(prefs.immichUrl, tr(R.string.photos_immich_url), InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(immichUrlField)
+        immichKeyField = field(prefs.immichKey, tr(R.string.photos_immich_key), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        column.addView(immichKeyField)
+        immichAlbumField = field(prefs.immichAlbum, tr(R.string.photos_immich_album), InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(immichAlbumField)
+        photoFolderText = label(if (prefs.photoFolder.isBlank()) tr(R.string.photos_folder_none) else tr(R.string.photos_folder_set, Uri.parse(prefs.photoFolder).lastPathSegment ?: ""))
+        column.addView(photoFolderText)
+        column.addView(button(tr(R.string.photos_folder_choose)) {
+            try {
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_PHOTO_FOLDER)
+            } catch (e: Exception) {
+                toast(tr(R.string.photos_folder_unavailable))
+            }
+        })
+        column.addView(button(tr(R.string.photos_folder_clear)) {
+            prefs.photoFolder = ""
+            photoFolderText.text = tr(R.string.photos_folder_none)
+        })
+        column.addView(label(tr(R.string.photos_seconds)))
+        photoSecondsField = field(prefs.photoSeconds.toString(), "15", InputType.TYPE_CLASS_NUMBER)
+        column.addView(photoSecondsField)
+        column.addView(label(tr(R.string.settings_saver_url)))
+        saverUrlField = field(prefs.screensaverUrl, tr(R.string.settings_saver_url_hint), InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(saverUrlField)
+        systemBrightnessCheck = CheckBox(this)
+        systemBrightnessCheck.text = tr(R.string.settings_system_brightness)
+        systemBrightnessCheck.setTextColor(Color.WHITE)
+        systemBrightnessCheck.isChecked = prefs.systemBrightness
+        column.addView(systemBrightnessCheck)
+        column.addView(label(tr(R.string.settings_system_brightness_help)))
+        bootCheck = CheckBox(this)
+        bootCheck.text = tr(R.string.settings_start_on_boot)
+        bootCheck.setTextColor(Color.WHITE)
+        bootCheck.isChecked = prefs.startOnBoot
+        column.addView(bootCheck)
+        scheduleCheck = CheckBox(this)
+        scheduleCheck.text = tr(R.string.settings_schedule)
+        scheduleCheck.setTextColor(Color.WHITE)
+        scheduleCheck.isChecked = prefs.scheduleEnabled
+        column.addView(scheduleCheck)
+        val times = LinearLayout(this)
+        times.orientation = LinearLayout.HORIZONTAL
+        sleepField = field(prefs.sleepTime, "23:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
+        wakeField = field(prefs.wakeTime, "07:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
+        times.addView(label(tr(R.string.settings_schedule_off)))
+        times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        times.addView(label(tr(R.string.settings_schedule_on)))
+        times.addView(wakeField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        column.addView(times)
+        column.addView(label(tr(R.string.settings_allowed_urls)))
+        allowedField = field(prefs.allowedUrls, tr(R.string.settings_allowed_urls_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(allowedField)
+
+        column.addView(label(tr(R.string.settings_handle)))
+        handleGroup = RadioGroup(this)
+        val handleChoices = listOf(
+            Prefs.HANDLE_BOTTOM_RIGHT to tr(R.string.handle_bottom_right),
+            Prefs.HANDLE_BOTTOM_LEFT to tr(R.string.handle_bottom_left),
+            Prefs.HANDLE_RIGHT_MIDDLE to tr(R.string.handle_right_middle),
+            Prefs.HANDLE_HIDDEN to tr(R.string.handle_hidden)
+        )
+        for ((value, text) in handleChoices) {
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = text
+            choice.tag = value
+            choice.setTextColor(Color.WHITE)
+            handleGroup.addView(choice)
+            if (value == prefs.handlePosition) handleGroup.check(choice.id)
+        }
+        column.addView(handleGroup)
+
+        column.addView(heading(tr(R.string.settings_permissions), 18f))
+        statusText = TextView(this)
+        statusText.setTextColor(0xFFB0C4E0.toInt())
+        statusText.textSize = 14f
+        statusText.setLineSpacing(0f, 1.3f)
+        column.addView(statusText)
+        column.addView(button(tr(R.string.settings_set_home)) {
+            open(Intent(Settings.ACTION_HOME_SETTINGS))
+        })
+        column.addView(button(tr(R.string.settings_allow_overlay)) {
+            open(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        })
+        // Version Google Play : pas de service d'accessibilité
+        if (!BuildConfig.PLAY_STORE) column.addView(button(tr(R.string.settings_enable_activity)) {
+            open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        })
+        column.addView(button(tr(R.string.settings_exit_kiosk)) {
+            toast(tr(R.string.settings_choose_home))
+            open(Intent(Settings.ACTION_HOME_SETTINGS))
+        })
+
+        column.addView(heading("Home Assistant", 18f))
+        haStatusText = TextView(this)
+        haStatusText.setTextColor(0xFFB0C4E0.toInt())
+        haStatusText.textSize = 14f
+        haStatusText.setLineSpacing(0f, 1.3f)
+        column.addView(haStatusText)
+        column.addView(button(tr(R.string.encryption_reset)) {
+            AlertDialog.Builder(this)
+                .setMessage(tr(R.string.encryption_reset_confirm))
+                .setPositiveButton(tr(R.string.encryption_reset)) { _, _ ->
+                    ApiService.instance?.resetEncryption()
+                    updateHaStatus()
+                }
+                .setNegativeButton(tr(R.string.cancel), null)
+                .show()
+        })
+
+        // Gladys Assistant (ou tout broker MQTT) : capteurs, commandes et gestion de la charge
+        column.addView(heading(tr(R.string.settings_mqtt_title), 18f))
+        mqttStatusText = label("")
+        column.addView(mqttStatusText)
+        mqttCheck = CheckBox(this)
+        mqttCheck.text = tr(R.string.settings_mqtt_enable)
+        mqttCheck.setTextColor(Color.WHITE)
+        mqttCheck.isChecked = prefs.mqttEnabled
+        column.addView(mqttCheck)
+        column.addView(label(tr(R.string.settings_mqtt_help)))
+        mqttHostField = field(prefs.mqttHost, tr(R.string.settings_mqtt_host), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(mqttHostField)
+        mqttPortField = field(prefs.mqttPort.toString(), "1883", InputType.TYPE_CLASS_NUMBER)
+        column.addView(mqttPortField)
+        mqttUserField = field(prefs.mqttUser, tr(R.string.settings_mqtt_user), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+        column.addView(mqttUserField)
+        mqttPasswordField = field(prefs.mqttPassword, tr(R.string.settings_mqtt_password), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        column.addView(mqttPasswordField)
+
+        column.addView(heading(tr(R.string.settings_charge_title), 18f))
+        chargeCheck = CheckBox(this)
+        chargeCheck.text = tr(R.string.settings_charge_enable)
+        chargeCheck.setTextColor(Color.WHITE)
+        chargeCheck.isChecked = prefs.chargeEnabled
+        column.addView(chargeCheck)
+        column.addView(label(tr(R.string.settings_charge_help)))
+        column.addView(label(tr(R.string.settings_charge_low)))
+        chargeLowField = field(prefs.chargeLow.toString(), "30", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeLowField)
+        column.addView(label(tr(R.string.settings_charge_high)))
+        chargeHighField = field(prefs.chargeHigh.toString(), "80", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeHighField)
+
+        column.addView(heading("Jarvis", 18f))
+        jarvisText = TextView(this)
+        jarvisText.setTextColor(0xFFB0C4E0.toInt())
+        jarvisText.textSize = 14f
+        jarvisText.setLineSpacing(0f, 1.3f)
+        column.addView(jarvisText)
+        jarvisCheck = CheckBox(this)
+        jarvisCheck.text = tr(R.string.settings_jarvis_listen)
+        jarvisCheck.setTextColor(Color.WHITE)
+        jarvisCheck.isChecked = prefs.jarvisWakeWord
+        column.addView(jarvisCheck)
+        onDeviceCheck = CheckBox(this)
+        onDeviceCheck.text = tr(R.string.settings_jarvis_on_device)
+        onDeviceCheck.setTextColor(Color.WHITE)
+        onDeviceCheck.isChecked = prefs.jarvisOnDevice
+        column.addView(onDeviceCheck)
+        motionCheck = CheckBox(this)
+        motionCheck.text = tr(R.string.settings_motion)
+        motionCheck.setTextColor(Color.WHITE)
+        motionCheck.isChecked = prefs.motionEnabled
+        column.addView(motionCheck)
+        column.addView(label(tr(R.string.settings_motion_help)))
+        column.addView(label(tr(R.string.settings_motion_off)))
+        motionOffField = field(prefs.motionOffMinutes.toString(), "0", InputType.TYPE_CLASS_NUMBER)
+        column.addView(motionOffField)
+        column.addView(label(tr(R.string.settings_sensitivity)))
+        sensitivityGroup = RadioGroup(this)
+        val levels = listOf(
+            tr(R.string.sensitivity_normal), tr(R.string.sensitivity_high), tr(R.string.sensitivity_very_high),
+            tr(R.string.sensitivity_low)
+        )
+        Jarvis.SENSITIVITY_ORDER.forEach { index ->
+            val text = levels[index]
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = text
+            choice.tag = index
+            choice.setTextColor(Color.WHITE)
+            sensitivityGroup.addView(choice)
+            if (index == prefs.jarvisSensitivity) sensitivityGroup.check(choice.id)
+        }
+        column.addView(sensitivityGroup)
+        column.addView(label(tr(R.string.voice_help)))
+        column.addView(button(tr(R.string.voice_learn)) { VoiceTraining(this).start() })
+        column.addView(button(tr(R.string.voice_forget)) {
+            VoiceVerifier.forget(this)
+            ApiService.instance?.jarvis?.reloadVoiceSettings()
+            updateJarvisStatus()
+            toast(tr(R.string.voice_forgotten))
+        })
+        column.addView(button(tr(R.string.settings_allow_mic)) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                toast(tr(R.string.settings_mic_already))
+            } else {
+                requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), MainActivity.REQUEST_MIC)
+            }
+        })
+        listenOffCheck = CheckBox(this)
+        listenOffCheck.text = tr(R.string.settings_listen_screen_off)
+        listenOffCheck.setTextColor(Color.WHITE)
+        listenOffCheck.isChecked = prefs.listenScreenOff
+        column.addView(listenOffCheck)
+        column.addView(button(tr(R.string.settings_test_jarvis)) { ApiService.instance?.jarvis?.talk() })
+
+        column.addView(heading(tr(R.string.settings_sendspin_title), 18f))
+        sendspinCheck = CheckBox(this)
+        sendspinCheck.text = tr(R.string.settings_sendspin)
+        sendspinCheck.setTextColor(Color.WHITE)
+        sendspinCheck.isChecked = prefs.sendspinEnabled
+        column.addView(sendspinCheck)
+        column.addView(label(tr(R.string.settings_sendspin_help)))
+        column.addView(label(tr(when (AppState.sendspinStatus) {
+            "waiting" -> R.string.sendspin_waiting
+            "connected" -> R.string.sendspin_connected
+            "playing" -> R.string.sendspin_playing
+            "error" -> R.string.sendspin_error
+            else -> R.string.sendspin_off
+        })))
+
+        column.addView(heading(tr(R.string.settings_updates), 18f))
+        if (BuildConfig.PLAY_STORE) column.addView(label(tr(R.string.updates_play)))
+        else if (!BuildConfig.SELF_UPDATE) column.addView(label(tr(R.string.updates_manual)))
+        updateText = TextView(this)
+        updateText.setTextColor(0xFFB0C4E0.toInt())
+        updateText.textSize = 14f
+        updateText.setLineSpacing(0f, 1.3f)
+        column.addView(updateText)
+        updateCheck = CheckBox(this)
+        updateCheck.text = tr(R.string.settings_auto_update)
+        updateCheck.setTextColor(Color.WHITE)
+        updateCheck.isChecked = prefs.autoUpdate
+        // Version Google Play : les mises à jour passent par le Play Store
+        if (!BuildConfig.PLAY_STORE && BuildConfig.SELF_UPDATE) {
+            column.addView(updateCheck)
+            column.addView(button(tr(R.string.settings_allow_install)) {
+                open(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            })
+            column.addView(button(tr(R.string.settings_check_now)) { Updater.check(this, install = true) })
+        }
+
+        // Calendrier
+        column.addView(heading(tr(R.string.calendar_title), 18f))
+        calendarCheck = CheckBox(this)
+        calendarCheck.text = tr(R.string.calendar_in_dock)
+        calendarCheck.setTextColor(Color.WHITE)
+        calendarCheck.isChecked = prefs.calendarInDock
+        column.addView(calendarCheck)
+
+        // Réveils
+        column.addView(heading(tr(R.string.alarm_section), 18f))
+        column.addView(label(tr(R.string.alarm_help)))
+        alarmList = LinearLayout(this)
+        alarmList.orientation = LinearLayout.VERTICAL
+        column.addView(alarmList)
+        refreshAlarms()
+        column.addView(button(tr(R.string.alarm_add)) { addAlarm() })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == false
+        ) {
+            column.addView(button(tr(R.string.alarm_exact)) {
+                open(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))
+            })
+        }
+
+        column.addView(heading(tr(R.string.backup_title), 18f))
+        column.addView(label(tr(R.string.backup_help)))
+        column.addView(button(tr(R.string.backup_export)) { SettingsBackup.startExport(this) })
+        column.addView(button(tr(R.string.backup_import)) { SettingsBackup.startImport(this) })
+
+        column.addView(heading(tr(R.string.settings_dock_apps), 18f))
+        column.addView(label(tr(R.string.settings_dock_help)))
+        for (app in Apps.listLaunchable(this)) column.addView(appRow(app))
+
+        column.addView(button(tr(R.string.settings_save)) { save() })
+        column.addView(label(tr(R.string.about_fork, BuildConfig.VERSION_NAME)))
+
+        val scroll = ScrollView(this)
+        scroll.setBackgroundColor(0xFF050C1E.toInt())
+        scroll.addView(column)
+        setContentView(scroll)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateStatus()
+        updateHaStatus()
+        updateText.text = updateLine(Updater.status)
+        updateJarvisStatus()
+        Updater.addListener(updateListener)
+        mqttStatusText.post(mqttStatusRefresh)
+    }
+
+    /** L'état MQTT change tout seul (connexion, erreur) : rafraîchi tant que l'écran est ouvert. */
+    private val mqttStatusRefresh = object : Runnable {
+        override fun run() {
+            val service = ApiService.instance
+            mqttStatusText.text = when (service?.mqttStatus) {
+                "connected" -> tr(R.string.mqtt_connected, "${service.friendlyName} (${service.deviceName})")
+                "connecting" -> tr(R.string.mqtt_connecting)
+                "error" -> tr(R.string.mqtt_error, service.mqttError)
+                else -> tr(R.string.mqtt_off)
+            }
+            mqttStatusText.postDelayed(this, 2_000)
+        }
+    }
+
+    override fun onPause() {
+        mqttStatusText.removeCallbacks(mqttStatusRefresh)
+        Updater.removeListener(updateListener)
+        super.onPause()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == MainActivity.REQUEST_CAMERA) ApiService.instance?.applyMotionSettings()
+        if (requestCode == MainActivity.REQUEST_MIC) {
+            ApiService.instance?.onMicrophoneChanged()
+            updateJarvisStatus()
+        }
+    }
+
+    fun updateJarvisStatus() {
+        val mic = checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        val state = ApiService.instance?.jarvis?.state
+        jarvisText.text = listOf(
+            if (mic) tr(R.string.jarvis_mic_ok) else tr(R.string.jarvis_mic_missing),
+            when (state) {
+                Jarvis.State.WAITING -> tr(R.string.jarvis_status_waiting)
+                Jarvis.State.OFF, null -> tr(R.string.jarvis_status_off)
+                else -> tr(R.string.jarvis_status_busy)
+            },
+            if (ApiService.instance?.jarvis?.detectsOnDevice == true) {
+                tr(R.string.jarvis_detect_tablet)
+            } else {
+                tr(R.string.jarvis_detect_ha)
+            },
+            (ApiService.instance?.jarvis?.learnedVoices ?: 0).let {
+                if (it > 0) tr(R.string.voice_count, it) else tr(R.string.voice_none)
+            }
+        ).joinToString("\n")
+    }
+
+    private fun updateLine(status: String): String {
+        val allowed = packageManager.canRequestPackageInstalls()
+        return tr(R.string.update_installed_version, BuildConfig.VERSION_NAME) + "\n" +
+            (if (allowed) tr(R.string.update_install_allowed) else tr(R.string.update_install_denied)) +
+            "\n$status"
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_PHOTO_FOLDER) {
+            val tree = data?.data
+            if (resultCode == RESULT_OK && tree != null) {
+                try {
+                    contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (e: Exception) {
+                    // autorisation temporaire seulement
+                }
+                prefs.photoFolder = tree.toString()
+                photoFolderText.text = tr(R.string.photos_folder_set, tree.lastPathSegment ?: "")
+            }
+            return
+        }
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        val uri = data?.data
+        if (resultCode != RESULT_OK || uri == null) return
+        when (requestCode) {
+            SettingsBackup.REQUEST_EXPORT ->
+                toast(tr(if (SettingsBackup.write(this, uri)) R.string.backup_saved else R.string.backup_failed))
+            SettingsBackup.REQUEST_IMPORT -> {
+                if (SettingsBackup.read(this, uri)) {
+                    toast(tr(R.string.backup_restored))
+                    window.decorView.postDelayed({ SettingsBackup.restartApp(this) }, 1_500)
+                } else {
+                    toast(tr(R.string.backup_invalid))
+                }
+            }
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (!prefs.isConfigured) {
+            toast(tr(R.string.settings_save_first))
+        } else {
+            @Suppress("DEPRECATION")
+            super.onBackPressed()
+        }
+    }
+
+    private fun save() {
+        val url = urlField.text.toString().trim().trimEnd('/')
+        val pin = pinField.text.toString().trim()
+        val delay = delayField.text.toString().trim().toIntOrNull() ?: 0
+        val saverMinutes = saverField.text.toString().trim().toIntOrNull() ?: 0
+        val chargeLow = chargeLowField.text.toString().trim().toIntOrNull() ?: -1
+        val chargeHigh = chargeHighField.text.toString().trim().toIntOrNull() ?: -1
+        val mqttHost = mqttHostField.text.toString().trim()
+        when {
+            mqttCheck.isChecked && mqttHost.isEmpty() -> toast(tr(R.string.error_mqtt_host))
+            chargeCheck.isChecked && !mqttCheck.isChecked -> toast(tr(R.string.error_charge_mqtt))
+            chargeCheck.isChecked && (chargeLow < 5 || chargeHigh > 100 || chargeHigh - chargeLow < 10) ->
+                toast(tr(R.string.error_charge_levels))
+            saverCheck.isChecked && saverMinutes < 1 -> toast(tr(R.string.error_saver_delay))
+            !(url.startsWith("http://") || url.startsWith("https://")) ->
+                toast(tr(R.string.error_url))
+            pin.length < 4 -> toast(tr(R.string.error_pin))
+            delay < 10 -> toast(tr(R.string.error_delay))
+            else -> {
+                prefs.haUrl = url
+                prefs.pin = pin
+                prefs.returnSeconds = delay
+                prefs.screensaverEnabled = saverCheck.isChecked
+                prefs.autoUpdate = updateCheck.isChecked
+                prefs.screensaverUrl = saverUrlField.text.toString().trim()
+                prefs.immichUrl = immichUrlField.text.toString().trim()
+                prefs.immichKey = immichKeyField.text.toString().trim()
+                prefs.immichAlbum = immichAlbumField.text.toString().trim()
+                photoSecondsField.text.toString().toIntOrNull()?.let { prefs.photoSeconds = it }
+                zoomField.text.toString().toIntOrNull()?.let { prefs.zoom = it }
+                prefs.startOnBoot = bootCheck.isChecked
+                prefs.listenScreenOff = listenOffCheck.isChecked
+                prefs.sendspinEnabled = sendspinCheck.isChecked
+                ApiService.instance?.applySendspin()
+                prefs.calendarInDock = calendarCheck.isChecked
+                prefs.scheduleEnabled = scheduleCheck.isChecked
+                sleepField.text.toString().trim().let { if (Regex("^\\d{1,2}[:hH]\\d{0,2}$").matches(it)) prefs.sleepTime = it }
+                wakeField.text.toString().trim().let { if (Regex("^\\d{1,2}[:hH]\\d{0,2}$").matches(it)) prefs.wakeTime = it }
+                prefs.allowedUrls = allowedField.text.toString().trim()
+                prefs.systemBrightness = systemBrightnessCheck.isChecked
+                if (systemBrightnessCheck.isChecked && !Settings.System.canWrite(this)) {
+                    try {
+                        startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName")))
+                    } catch (e: Exception) {
+                        // écran indisponible
+                    }
+                }
+                AppState.controller?.applyScreen()
+                val wakeChanged = prefs.jarvisWakeWord != jarvisCheck.isChecked
+                prefs.jarvisWakeWord = jarvisCheck.isChecked
+                val modeChanged = prefs.jarvisOnDevice != onDeviceCheck.isChecked
+                if (modeChanged && onDeviceCheck.isChecked) WakeWordDetector.clearCrash(this)
+                prefs.jarvisOnDevice = onDeviceCheck.isChecked
+                prefs.motionEnabled = motionCheck.isChecked
+                if (motionCheck.isChecked &&
+                    checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissions(arrayOf(android.Manifest.permission.CAMERA), MainActivity.REQUEST_CAMERA)
+                }
+                prefs.motionOffMinutes = motionOffField.text.toString().trim().toIntOrNull() ?: 0
+                ApiService.instance?.applyMotionSettings()
+                prefs.mqttEnabled = mqttCheck.isChecked
+                prefs.mqttHost = mqttHost
+                mqttPortField.text.toString().trim().toIntOrNull()?.let { prefs.mqttPort = it }
+                prefs.mqttUser = mqttUserField.text.toString().trim()
+                prefs.mqttPassword = mqttPasswordField.text.toString()
+                prefs.chargeEnabled = chargeCheck.isChecked
+                if (chargeCheck.isChecked) {
+                    prefs.chargeLow = chargeLow
+                    prefs.chargeHigh = chargeHigh
+                }
+                ApiService.instance?.applyMqtt()
+                val level = sensitivityGroup.findViewById<RadioButton>(sensitivityGroup.checkedRadioButtonId)
+                prefs.jarvisSensitivity = (level?.tag as? Int) ?: 0
+                ApiService.instance?.jarvis?.reloadVoiceSettings()
+                if (wakeChanged || modeChanged) ApiService.instance?.jarvis?.onSettingsChanged()
+                if (saverMinutes >= 1) prefs.screensaverMinutes = saverMinutes
+                prefs.dockApps = dockSelection.toList()
+                prefs.videoApps = videoSelection.toSet()
+                val checked = handleGroup.findViewById<RadioButton>(handleGroup.checkedRadioButtonId)
+                prefs.handlePosition = (checked?.tag as? String) ?: Prefs.HANDLE_BOTTOM_RIGHT
+                ApiService.instance?.onDockChanged()
+                ApiService.instance?.reportSettings()
+                toast(tr(R.string.settings_saved))
+                finish()
+            }
+        }
+    }
+
+    private fun updateStatus() {
+        val home = isDefaultHome()
+        val overlay = Settings.canDrawOverlays(this)
+        val activity = AppState.accessibilityActive
+        statusText.text = listOf(
+            (if (home) "✅ " else "⚠️ ") + tr(R.string.status_home) + (if (home) "" else "\n   " + tr(R.string.status_home_warning)),
+            (if (overlay) tr(R.string.status_overlay_ok) else tr(R.string.status_overlay_missing)),
+            if (BuildConfig.PLAY_STORE) null
+            else if (activity) tr(R.string.status_activity_ok) else tr(R.string.status_activity_missing)
+        ).filterNotNull().joinToString("\n")
+    }
+
+    private fun updateHaStatus() {
+        val service = ApiService.instance
+        val error = AppState.apiError
+        val ip = localIpAddress() ?: tr(R.string.unknown_address)
+        haStatusText.text = when {
+            error != null -> "⚠️ $error"
+            service == null -> tr(R.string.ha_service_stopped)
+            service.connectedClients() > 0 -> tr(R.string.ha_connected, service.friendlyName, service.deviceName)
+            else -> tr(R.string.ha_waiting, service.friendlyName, ip)
+        } + if (service != null && error == null) {
+            "\n" + tr(if (service.isEncrypted) R.string.encryption_on else R.string.encryption_off)
+        } else {
+            ""
+        }
+    }
+
+    private fun localIpAddress(): String? {
+        val connectivity = getSystemService(ConnectivityManager::class.java) ?: return null
+        val properties = connectivity.getLinkProperties(connectivity.activeNetwork) ?: return null
+        return properties.linkAddresses
+            .map { it.address }
+            .firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
+            ?.hostAddress
+    }
+
+    private fun isDefaultHome(): Boolean {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        @Suppress("DEPRECATION")
+        val resolved = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        return resolved?.activityInfo?.packageName == packageName
+    }
+
+    private fun open(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            toast(tr(R.string.setting_missing))
+        }
+    }
+
+    private fun appRow(app: LaunchableApp): View {
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.setPadding(0, dp(6), 0, dp(6))
+
+        val icon = ImageView(this)
+        icon.setImageDrawable(app.icon)
+        row.addView(icon, LinearLayout.LayoutParams(dp(36), dp(36)))
+
+        val name = TextView(this)
+        name.text = app.label
+        name.setTextColor(Color.WHITE)
+        name.textSize = 15f
+        name.setPadding(dp(12), 0, 0, 0)
+        row.addView(name, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+
+        val inDock = CheckBox(this)
+        inDock.text = "Dock"
+        inDock.setTextColor(Color.WHITE)
+        inDock.isChecked = app.packageName in dockSelection
+        inDock.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                if (app.packageName !in dockSelection) dockSelection.add(app.packageName)
+            } else {
+                dockSelection.remove(app.packageName)
+            }
+        }
+        row.addView(inDock)
+
+        val video = CheckBox(this)
+        video.text = tr(R.string.dock_video)
+        video.setTextColor(Color.WHITE)
+        video.isChecked = app.packageName in videoSelection
+        video.setOnCheckedChangeListener { _, checked ->
+            if (checked) videoSelection.add(app.packageName) else videoSelection.remove(app.packageName)
+        }
+        row.addView(video)
+        return row
+    }
+
+    private fun heading(s: String, size: Float): TextView {
+        val view = TextView(this)
+        view.text = s
+        view.textSize = size
+        view.setTextColor(0xFF3FD4FF.toInt())
+        view.setPadding(0, dp(20), 0, dp(8))
+        return view
+    }
+
+    private fun label(s: String): TextView {
+        val view = TextView(this)
+        view.text = s
+        view.textSize = 14f
+        view.setTextColor(0xFFB0C4E0.toInt())
+        view.setPadding(0, dp(12), 0, dp(4))
+        return view
+    }
+
+    private fun field(value: String, hintText: String, type: Int): EditText {
+        val view = EditText(this)
+        view.setText(value)
+        view.hint = hintText
+        view.inputType = type
+        view.isSingleLine = true
+        view.setTextColor(Color.WHITE)
+        view.setHintTextColor(0xFF7F9BC4.toInt())
+        return view
+    }
+
+    private fun button(s: String, action: () -> Unit): Button {
+        val view = Button(this)
+        view.text = s
+        view.isAllCaps = false
+        view.setOnClickListener { action() }
+        return view
+    }
+
+    // ---- Réveils ----
+
+    private lateinit var alarmList: LinearLayout
+
+    private fun refreshAlarms() {
+        alarmList.removeAllViews()
+        val alarms = Alarms.list(this)
+        if (alarms.isEmpty()) alarmList.addView(label(tr(R.string.alarm_empty)))
+        for (alarm in alarms) {
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            row.gravity = android.view.Gravity.CENTER_VERTICAL
+            val check = CheckBox(this)
+            check.isChecked = alarm.enabled
+            check.setTextColor(Color.WHITE)
+            check.textSize = 18f
+            check.text = buildString {
+                append(alarm.time).append("  ·  ").append(Alarms.daysLabel(alarm.days))
+                if (alarm.label.isNotBlank()) append("  ·  ").append(alarm.label)
+                if (alarm.sunrise) append("  ☀")
+            }
+            check.setOnCheckedChangeListener { _, on ->
+                val all = Alarms.list(this)
+                all.firstOrNull { it.id == alarm.id }?.enabled = on
+                Alarms.save(this, all)
+                ApiService.instance?.reportNextAlarm()
+            }
+            row.addView(check, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            val delete = Button(this)
+            delete.text = "✕"
+            delete.setOnClickListener {
+                Alarms.save(this, Alarms.list(this).filterNot { it.id == alarm.id })
+                ApiService.instance?.reportNextAlarm()
+                refreshAlarms()
+            }
+            row.addView(delete)
+            alarmList.addView(row)
+        }
+    }
+
+    private fun addAlarm() {
+        android.app.TimePickerDialog(this, { _, hour, minute ->
+            val names = tr(R.string.alarm_day_names_long).split(",").toTypedArray()
+            val chosen = BooleanArray(7) { it < 5 }
+            AlertDialog.Builder(this)
+                .setTitle(tr(R.string.alarm_days_title, "%02d:%02d".format(hour, minute)))
+                .setMultiChoiceItems(names, chosen) { _, which, on -> chosen[which] = on }
+                .setPositiveButton(tr(R.string.alarm_next_step)) { _, _ ->
+                    var days = 0
+                    chosen.forEachIndexed { i, on -> if (on) days = days or (1 shl i) }
+                    val nameField = EditText(this)
+                    nameField.hint = tr(R.string.alarm_name_hint)
+                    val sunrise = CheckBox(this)
+                    sunrise.text = tr(R.string.alarm_sunrise, Alarms.SUNRISE_MINUTES)
+                    val box = LinearLayout(this)
+                    box.orientation = LinearLayout.VERTICAL
+                    box.setPadding(dp(20), dp(8), dp(20), 0)
+                    box.addView(nameField)
+                    box.addView(sunrise)
+                    AlertDialog.Builder(this)
+                        .setTitle(tr(R.string.alarm_add))
+                        .setView(box)
+                        .setPositiveButton("OK") { _, _ ->
+                            Alarms.add(this, hour, minute, days, nameField.text.toString().trim(), sunrise.isChecked)
+                            ApiService.instance?.reportNextAlarm()
+                            refreshAlarms()
+                        }
+                        .setNegativeButton(tr(R.string.cancel), null)
+                        .show()
+                }
+                .setNegativeButton(tr(R.string.cancel), null)
+                .show()
+        }, 7, 0, true).show()
+    }
+
+    companion object {
+        private const val REQUEST_PHOTO_FOLDER = 52
+    }
+}

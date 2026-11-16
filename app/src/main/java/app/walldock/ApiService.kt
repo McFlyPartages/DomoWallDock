@@ -1,0 +1,1460 @@
+package app.walldock
+
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.net.ConnectivityManager
+import android.net.Uri
+import android.speech.tts.TextToSpeech
+import android.net.nsd.NsdManager
+import app.walldock.sendspin.SendspinClient
+import android.net.nsd.NsdServiceInfo
+import android.os.BatteryManager
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.os.PowerManager
+import android.provider.Settings
+import app.walldock.esphome.Entity
+import app.walldock.esphome.EsphomeServer
+import app.walldock.esphome.UserService
+import java.security.MessageDigest
+import java.util.Locale
+
+/**
+ * Fait apparaître la tablette dans Home Assistant comme un appareil ESPHome :
+ * serveur de l'API native sur le port 6053 + annonce sur le réseau (mDNS).
+ */
+class ApiService : Service(), EsphomeServer.Handler {
+
+    private val main = Handler(Looper.getMainLooper())
+    private var server: EsphomeServer? = null
+    private var mediaPlayer: TabletPlayer? = null
+    private var nsdManager: NsdManager? = null
+    private var nsdListener: NsdManager.RegistrationListener? = null
+
+    lateinit var deviceName: String
+        private set
+    lateinit var friendlyName: String
+        private set
+
+    private val battery = Entity(Entity.Kind.SENSOR, "batterie", tr(R.string.entity_batterie))
+        .unit("%").deviceClass("battery").measurement().category(Entity.CATEGORY_DIAGNOSTIC)
+    private val charging = Entity(Entity.Kind.BINARY_SENSOR, "en_charge", tr(R.string.entity_en_charge))
+        .deviceClass("battery_charging").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val screen = Entity(Entity.Kind.SWITCH, "ecran", tr(R.string.entity_ecran)).icon("mdi:tablet-dashboard")
+    private val brightness = Entity(Entity.Kind.NUMBER, "luminosite", tr(R.string.entity_luminosite))
+        .unit("%").range(1f, 100f, 1f).icon("mdi:brightness-6")
+    private val currentApp = Entity(Entity.Kind.TEXT_SENSOR, "appli_ouverte", tr(R.string.entity_appli_ouverte)).icon("mdi:application")
+    private val backToDashboard = Entity(Entity.Kind.BUTTON, "retour_tableau_de_bord", tr(R.string.entity_retour_tableau_de_bord))
+        .icon("mdi:view-dashboard")
+    private val reload = Entity(Entity.Kind.BUTTON, "recharger", tr(R.string.entity_recharger))
+        .icon("mdi:refresh").category(Entity.CATEGORY_CONFIG)
+
+    private val openSelect = Entity(Entity.Kind.SELECT, "ouvrir", tr(R.string.entity_ouvrir)).icon("mdi:apps")
+    private val alertShown = Entity(Entity.Kind.BINARY_SENSOR, "alerte_affichee", tr(R.string.entity_alerte_affichee))
+        .icon("mdi:alert-octagon")
+
+    private val updateStatus = Entity(Entity.Kind.TEXT_SENSOR, "mise_a_jour", tr(R.string.entity_mise_a_jour))
+        .icon("mdi:update").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val lastCrash = Entity(Entity.Kind.TEXT_SENSOR, "derniere_erreur", tr(R.string.entity_last_crash))
+        .icon("mdi:bug").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val installUpdate = Entity(Entity.Kind.BUTTON, "installer_mise_a_jour", tr(R.string.entity_installer_mise_a_jour))
+        .icon("mdi:download").category(Entity.CATEGORY_CONFIG)
+
+    private val jarvisState = Entity(Entity.Kind.TEXT_SENSOR, "jarvis", "Jarvis").icon("mdi:account-voice")
+    private val talkToJarvis = Entity(Entity.Kind.BUTTON, "parler_a_jarvis", tr(R.string.entity_parler_a_jarvis)).icon("mdi:microphone")
+
+    private val micLevel = Entity(Entity.Kind.SENSOR, "niveau_micro", tr(R.string.entity_niveau_micro))
+        .unit("%").measurement().icon("mdi:microphone-outline").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val audioSent = Entity(Entity.Kind.SENSOR, "son_envoye", tr(R.string.entity_son_envoye))
+        .unit("s").icon("mdi:upload-network").category(Entity.CATEGORY_DIAGNOSTIC)
+
+    private val volume = Entity(Entity.Kind.NUMBER, "volume", "Volume")
+        .unit("%").range(0f, 100f, 1f).icon("mdi:volume-high")
+    private val stopRinging = Entity(Entity.Kind.BUTTON, "arreter_la_sonnerie", tr(R.string.entity_arreter_la_sonnerie))
+        .icon("mdi:alarm-off")
+    private val detectionMode = Entity(Entity.Kind.TEXT_SENSOR, "detection_hey_jarvis", tr(R.string.entity_detection_hey_jarvis))
+        .icon("mdi:ear-hearing").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val wakeScore = Entity(Entity.Kind.SENSOR, "score_hey_jarvis", tr(R.string.entity_score_hey_jarvis))
+        .unit("%").measurement().icon("mdi:waveform").category(Entity.CATEGORY_DIAGNOSTIC)
+
+    private val screenCamera = Entity(Entity.Kind.CAMERA, "capture_ecran", tr(R.string.entity_capture_ecran))
+        .icon("mdi:monitor-screenshot").category(Entity.CATEGORY_DIAGNOSTIC)
+    // ---- Réglages de WallDock modifiables depuis HA (catégorie « Configuration ») ----
+    private val setListen = Entity(Entity.Kind.SWITCH, "reglage_ecoute_jarvis", tr(R.string.entity_set_listen))
+        .icon("mdi:ear-hearing").category(Entity.CATEGORY_CONFIG)
+    private val setOnDevice = Entity(Entity.Kind.SWITCH, "reglage_jarvis_sur_tablette", tr(R.string.entity_set_on_device))
+        .icon("mdi:tablet").category(Entity.CATEGORY_CONFIG)
+    private val setSensitivity = Entity(Entity.Kind.SELECT, "reglage_sensibilite_jarvis", tr(R.string.entity_set_sensitivity))
+        .icon("mdi:tune-vertical").category(Entity.CATEGORY_CONFIG)
+    private val setScreensaver = Entity(Entity.Kind.SWITCH, "reglage_ecran_de_veille", tr(R.string.entity_set_screensaver))
+        .icon("mdi:clock-outline").category(Entity.CATEGORY_CONFIG)
+    private val setScreensaverMinutes = Entity(Entity.Kind.NUMBER, "reglage_delai_veille", tr(R.string.entity_set_screensaver_minutes))
+        .unit("min").range(1f, 240f, 1f).icon("mdi:timer-outline").category(Entity.CATEGORY_CONFIG)
+        .also { it.numberMode = Entity.NUMBER_MODE_BOX }
+    private val setReturnSeconds = Entity(Entity.Kind.NUMBER, "reglage_retour_tableau", tr(R.string.entity_set_return))
+        .unit("s").range(10f, 3600f, 10f).icon("mdi:keyboard-return").category(Entity.CATEGORY_CONFIG)
+        .also { it.numberMode = Entity.NUMBER_MODE_BOX }
+    private val setZoom = Entity(Entity.Kind.NUMBER, "reglage_zoom", tr(R.string.entity_set_zoom))
+        .unit("%").range(50f, 200f, 5f).icon("mdi:magnify-plus-outline").category(Entity.CATEGORY_CONFIG)
+    private val setAutoUpdate = Entity(Entity.Kind.SWITCH, "reglage_mises_a_jour_auto", tr(R.string.entity_set_auto_update))
+        .icon("mdi:update").category(Entity.CATEGORY_CONFIG)
+    private val setHandle = Entity(Entity.Kind.SELECT, "reglage_poignee_dock", tr(R.string.entity_set_handle))
+        .icon("mdi:gesture-tap").category(Entity.CATEGORY_CONFIG)
+    private val setUrl = Entity(Entity.Kind.TEXT, "reglage_adresse_tableau", tr(R.string.entity_set_url))
+        .icon("mdi:web").category(Entity.CATEGORY_CONFIG)
+
+    private val motionSensor = Entity(Entity.Kind.BINARY_SENSOR, "mouvement", tr(R.string.entity_motion))
+        .deviceClass("motion")
+    private val motionStatus = Entity(Entity.Kind.TEXT_SENSOR, "detection_camera", tr(R.string.entity_motion_status))
+        .icon("mdi:camera-outline").category(Entity.CATEGORY_DIAGNOSTIC)
+    private val setMotion = Entity(Entity.Kind.SWITCH, "reglage_detection_mouvement", tr(R.string.entity_set_motion))
+        .icon("mdi:motion-sensor").category(Entity.CATEGORY_CONFIG)
+    private val setMotionSensitivity = Entity(Entity.Kind.SELECT, "reglage_sensibilite_mouvement", tr(R.string.entity_set_motion_sensitivity))
+        .icon("mdi:tune-vertical").category(Entity.CATEGORY_CONFIG)
+    private val setMotionWake = Entity(Entity.Kind.SWITCH, "reglage_mouvement_allume_ecran", tr(R.string.entity_set_motion_wake))
+        .icon("mdi:monitor-eye").category(Entity.CATEGORY_CONFIG)
+    private val motionSensitivityLabels get() = listOf(
+        tr(R.string.motion_sens_low), tr(R.string.motion_sens_medium), tr(R.string.motion_sens_high)
+    )
+    private var motionDetector: MotionDetector? = null
+    /** Quelqu'un bouge devant la caméra en ce moment. */
+    private var motionActive = false
+    /** Dernier mouvement vu (elapsedRealtime). */
+    private var lastPresence = android.os.SystemClock.elapsedRealtime()
+
+    /** Plus personne devant la tablette depuis le délai réglé : écran éteint (la caméra le rallumera). */
+    private val presenceCheck = object : Runnable {
+        override fun run() {
+            main.postDelayed(this, 10_000)
+            val prefs = Prefs(this@ApiService)
+            val minutes = prefs.motionOffMinutes
+            if (minutes <= 0 || !prefs.motionEnabled || !prefs.motionWakesScreen) return
+            if (!AppState.screenOn || !AppState.dashboardVisible) return
+            val talking = jarvis?.state.let { it == Jarvis.State.LISTENING || it == Jarvis.State.THINKING || it == Jarvis.State.SPEAKING }
+            if (alertOverlay.isShowing || cameraOverlay.isShowing || talking) return
+            val now = android.os.SystemClock.elapsedRealtime()
+            // Sans image récente, la caméra ne pourrait pas rallumer l'écran : on ne l'éteint pas
+            val detector = motionDetector
+            if (detector?.running != true || now - detector.lastFrameAt > 5_000) return
+            if (motionActive) return
+            val seen = maxOf(lastPresence, AppState.lastTouch, AppState.lastInteraction)
+            if (now - seen >= minutes * 60_000L) setScreen(false)
+        }
+    }
+
+    // ---- MQTT (Gladys Assistant) et gestion de la charge ----
+
+    private var mqtt: MqttBridge? = null
+    private var batteryPercent = -1
+
+    /** État de la connexion MQTT pour l'écran des réglages : off, connecting, connected, error. */
+    val mqttStatus: String get() = mqtt?.status ?: "off"
+    val mqttError: String get() = mqtt?.lastError ?: ""
+
+    /** (Re)connecte MQTT selon les réglages et republie la décision de charge. */
+    fun applyMqtt() {
+        val bridge = mqtt ?: return
+        val prefs = Prefs(this)
+        if (!prefs.chargeEnabled) prefs.chargeWanted = null
+        bridge.apply(prefs)
+        updateCharge()
+    }
+
+    private fun updateCharge() {
+        val prefs = Prefs(this)
+        if (!prefs.chargeEnabled || batteryPercent < 0) return
+        val wanted = ChargeControl.wanted(batteryPercent, prefs.chargeLow, prefs.chargeHigh, prefs.chargeWanted)
+        if (wanted != prefs.chargeWanted) prefs.chargeWanted = wanted
+        mqtt?.set(MqttBridge.CHARGE_WANTED, wanted)
+    }
+
+    /** Libellés par index enregistré (0 normale, 1 élevée, 2 très élevée, 3 basse). */
+    private val sensitivityByIndex get() = listOf(
+        tr(R.string.sens_short_normal), tr(R.string.sens_short_high), tr(R.string.sens_short_very_high),
+        tr(R.string.sens_short_low)
+    )
+    /** Options proposées dans HA, de la plus stricte à la plus large. */
+    private val sensitivityLabels get() = Jarvis.SENSITIVITY_ORDER.map { sensitivityByIndex[it] }
+    private val handleLabels get() = linkedMapOf(
+        Prefs.HANDLE_BOTTOM_RIGHT to tr(R.string.handle_bottom_right),
+        Prefs.HANDLE_BOTTOM_LEFT to tr(R.string.handle_bottom_left),
+        Prefs.HANDLE_RIGHT_MIDDLE to tr(R.string.handle_right_middle),
+        Prefs.HANDLE_HIDDEN to tr(R.string.handle_hidden_short)
+    )
+
+    private val mediaEntity = Entity(Entity.Kind.MEDIA_PLAYER, "lecteur", tr(R.string.entity_lecteur)).icon("mdi:speaker")
+
+    // ---- Supervision et inactivité ----
+    private val batteryTemp = Entity(Entity.Kind.SENSOR, "temperature_batterie", tr(R.string.entity_battery_temp))
+        .unit("°C").deviceClass("temperature").measurement().category(Entity.CATEGORY_DIAGNOSTIC)
+        .also { it.accuracyDecimals = 1 }
+    private val wifiSignal = Entity(Entity.Kind.SENSOR, "signal_wifi", tr(R.string.entity_wifi_signal))
+        .unit("dBm").deviceClass("signal_strength").measurement().category(Entity.CATEGORY_DIAGNOSTIC)
+    private val idleTime = Entity(Entity.Kind.SENSOR, "inactivite", tr(R.string.entity_idle))
+        .unit("s").deviceClass("duration").icon("mdi:timer-sand")
+    private val activity = Entity(Entity.Kind.BINARY_SENSOR, "activite_ecran", tr(R.string.entity_activity))
+        .icon("mdi:gesture-tap")
+    private val setActivitySeconds = Entity(Entity.Kind.NUMBER, "reglage_delai_activite", tr(R.string.entity_set_activity_seconds))
+        .unit("s").range(10f, 3600f, 10f).icon("mdi:timer-cog-outline").category(Entity.CATEGORY_CONFIG)
+        .also { it.numberMode = Entity.NUMBER_MODE_BOX }
+    private val setSaverUrl = Entity(Entity.Kind.TEXT, "reglage_page_veille", tr(R.string.entity_set_saver_url))
+        .icon("mdi:monitor-dashboard").category(Entity.CATEGORY_CONFIG)
+    private val setSystemBrightness = Entity(Entity.Kind.SWITCH, "reglage_luminosite_systeme", tr(R.string.entity_set_system_brightness))
+        .icon("mdi:brightness-auto").category(Entity.CATEGORY_CONFIG)
+    private val setListenScreenOff = Entity(Entity.Kind.SWITCH, "reglage_ecoute_ecran_eteint", tr(R.string.entity_set_listen_screen_off))
+        .icon("mdi:microphone-settings").category(Entity.CATEGORY_CONFIG)
+    private val setSendspin = Entity(Entity.Kind.SWITCH, "reglage_lecteur_music_assistant", tr(R.string.entity_set_sendspin))
+        .icon("mdi:speaker-wireless").category(Entity.CATEGORY_CONFIG)
+
+    // ---- Lecteur Music Assistant (Sendspin) ----
+    private var sendspin: SendspinClient? = null
+    private var sendspinPlayer: SendspinPlayer? = null
+    private var sendspinNsd: NsdManager.RegistrationListener? = null
+
+    /** Démarre ou arrête le lecteur Music Assistant selon le réglage. */
+    fun applySendspin() {
+        val prefs = Prefs(this)
+        if (prefs.sendspinEnabled && sendspin == null) {
+            val out = SendspinPlayer(this)
+            out.setVolume(prefs.sendspinVolume, prefs.sendspinMuted)
+            out.onPlaying = { playing ->
+                main.post {
+                    AppState.sendspinStatus = if (playing) "playing" else if (sendspin != null) "connected" else "off"
+                }
+            }
+            val client = SendspinClient(
+                prefs.sendspinKey, friendlyName, "${Build.MANUFACTURER} ${Build.MODEL}", BuildConfig.VERSION_NAME,
+                prefs.sendspinVolume, prefs.sendspinMuted,
+                object : SendspinClient.Player by out {
+                    override fun setVolume(volume: Int, muted: Boolean) {
+                        out.setVolume(volume, muted)
+                        val p = Prefs(this@ApiService)
+                        p.sendspinVolume = volume
+                        p.sendspinMuted = muted
+                    }
+                }
+            ) { status -> main.post { AppState.sendspinStatus = status } }
+            sendspinPlayer = out
+            sendspin = client
+            Thread {
+                try {
+                    client.start(SendspinClient.PORT)
+                    main.post { registerSendspinMdns() }
+                } catch (e: Exception) {
+                    main.post { AppState.sendspinStatus = "error" }
+                }
+            }.start()
+        } else if (!prefs.sendspinEnabled && sendspin != null) {
+            unregisterSendspinMdns()
+            val client = sendspin
+            sendspin = null
+            sendspinPlayer = null
+            Thread { client?.stop() }.start()
+            AppState.sendspinStatus = "off"
+        }
+    }
+
+    private fun registerSendspinMdns() {
+        if (isEmulatorNetwork() || sendspin == null) return
+        val manager = getSystemService(NsdManager::class.java) ?: return
+        val service = NsdServiceInfo()
+        service.serviceName = deviceName
+        service.serviceType = "_sendspin._tcp"
+        service.port = SendspinClient.PORT
+        service.setAttribute("path", SendspinClient.PATH)
+        service.setAttribute("name", friendlyName)
+        val listener = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(info: NsdServiceInfo) {}
+            override fun onRegistrationFailed(info: NsdServiceInfo, errorCode: Int) {}
+            override fun onServiceUnregistered(info: NsdServiceInfo) {}
+            override fun onUnregistrationFailed(info: NsdServiceInfo, errorCode: Int) {}
+        }
+        try {
+            manager.registerService(service, NsdManager.PROTOCOL_DNS_SD, listener)
+            sendspinNsd = listener
+        } catch (e: Exception) {
+            // découverte indisponible
+        }
+    }
+
+    private fun unregisterSendspinMdns() {
+        sendspinNsd?.let {
+            try {
+                getSystemService(NsdManager::class.java)?.unregisterService(it)
+            } catch (e: Exception) {
+                // déjà retiré
+            }
+        }
+        sendspinNsd = null
+    }
+
+    /** Garde le processeur éveillé pendant l'écoute de Jarvis, écran éteint. */
+    private var listenLock: PowerManager.WakeLock? = null
+
+    private fun updateListenLock() {
+        val prefs = Prefs(this)
+        // Écran éteint : la caméra doit continuer à tourner pour le rallumer quand quelqu'un passe
+        val watching = !AppState.screenOn && prefs.motionEnabled && prefs.motionWakesScreen && motionDetector?.running == true
+        val wanted = (jarvis?.isRecording == true && prefs.listenScreenOff) || watching
+        val lock = listenLock ?: getSystemService(PowerManager::class.java)
+            ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "walldock:listen")?.also {
+                it.setReferenceCounted(false)
+                listenLock = it
+            } ?: return
+        if (wanted && !lock.isHeld) lock.acquire()
+        else if (!wanted && lock.isHeld) lock.release()
+    }
+
+    private val setStartOnBoot = Entity(Entity.Kind.SWITCH, "reglage_demarrage_auto", tr(R.string.entity_set_start_on_boot))
+        .icon("mdi:power").category(Entity.CATEGORY_CONFIG)
+
+    private val nextAlarm = Entity(Entity.Kind.TEXT_SENSOR, "prochain_reveil", tr(R.string.entity_next_alarm))
+        .icon("mdi:alarm")
+
+    // ---- Planification et liste blanche ----
+    private val setSchedule = Entity(Entity.Kind.SWITCH, "reglage_planification", tr(R.string.entity_set_schedule))
+        .icon("mdi:calendar-clock").category(Entity.CATEGORY_CONFIG)
+    private val setSleepTime = Entity(Entity.Kind.TEXT, "reglage_heure_extinction", tr(R.string.entity_set_sleep_time))
+        .icon("mdi:weather-night").category(Entity.CATEGORY_CONFIG)
+    private val setWakeTime = Entity(Entity.Kind.TEXT, "reglage_heure_allumage", tr(R.string.entity_set_wake_time))
+        .icon("mdi:weather-sunny").category(Entity.CATEGORY_CONFIG)
+    private val setAllowedUrls = Entity(Entity.Kind.TEXT, "reglage_adresses_autorisees", tr(R.string.entity_set_allowed_urls))
+        .icon("mdi:shield-check-outline").category(Entity.CATEGORY_CONFIG)
+
+    private val entities = listOf(
+        lastCrash,
+        mediaEntity, screenCamera, jarvisState, talkToJarvis, volume, stopRinging, detectionMode, wakeScore, micLevel, audioSent,
+        battery, charging, screen, brightness, currentApp, openSelect, alertShown, backToDashboard, reload,
+        updateStatus, installUpdate,
+        setListen, setOnDevice, setSensitivity, setScreensaver, setScreensaverMinutes, setReturnSeconds,
+        setAutoUpdate, setHandle, setUrl,
+        motionSensor, motionStatus, setMotion, setMotionSensitivity, setMotionWake,
+        batteryTemp, wifiSignal, idleTime, activity, setActivitySeconds, setSaverUrl, setSystemBrightness, setStartOnBoot,
+        setSchedule, setSleepTime, setWakeTime, setAllowedUrls, setListenScreenOff, nextAlarm, setZoom, setSendspin
+    )
+
+    /**
+     * Planification : éteint l'écran à l'heure du coucher et le rallume à l'heure du réveil.
+     * Seuls les passages d'une période à l'autre agissent : un allumage manuel (toucher, HA)
+     * pendant la nuit reste possible.
+     */
+    private var lastNight: Boolean? = null
+    private val scheduleCheck = object : Runnable {
+        override fun run() {
+            checkAlarms()
+            val prefs = Prefs(this@ApiService)
+            if (prefs.scheduleEnabled) {
+                val night = isNight(prefs.sleepTime, prefs.wakeTime)
+                if (night != null && lastNight != null && night != lastNight) setScreen(!night)
+                lastNight = night
+            } else {
+                lastNight = null
+            }
+            main.postDelayed(this, 20_000)
+        }
+    }
+
+    // ---- Réveils ----
+
+    private var sunriseTarget = -1f
+    private var sunriseRestore = -1f
+    private var sunriseStart = 0L
+    private val sunriseStep = object : Runnable {
+        override fun run() {
+            val elapsed = System.currentTimeMillis() - sunriseStart
+            val total = Alarms.SUNRISE_MINUTES * 60_000f
+            if (elapsed >= total) return
+            AppState.brightness = (1f + (sunriseTarget - 1f) * (elapsed / total)).coerceIn(1f, 100f)
+            AppState.controller?.applyScreen()
+            main.postDelayed(this, 15_000)
+        }
+    }
+
+    /** Réveils à faire sonner et levers de soleil à lancer (appelé toutes les 20 s et par Android). */
+    fun checkAlarms() = main.post {
+        val (ringing, sunrise) = Alarms.due(this)
+        if (sunrise != null) startSunrise()
+        for (alarm in ringing) ringAlarm(alarm.label.ifBlank { alarm.time })
+        reportNextAlarm()
+    }
+
+    private fun startSunrise() {
+        sunriseRestore = AppState.brightness
+        sunriseTarget = if (AppState.brightness < 0) 100f else AppState.brightness.coerceAtLeast(30f)
+        sunriseStart = System.currentTimeMillis()
+        if (!AppState.screenOn) setScreen(true) else wakeUp()
+        main.removeCallbacks(sunriseStep)
+        main.post(sunriseStep)
+    }
+
+    private fun ringAlarm(label: String) {
+        main.removeCallbacks(sunriseStep)
+        if (sunriseStart > 0) {
+            AppState.brightness = sunriseRestore
+            sunriseStart = 0
+        }
+        if (!AppState.screenOn) setScreen(true) else AppState.controller?.applyScreen()
+        jarvis?.timers?.ringAlarm(label) {
+            // Répéter dans 10 minutes
+            main.postDelayed({ ringAlarm(label) }, 10 * 60_000L)
+        }
+    }
+
+    fun reportNextAlarm() {
+        val next = Alarms.upcoming(this)
+        val text = if (next == null) tr(R.string.alarm_none) else {
+            val time = java.text.SimpleDateFormat("EEE HH:mm", java.util.Locale.getDefault()).format(java.util.Date(next.second))
+            if (next.first.label.isBlank()) time else "$time · ${next.first.label}"
+        }
+        server?.setState(nextAlarm, text)
+    }
+
+    private fun minutes(time: String): Int? {
+        val parts = time.trim().split(":", "h", "H")
+        val h = parts.getOrNull(0)?.trim()?.toIntOrNull() ?: return null
+        val m = parts.getOrNull(1)?.trim()?.ifEmpty { "0" }?.toIntOrNull() ?: 0
+        if (h !in 0..23 || m !in 0..59) return null
+        return h * 60 + m
+    }
+
+    /** Vrai entre l'heure d'extinction et l'heure d'allumage (la plage peut passer minuit). */
+    private fun isNight(sleep: String, wake: String): Boolean? {
+        val s = minutes(sleep) ?: return null
+        val w = minutes(wake) ?: return null
+        if (s == w) return null
+        val now = java.util.Calendar.getInstance().let { it.get(java.util.Calendar.HOUR_OF_DAY) * 60 + it.get(java.util.Calendar.MINUTE) }
+        return if (s < w) now in s until w else now >= s || now < w
+    }
+
+    /** Inactivité : capteur arrondi à 10 s, et « activité » selon le délai réglé. */
+    private var lastIdleReported = -1L
+    private val idleReport = object : Runnable {
+        override fun run() {
+            val idle = AppState.idleSeconds
+            val rounded = idle / 10 * 10
+            if (rounded != lastIdleReported) {
+                lastIdleReported = rounded
+                server?.setState(idleTime, rounded.toFloat())
+            }
+            server?.setState(activity, idle < Prefs(this@ApiService).activitySeconds)
+            main.postDelayed(this, 2_000)
+        }
+    }
+
+    /** Niveau du Wi-Fi, chaque minute. */
+    private val wifiReport = object : Runnable {
+        override fun run() {
+            try {
+                val wifi = applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)
+                @Suppress("DEPRECATION")
+                val rssi = wifi?.connectionInfo?.rssi
+                if (rssi != null && rssi > -127 && rssi < 0) server?.setState(wifiSignal, rssi.toFloat())
+            } catch (e: Exception) {
+                // pas de Wi-Fi
+            }
+            main.postDelayed(this, 60_000)
+        }
+    }
+
+    /** Diagnostic du micro toutes les 5 s : niveau (crête) et secondes de son envoyées à HA. */
+    private var peakLevel = 0f
+    private val micReport = object : Runnable {
+        override fun run() {
+            val assistant = jarvis
+            if (assistant != null) {
+                val level = if (assistant.isRecording) assistant.micLevel else 0f
+                peakLevel = maxOf(peakLevel * 0.5f, level)
+                server?.setState(micLevel, (peakLevel * 100f).toInt().toFloat())
+                server?.setState(audioSent, (assistant.chunksSent * 64 / 1000).toFloat())
+                val score = if (assistant.detectsOnDevice) assistant.wakeScorePeak else 0f
+                assistant.wakeScorePeak = 0f
+                server?.setState(wakeScore, (score * 100f).toInt().toFloat())
+                server?.setState(detectionMode, assistant.detectionStatus)
+                server?.setState(motionStatus, motionStatusText())
+            }
+            reportVolume()
+            updateListenLock()
+            main.postDelayed(this, 5_000)
+        }
+    }
+
+    private val updateListener: (String) -> Unit = { server?.setState(updateStatus, it) }
+
+    /** Vérification des mises à jour : 1 min après le démarrage, puis toutes les 12 h. */
+    private val updateCheck = object : Runnable {
+        override fun run() {
+            main.removeCallbacks(this)
+            if (!Prefs(this@ApiService).autoUpdate) {
+                Updater.check(this@ApiService, install = false)
+                main.postDelayed(this, UPDATE_INTERVAL_MS)
+            } else if (!AppState.dashboardVisible || alertOverlay.isShowing) {
+                // Pas d'installation par-dessus une appli ouverte ou une alerte : on réessaie plus tard
+                main.postDelayed(this, UPDATE_RETRY_MS)
+            } else {
+                Updater.check(this@ApiService, install = true)
+                main.postDelayed(this, UPDATE_INTERVAL_MS)
+            }
+        }
+    }
+
+    // Actions appelables depuis HA : esphome.<appareil>_parler, _ouvrir_page, _ouvrir_appli
+    private val speakService = UserService("parler").arg("message", UserService.ARG_STRING)
+    private val openPageService = UserService("ouvrir_page").arg("adresse", UserService.ARG_STRING)
+    private val openAppService = UserService("ouvrir_appli").arg("nom", UserService.ARG_STRING)
+    private val showAlertService = UserService("afficher_alerte")
+        .arg("titre", UserService.ARG_STRING)
+        .arg("message", UserService.ARG_STRING)
+        .arg("secondes", UserService.ARG_INT)
+    private val closeAlertService = UserService("fermer_alerte")
+    private val playSoundService = UserService("jouer_son").arg("adresse", UserService.ARG_STRING)
+    private val showCameraService = UserService("afficher_camera")
+        .arg("camera", UserService.ARG_STRING)
+        .arg("titre", UserService.ARG_STRING)
+        .arg("secondes", UserService.ARG_INT)
+    // Réveils : heure « 07:30 », jours « lun,mar,mer » / « semaine » / « tous » / vide = une fois
+    private val addAlarmService = UserService("ajouter_reveil")
+        .arg("heure", UserService.ARG_STRING).arg("jours", UserService.ARG_STRING)
+        .arg("nom", UserService.ARG_STRING).arg("lever_de_soleil", UserService.ARG_BOOL)
+    private val deleteAlarmService = UserService("supprimer_reveil").arg("nom", UserService.ARG_STRING)
+    private val calendarService = UserService("afficher_calendrier").arg("vue", UserService.ARG_STRING)
+    private val services = listOf(
+        speakService, openPageService, openAppService, showAlertService, closeAlertService, playSoundService,
+        showCameraService, addAlarmService, deleteAlarmService, calendarService
+    )
+    private lateinit var cameraOverlay: CameraOverlay
+    /** Caméra HA demandée (entity_id), en attente de son adresse : (titre, secondes). */
+    private var pendingCamera: Triple<String, String, Int>? = null
+    private var player: MediaPlayer? = null
+
+    private lateinit var alertOverlay: AlertOverlay
+
+    /** Assistant vocal Jarvis (satellite vocal de HA). */
+    var jarvis: Jarvis? = null
+        private set
+
+    /** Choix de la liste « Ouvrir » → nom de paquet (null pour le tableau de bord). */
+    private var openTargets: Map<String, String?> = emptyMap()
+
+    private var tts: TextToSpeech? = null
+    private var ttsReady = false
+    private val pendingSpeech = mutableListOf<String>()
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            if (level >= 0 && scale > 0) {
+                batteryPercent = (level * 100f / scale).toInt()
+                server?.setState(battery, batteryPercent.toFloat())
+                mqtt?.set(MqttBridge.BATTERY, batteryPercent.toString())
+            }
+            val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+            server?.setState(charging, isCharging)
+            mqtt?.set(MqttBridge.CHARGING, isCharging)
+            val temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
+            if (temperature != Int.MIN_VALUE) {
+                server?.setState(batteryTemp, temperature / 10f)
+                mqtt?.set(MqttBridge.BATTERY_TEMPERATURE, (temperature / 10f).toString())
+            }
+            updateCharge()
+        }
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        startInForeground()
+
+        val mac = pseudoMac()
+        deviceName = "gladyswalldock-" + mac.replace(":", "").takeLast(6).lowercase()
+        friendlyName = "GladysWallDock " + Build.MODEL
+
+        val info = EsphomeServer.DeviceInfo()
+        info.name = deviceName
+        info.friendlyName = friendlyName
+        info.macAddress = mac
+        info.model = "${Build.MANUFACTURER} ${Build.MODEL}"
+        info.manufacturer = "GladysWallDock"
+        info.projectVersion = BuildConfig.VERSION_NAME
+        info.voiceFeatures = Jarvis.FEATURES
+
+        refreshOpenTargets()
+        val srv = EsphomeServer(info, entities, services, this, EsphomeServer.DEFAULT_PORT)
+        server = srv
+        // Chiffrement de l'API (Noise) : HA crée et envoie la clé tout seul, elle est gardée ici
+        srv.setKeyStore(object : EsphomeServer.KeyStore {
+            override fun loadKey(): ByteArray? = Prefs(this@ApiService).noiseKey
+            override fun saveKey(key: ByteArray?) {
+                Prefs(this@ApiService).noiseKey = key
+                main.post {
+                    unregisterMdns()
+                    registerMdns(mac)
+                }
+            }
+        })
+        // Mot de réveil entendu : on rallume l'écran (vrai écran éteint ou écran « éteint » de WallDock)
+        val assistant = Jarvis(this, srv) { if (!AppState.screenOn) setScreen(true) else wakeUp() }
+        val tabletPlayer = TabletPlayer(this) { server?.setState(mediaEntity, it) }
+        mediaPlayer = tabletPlayer
+        assistant.onStateChanged = {
+            server?.setState(jarvisState, JARVIS_LABELS[it] ?: "")
+            // La musique se met en pause pendant que Jarvis écoute ou parle
+            tabletPlayer.setInterrupted(it == Jarvis.State.LISTENING || it == Jarvis.State.THINKING || it == Jarvis.State.SPEAKING)
+            sendspinPlayer?.setInterrupted(it == Jarvis.State.LISTENING || it == Jarvis.State.THINKING || it == Jarvis.State.SPEAKING)
+        }
+        jarvis = assistant
+        srv.setVoiceHandler(assistant)
+        srv.setState(jarvisState, JARVIS_LABELS[Jarvis.State.OFF] ?: "")
+        srv.setState(mediaEntity, tabletPlayer.state())
+        setSensitivity.options = sensitivityLabels
+        setHandle.options = handleLabels.values.toList()
+        setMotionSensitivity.options = motionSensitivityLabels
+        srv.setState(motionSensor, false)
+        reportSettings()
+        motionDetector = MotionDetector(this) { onMotion(it) }
+        applyMotionSettings()
+        srv.setState(screen, AppState.screenOn)
+        srv.setState(brightness, if (AppState.brightness < 0) 100f else AppState.brightness)
+        srv.setState(currentApp, AppState.currentApp)
+        srv.setState(openSelect, DASHBOARD_OPTION)
+        srv.setState(alertShown, false)
+        srv.setState(updateStatus, Updater.status)
+        reportLastCrash()
+        Updater.addListener(updateListener)
+        main.postDelayed(updateCheck, 60_000)
+        main.postDelayed(micReport, 5_000)
+        main.postDelayed(idleReport, 3_000)
+        main.postDelayed(scheduleCheck, 10_000)
+        main.postDelayed(presenceCheck, 30_000)
+        Alarms.schedule(this)
+        main.postDelayed(wifiReport, 5_000)
+        alertOverlay = AlertOverlay(this) { server?.setState(alertShown, false) }
+        cameraOverlay = CameraOverlay(this) { server?.setState(alertShown, alertOverlay.isShowing) }
+
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale.FRANCE
+                ttsReady = true
+                pendingSpeech.forEach { speak(it) }
+                pendingSpeech.clear()
+            }
+        }
+
+        applySendspin()
+
+        val bridge = MqttBridge(deviceName, friendlyName, "${Build.MANUFACTURER} ${Build.MODEL}", object : MqttBridge.Commands {
+            override fun setScreen(on: Boolean) = this@ApiService.setScreen(on)
+            override fun reload() {
+                AppState.controller?.reloadDashboard()
+            }
+            override fun showDashboard() = this@ApiService.showDashboard(home = true)
+        })
+        bridge.set(MqttBridge.SCREEN, AppState.screenOn)
+        bridge.set(MqttBridge.MOTION, false)
+        mqtt = bridge
+        applyMqtt()
+
+        Thread {
+            try {
+                srv.start()
+                main.post { registerMdns(mac) }
+            } catch (e: Exception) {
+                AppState.apiError = tr(R.string.port_in_use, EsphomeServer.DEFAULT_PORT)
+            }
+        }.start()
+
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(batteryReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(batteryReceiver, filter)
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
+    override fun onDestroy() {
+        instance = null
+        jarvis?.release()
+        jarvis = null
+        motionDetector?.stop()
+        motionDetector = null
+        mediaPlayer?.release()
+        mediaPlayer = null
+        main.removeCallbacks(updateCheck)
+        main.removeCallbacks(micReport)
+        main.removeCallbacks(idleReport)
+        listenLock?.let { if (it.isHeld) it.release() }
+        main.removeCallbacks(scheduleCheck)
+        main.removeCallbacks(presenceCheck)
+        mqtt?.stop()
+        mqtt = null
+        main.removeCallbacks(wifiReport)
+        Updater.removeListener(updateListener)
+        alertOverlay.close(notify = false)
+        cameraOverlay.close(notify = false)
+        player?.release()
+        player = null
+        tts?.shutdown()
+        tts = null
+        try {
+            unregisterReceiver(batteryReceiver)
+        } catch (e: Exception) {
+            // déjà désinscrit
+        }
+        unregisterMdns()
+        unregisterSendspinMdns()
+        sendspin?.let { c -> Thread { c.stop() }.start() }
+        sendspin = null
+        sendspinPlayer = null
+        server?.stop()
+        server = null
+        super.onDestroy()
+    }
+
+    /** Dernier plantage de l'appli : début dans le capteur, trace complète dans les journaux. */
+    private fun reportLastCrash() {
+        val text = getSharedPreferences("walldock_crash", MODE_PRIVATE).getString("last", null)
+        if (text == null) {
+            server?.setState(lastCrash, tr(R.string.no_crash))
+            return
+        }
+        // L'état d'un capteur HA est limité à 255 caractères : cause + première ligne de notre code
+        val lines = text.lines()
+        val ours = lines.firstOrNull { it.contains("app.walldock") }?.trim()?.removePrefix("at ") ?: ""
+        val head = lines.first()
+        val short = if (ours.isEmpty()) head else "$head | $ours"
+        server?.setState(lastCrash, if (short.length > 250) short.take(249) + "…" else short)
+        android.util.Log.e("WallDock", "Dernier plantage :\n$text")
+    }
+
+    /** Nombre de connexions Home Assistant en cours. */
+    fun connectedClients(): Int = server?.clientCount() ?: 0
+
+    /** À appeler quand l'appli au premier plan change (tableau de bord ou appli du dock). */
+    fun reportCurrentApp() {
+        server?.setState(currentApp, AppState.currentApp)
+        if (openTargets.containsKey(AppState.currentApp)) server?.setState(openSelect, AppState.currentApp)
+    }
+
+    /** À appeler quand les applis du dock changent : HA relit la liste « Ouvrir ». */
+    fun onDockChanged() {
+        refreshOpenTargets()
+        server?.reconnectClients()
+    }
+
+    private fun refreshOpenTargets() {
+        val targets = linkedMapOf<String, String?>(DASHBOARD_OPTION to null)
+        for (packageName in Prefs(this).dockApps) {
+            val app = Apps.load(this, packageName) ?: continue
+            targets[app.label] = app.packageName
+        }
+        openTargets = targets
+        openSelect.options = targets.keys.toList()
+    }
+
+    /** À appeler quand l'écran est rallumé localement (toucher sur l'écran noir). */
+    fun reportScreen() {
+        server?.setState(screen, AppState.screenOn)
+        mqtt?.set(MqttBridge.SCREEN, AppState.screenOn)
+    }
+
+    // ----- Commandes reçues de Home Assistant (fil réseau → fil principal) -----
+
+    override fun onSwitch(entity: Entity, state: Boolean) {
+        main.post {
+            val prefs = Prefs(this)
+            when {
+                entity === screen -> setScreen(state)
+                entity === setListen -> {
+                    prefs.jarvisWakeWord = state
+                    jarvis?.onSettingsChanged()
+                }
+                entity === setOnDevice -> {
+                    if (state) WakeWordDetector.clearCrash(this)
+                    prefs.jarvisOnDevice = state
+                    jarvis?.onSettingsChanged()
+                }
+                entity === setScreensaver -> prefs.screensaverEnabled = state
+                entity === setMotion -> {
+                    prefs.motionEnabled = state
+                    applyMotionSettings()
+                }
+                entity === setMotionWake -> prefs.motionWakesScreen = state
+                entity === setAutoUpdate -> prefs.autoUpdate = state
+                entity === setStartOnBoot -> prefs.startOnBoot = state
+                entity === setListenScreenOff -> {
+                    prefs.listenScreenOff = state
+                    updateListenLock()
+                }
+                entity === setSendspin -> {
+                    prefs.sendspinEnabled = state
+                    applySendspin()
+                }
+                entity === setSchedule -> prefs.scheduleEnabled = state
+                entity === setSystemBrightness -> {
+                    prefs.systemBrightness = state
+                    // L'autorisation ne peut être donnée que sur la tablette : on ouvre l'écran d'Android
+                    if (state && !android.provider.Settings.System.canWrite(this)) {
+                        try {
+                            startActivity(
+                                Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS, android.net.Uri.parse("package:$packageName"))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        } catch (e: Exception) {
+                            // écran indisponible
+                        }
+                    }
+                    AppState.controller?.applyScreen()
+                }
+            }
+            reportSettings()
+        }
+    }
+
+    override fun onText(entity: Entity, value: String) {
+        main.post {
+            if (entity === setSleepTime || entity === setWakeTime) {
+                val time = value.trim()
+                if (minutes(time) != null) {
+                    if (entity === setSleepTime) Prefs(this).sleepTime = time else Prefs(this).wakeTime = time
+                }
+            }
+            if (entity === setAllowedUrls) Prefs(this).allowedUrls = value.trim()
+            if (entity === setSaverUrl) {
+                Prefs(this).screensaverUrl = value.trim()
+            }
+            if (entity === setUrl) {
+                val url = value.trim().trimEnd('/')
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    Prefs(this).haUrl = url
+                    AppState.controller?.applySettings()
+                }
+            }
+            reportSettings()
+        }
+    }
+
+    /** Pousse vers HA les réglages actuels (au démarrage et après chaque changement, ici ou dans les réglages). */
+    fun reportSettings() {
+        val prefs = Prefs(this)
+        val srv = server ?: return
+        srv.setState(setListen, prefs.jarvisWakeWord)
+        srv.setState(setOnDevice, prefs.jarvisOnDevice)
+        srv.setState(setSensitivity, sensitivityByIndex.getOrElse(prefs.jarvisSensitivity) { sensitivityByIndex[0] })
+        srv.setState(setScreensaver, prefs.screensaverEnabled)
+        srv.setState(setScreensaverMinutes, prefs.screensaverMinutes.toFloat())
+        srv.setState(setReturnSeconds, prefs.returnSeconds.toFloat())
+        srv.setState(setZoom, prefs.zoom.toFloat())
+        srv.setState(setAutoUpdate, prefs.autoUpdate)
+        srv.setState(setHandle, handleLabels[prefs.handlePosition] ?: handleLabels.values.first())
+        srv.setState(setUrl, prefs.haUrl)
+        srv.setState(setSaverUrl, prefs.screensaverUrl)
+        srv.setState(setSystemBrightness, prefs.systemBrightness)
+        srv.setState(setStartOnBoot, prefs.startOnBoot)
+        srv.setState(setListenScreenOff, prefs.listenScreenOff)
+        srv.setState(setSendspin, prefs.sendspinEnabled)
+        srv.setState(setSchedule, prefs.scheduleEnabled)
+        srv.setState(setSleepTime, prefs.sleepTime)
+        srv.setState(setWakeTime, prefs.wakeTime)
+        srv.setState(setAllowedUrls, prefs.allowedUrls)
+        srv.setState(setActivitySeconds, prefs.activitySeconds.toFloat())
+        srv.setState(setMotion, prefs.motionEnabled)
+        srv.setState(setMotionWake, prefs.motionWakesScreen)
+        srv.setState(setMotionSensitivity, motionSensitivityLabels.getOrElse(prefs.motionSensitivity) { motionSensitivityLabels[1] })
+        srv.setState(motionStatus, motionStatusText())
+    }
+
+    /** Démarre ou arrête la détection de mouvement selon les réglages (et la permission caméra). */
+    fun applyMotionSettings() {
+        val prefs = Prefs(this)
+        val detector = motionDetector ?: return
+        detector.sensitivity = prefs.motionSensitivity
+        // Le délai d'extinction repart de maintenant
+        lastPresence = android.os.SystemClock.elapsedRealtime()
+        if (prefs.motionEnabled) {
+            if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                AppState.controller?.requestCameraPermission()
+            }
+            startInForeground()
+            detector.start()
+        } else {
+            detector.stop()
+            startInForeground()
+        }
+        server?.setState(motionStatus, motionStatusText())
+    }
+
+    private fun motionStatusText(): String {
+        val detector = motionDetector
+        return when {
+            !Prefs(this).motionEnabled -> tr(R.string.motion_status_off)
+            checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED ->
+                tr(R.string.motion_no_permission)
+            detector?.lastError != null -> detector.lastError ?: ""
+            detector?.running == true -> tr(R.string.motion_status_on)
+            else -> tr(R.string.motion_status_off)
+        }
+    }
+
+    private fun onMotion(present: Boolean) {
+        motionActive = present
+        lastPresence = android.os.SystemClock.elapsedRealtime()
+        mqtt?.set(MqttBridge.MOTION, present)
+        server?.setState(motionSensor, present)
+        server?.setState(motionStatus, motionStatusText())
+        if (!present || !Prefs(this).motionWakesScreen) return
+        if (!AppState.screenOn) setScreen(true) else wakeUp()
+        AppState.controller?.userPresent()
+    }
+
+    /** Volume des sons (Jarvis, annonces, sonnette) = volume « médias » de la tablette, en %. */
+    private fun reportVolume() {
+        val audio = getSystemService(android.media.AudioManager::class.java) ?: return
+        val max = audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        val current = audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+        server?.setState(volume, (current * 100f / max).toInt().toFloat())
+        mediaPlayer?.report()
+    }
+
+    /**
+     * Caméra en plein écran : soit une entité HA (camera.sonnette), dont on demande l'adresse
+     * du flux à HA, soit directement une adresse d'image ou de flux MJPEG.
+     */
+    private fun showCamera(camera: String, title: String, seconds: Int) {
+        val target = camera.trim()
+        if (target.isEmpty()) return
+        if (target.startsWith("camera.")) {
+            pendingCamera = Triple(target, title, seconds)
+            if (server?.requestHomeAssistantState(target, "entity_picture") != true) pendingCamera = null
+        } else if (isImageAddress(target)) {
+            displayCamera(Prefs(this).absoluteUrl(target), title, seconds)
+        } else {
+            // Une page du tableau de bord (ex. /sonnette-ring/live) : la vidéo en direct
+            // passe par l'interface de HA (WebRTC/HLS), comme sur le tableau de bord
+            val url = resolvePageUrl(target) ?: return
+            wakeUp()
+            if (!AppState.screenOn) setScreen(true)
+            if (cameraOverlay.showPage(url, title, seconds)) server?.setState(alertShown, true)
+        }
+    }
+
+    private fun isImageAddress(address: String): Boolean {
+        val path = address.substringBefore('?').lowercase()
+        return address.contains("/api/camera_proxy") || address.contains("/api/image") ||
+            listOf(".jpg", ".jpeg", ".png", ".gif", ".webp", ".mjpg", ".mjpeg", ".cgi").any { path.endsWith(it) }
+    }
+
+    private fun displayCamera(url: String, title: String, seconds: Int) {
+        wakeUp()
+        if (!AppState.screenOn) setScreen(true)
+        if (cameraOverlay.show(url, title, seconds)) server?.setState(alertShown, true)
+    }
+
+    override fun onHomeAssistantState(entityId: String, attribute: String, state: String) {
+        main.post {
+            val pending = pendingCamera ?: return@post
+            if (entityId != pending.first || attribute != "entity_picture") return@post
+            pendingCamera = null
+            if (state.isBlank() || state == "None") return@post
+            // Image fixe → flux vidéo MJPEG (même jeton d'accès)
+            val stream = state.replace("/api/camera_proxy/", "/api/camera_proxy_stream/")
+            displayCamera(Prefs(this).absoluteUrl(stream), pending.second, pending.third)
+        }
+    }
+
+    /** HA demande une image de l'entité « Capture d'écran ». */
+    override fun onCameraRequest(entity: Entity) {
+        main.post {
+            if (capturing) return@post
+            capturing = true
+            val controller = AppState.controller
+            val deliver: (android.graphics.Bitmap?) -> Unit = { bitmap ->
+                Thread({
+                    val jpeg = encodeScreenshot(bitmap)
+                    server?.sendCameraImage(entity, jpeg)
+                    main.post { capturing = false }
+                }, "walldock-capture").start()
+            }
+            if (controller == null) deliver(null) else controller.captureScreen(deliver)
+        }
+    }
+
+    private var capturing = false
+
+    private fun encodeScreenshot(source: android.graphics.Bitmap?): ByteArray {
+        val bitmap = if (source != null) {
+            val scale = minOf(1f, 1280f / source.width)
+            if (scale < 1f) {
+                android.graphics.Bitmap.createScaledBitmap(source, (source.width * scale).toInt(), (source.height * scale).toInt(), true)
+            } else {
+                source
+            }
+        } else {
+            // WallDock n'est pas affiché (autre appli ouverte, écran éteint…) : image explicative
+            val image = android.graphics.Bitmap.createBitmap(640, 360, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(image)
+            canvas.drawColor(android.graphics.Color.BLACK)
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            paint.color = android.graphics.Color.WHITE
+            paint.textSize = 26f
+            paint.textAlign = android.graphics.Paint.Align.CENTER
+            canvas.drawText(tr(R.string.capture_unavailable), 320f, 170f, paint)
+            paint.textSize = 20f
+            paint.color = 0xFF8FA8C8.toInt()
+            canvas.drawText(AppState.currentApp, 320f, 210f, paint)
+            image
+        }
+        val out = java.io.ByteArrayOutputStream()
+        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out)
+        return out.toByteArray()
+    }
+
+    override fun onMediaPlayer(entity: Entity, command: Int?, volume: Float?, url: String?, announcement: Boolean) {
+        main.post {
+            val p = mediaPlayer ?: return@post
+            if (volume != null) p.setVolume(volume)
+            if (url != null) {
+                if (announcement) p.announce(url) else p.play(url)
+            }
+            when (command) {
+                EsphomeServer.MEDIA_COMMAND_PLAY -> p.resume()
+                EsphomeServer.MEDIA_COMMAND_PAUSE -> p.pause()
+                EsphomeServer.MEDIA_COMMAND_STOP -> p.stop()
+                EsphomeServer.MEDIA_COMMAND_MUTE -> p.setMuted(true)
+                EsphomeServer.MEDIA_COMMAND_UNMUTE -> p.setMuted(false)
+                EsphomeServer.MEDIA_COMMAND_TOGGLE -> p.toggle()
+                EsphomeServer.MEDIA_COMMAND_VOLUME_UP -> p.volumeStep(up = true)
+                EsphomeServer.MEDIA_COMMAND_VOLUME_DOWN -> p.volumeStep(up = false)
+            }
+            reportVolume()
+        }
+    }
+
+    private fun setVolume(percent: Float) {
+        val audio = getSystemService(android.media.AudioManager::class.java) ?: return
+        val max = audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+        val index = Math.round(percent.coerceIn(0f, 100f) / 100f * max)
+        try {
+            audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, index, 0)
+        } catch (e: Exception) {
+            // mode Ne pas déranger : changement refusé
+        }
+        reportVolume()
+    }
+
+    override fun onNumber(entity: Entity, value: Float) {
+        main.post {
+            if (entity === brightness) {
+                AppState.brightness = value.coerceIn(1f, 100f)
+                AppState.controller?.applyScreen()
+                server?.setState(brightness, AppState.brightness)
+            } else if (entity === volume) {
+                setVolume(value)
+            } else if (entity === setScreensaverMinutes) {
+                Prefs(this).screensaverMinutes = value.toInt().coerceIn(1, 240)
+                reportSettings()
+            } else if (entity === setActivitySeconds) {
+                Prefs(this).activitySeconds = value.toInt().coerceIn(10, 3600)
+                reportSettings()
+            } else if (entity === setReturnSeconds) {
+                Prefs(this).returnSeconds = value.toInt().coerceIn(10, 3600)
+                reportSettings()
+            } else if (entity === setZoom) {
+                Prefs(this).zoom = value.toInt()
+                AppState.controller?.applySettings()
+                reportSettings()
+            }
+        }
+    }
+
+    override fun onButton(entity: Entity) {
+        main.post {
+            when {
+                entity === backToDashboard -> showDashboard(home = true)
+                entity === reload -> AppState.controller?.reloadDashboard()
+                entity === installUpdate -> Updater.check(this, install = true)
+                entity === talkToJarvis -> jarvis?.talk()
+                entity === stopRinging -> jarvis?.timers?.stopRinging()
+            }
+        }
+    }
+
+    override fun onSelect(entity: Entity, option: String) {
+        main.post {
+            if (entity === setSensitivity) {
+                val index = sensitivityByIndex.indexOf(option)
+                if (index >= 0) {
+                    Prefs(this).jarvisSensitivity = index
+                    jarvis?.reloadVoiceSettings()
+                }
+                reportSettings()
+                return@post
+            }
+            if (entity === setMotionSensitivity) {
+                val index = motionSensitivityLabels.indexOf(option)
+                if (index >= 0) {
+                    Prefs(this).motionSensitivity = index
+                    motionDetector?.sensitivity = index
+                }
+                reportSettings()
+                return@post
+            }
+            if (entity === setHandle) {
+                handleLabels.entries.firstOrNull { it.value == option }?.let {
+                    Prefs(this).handlePosition = it.key
+                    AppState.controller?.applySettings()
+                }
+                reportSettings()
+                return@post
+            }
+            if (entity !== openSelect || !openTargets.containsKey(option)) return@post
+            val packageName = openTargets[option]
+            if (packageName == null) showDashboard(home = true) else openApp(packageName)
+            server?.setState(openSelect, option)
+        }
+    }
+
+    override fun onService(service: UserService, args: Map<String, Any>) {
+        main.post {
+            when {
+                service === speakService -> speak(args["message"] as? String ?: "")
+                service === playSoundService -> playSound(args["adresse"] as? String ?: "")
+                service === openPageService -> openPage(args["adresse"] as? String ?: "")
+                service === openAppService -> openAppByName(args["nom"] as? String ?: "")
+                service === showAlertService -> showAlert(
+                    args["titre"] as? String ?: "",
+                    args["message"] as? String ?: "",
+                    args["secondes"] as? Int ?: 0
+                )
+                service === closeAlertService -> {
+                    alertOverlay.close(notify = false)
+                    cameraOverlay.close(notify = false)
+                    pendingCamera = null
+                    server?.setState(alertShown, false)
+                }
+                service === calendarService -> {
+                    if (!AppState.screenOn) setScreen(true) else wakeUp()
+                    Dashboard.bringToFront(this)
+                    val view = args["vue"] as? String ?: ""
+                    main.postDelayed({ AppState.controller?.showCalendar(view) }, 400)
+                }
+                service === addAlarmService -> {
+                    val time = (args["heure"] as? String ?: "").trim()
+                    val m = minutes(time)
+                    if (m != null) {
+                        Alarms.add(this, m / 60, m % 60, Alarms.parseDays(args["jours"] as? String ?: ""),
+                            (args["nom"] as? String ?: "").trim(), args["lever_de_soleil"] as? Boolean ?: false)
+                        reportNextAlarm()
+                    }
+                }
+                service === deleteAlarmService -> {
+                    val name = (args["nom"] as? String ?: "").trim()
+                    val all = Alarms.list(this)
+                    // Par nom, par heure (« 07:30 »), ou « tous »
+                    val kept = if (name.equals("tous", true) || name.equals("all", true)) mutableListOf()
+                    else all.filterNot { it.label.equals(name, true) || it.time == name }
+                    Alarms.save(this, kept)
+                    reportNextAlarm()
+                }
+                service === showCameraService -> showCamera(
+                    args["camera"] as? String ?: "",
+                    args["titre"] as? String ?: "",
+                    args["secondes"] as? Int ?: 0
+                )
+            }
+        }
+    }
+
+    private fun showAlert(title: String, message: String, seconds: Int) {
+        if (!AppState.screenOn) setScreen(true) else wakeUp()
+        val shown = alertOverlay.show(title.ifBlank { tr(R.string.alert_default_title) }, message, seconds)
+        server?.setState(alertShown, shown)
+        // Sans l'autorisation « affichage par-dessus », on se rabat sur la voix
+        if (!shown) speak(listOf(title, message).filter { it.isNotBlank() }.joinToString(". "))
+    }
+
+    // ----- Actions -----
+
+    /** Ramène le tableau de bord ; [home] = revenir aussi à la page d'accueil configurée. */
+    private fun showDashboard(home: Boolean) {
+        val controller = AppState.controller
+        if (AppState.dashboardVisible && controller != null) {
+            if (home) controller.showHome()
+        } else {
+            if (home) AppState.pendingHome = true
+            Dashboard.bringToFront(this)
+        }
+    }
+
+    private fun openApp(packageName: String) {
+        val controller = AppState.controller
+        if (AppState.dashboardVisible && controller != null) {
+            controller.openApp(packageName)
+        } else {
+            // Android n'autorise le lancement d'une appli que depuis le premier plan :
+            // on ramène d'abord WallDock, qui l'ouvrira à son tour.
+            AppState.pendingApp = packageName
+            Dashboard.bringToFront(this)
+        }
+    }
+
+    private fun openAppByName(name: String) {
+        val wanted = name.trim()
+        if (wanted.isEmpty()) return
+        if (wanted.equals(DASHBOARD_OPTION, ignoreCase = true)) {
+            showDashboard(home = true)
+            return
+        }
+        val apps = Apps.listLaunchable(this)
+        val app = apps.firstOrNull { it.packageName.equals(wanted, ignoreCase = true) }
+            ?: apps.firstOrNull { it.label.equals(wanted, ignoreCase = true) }
+            ?: apps.firstOrNull { it.label.contains(wanted, ignoreCase = true) }
+        if (app != null) openApp(app.packageName)
+    }
+
+    private fun openPage(address: String) {
+        val url = resolvePageUrl(address.trim()) ?: return
+        val controller = AppState.controller
+        if (AppState.dashboardVisible && controller != null) {
+            controller.openUrl(url)
+        } else {
+            AppState.pendingUrl = url
+            Dashboard.bringToFront(this)
+        }
+    }
+
+    /**
+     * « /dashboard-home/plan » → adresse complète sur le même Home Assistant ;
+     * le mode kiosque (?kiosk) est conservé s'il est utilisé dans l'adresse configurée.
+     */
+    private fun resolvePageUrl(address: String): String? {
+        if (address.isEmpty()) return null
+        if (address.startsWith("http://") || address.startsWith("https://")) return address
+        val base = Uri.parse(Prefs(this).haUrl)
+        val scheme = base.scheme ?: return null
+        val authority = base.encodedAuthority ?: return null
+        val path = if (address.startsWith("/")) address else "/$address"
+        var url = "$scheme://$authority$path"
+        val kiosk = base.query?.split("&")?.any { it == "kiosk" || it.startsWith("kiosk=") } == true
+        if (kiosk && !url.contains("kiosk")) url += if (url.contains("?")) "&kiosk" else "?kiosk"
+        return url
+    }
+
+    /** Joue un son (mp3, ogg…) : adresse complète ou chemin HA comme /local/sonnette.mp3. */
+    private fun playSound(address: String) {
+        val trimmed = address.trim()
+        if (trimmed.isEmpty()) return
+        val url = Prefs(this).absoluteUrl(trimmed)
+        wakeUp()
+        player?.release()
+        val media = MediaPlayer()
+        player = media
+        try {
+            media.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
+            media.setDataSource(url)
+            media.setOnPreparedListener { it.start() }
+            media.setOnCompletionListener {
+                it.release()
+                if (player === it) player = null
+            }
+            media.setOnErrorListener { mp, _, _ ->
+                mp.release()
+                if (player === mp) player = null
+                true
+            }
+            media.prepareAsync()
+        } catch (e: Exception) {
+            media.release()
+            player = null
+        }
+    }
+
+    private fun speak(message: String) {
+        if (message.isBlank()) return
+        val engine = tts
+        if (engine == null || !ttsReady) {
+            pendingSpeech.add(message)
+            return
+        }
+        engine.speak(message, TextToSpeech.QUEUE_ADD, null, "walldock-${System.currentTimeMillis()}")
+    }
+
+    private fun setScreen(on: Boolean) {
+        AppState.screenOn = on
+        if (on) wakeUp()
+        if (!AppState.dashboardVisible) Dashboard.bringToFront(this)
+        AppState.controller?.applyScreen()
+        server?.setState(screen, on)
+        mqtt?.set(MqttBridge.SCREEN, on)
+        updateListenLock()
+    }
+
+    @SuppressLint("WakelockTimeout")
+    @Suppress("DEPRECATION")
+    fun wakeUp() {
+        val power = getSystemService(PowerManager::class.java) ?: return
+        val lock = power.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "walldock:wake"
+        )
+        lock.acquire(3_000)
+    }
+
+    // ----- Annonce sur le réseau pour la découverte automatique par Home Assistant -----
+
+    private fun registerMdns(mac: String) {
+        // Dans l'émulateur Android (réseau 10.0.2.x), l'adresse annoncée est injoignable depuis
+        // Home Assistant et écraserait l'adresse saisie à la main : on ne s'annonce pas.
+        if (isEmulatorNetwork()) return
+        val manager = getSystemService(NsdManager::class.java) ?: return
+        val service = NsdServiceInfo()
+        service.serviceName = deviceName
+        service.serviceType = "_esphomelib._tcp"
+        service.port = EsphomeServer.DEFAULT_PORT
+        service.setAttribute("mac", mac.replace(":", "").lowercase())
+        service.setAttribute("version", "2025.10.0")
+        service.setAttribute("friendly_name", friendlyName)
+        service.setAttribute("platform", "android")
+        service.setAttribute("network", "wifi")
+        // Annonce du chiffrement, comme un appareil ESPHome
+        if (server?.isEncrypted == true) {
+            service.setAttribute("api_encryption", EsphomeServer.NOISE_PROTOCOL)
+        } else {
+            service.setAttribute("api_encryption_supported", EsphomeServer.NOISE_PROTOCOL)
+        }
+        val listener = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(info: NsdServiceInfo) {}
+            override fun onRegistrationFailed(info: NsdServiceInfo, errorCode: Int) {}
+            override fun onServiceUnregistered(info: NsdServiceInfo) {}
+            override fun onUnregistrationFailed(info: NsdServiceInfo, errorCode: Int) {}
+        }
+        try {
+            manager.registerService(service, NsdManager.PROTOCOL_DNS_SD, listener)
+            nsdManager = manager
+            nsdListener = listener
+        } catch (e: Exception) {
+            // L'ajout manuel par adresse IP reste possible
+        }
+    }
+
+    private fun unregisterMdns() {
+        nsdListener?.let {
+            try {
+                nsdManager?.unregisterService(it)
+            } catch (e: Exception) {
+                // déjà retiré
+            }
+        }
+        nsdListener = null
+    }
+
+    /** Vrai si la connexion avec Home Assistant est chiffrée (clé en place). */
+    val isEncrypted: Boolean
+        get() = server?.isEncrypted == true
+
+    /** Retire la clé : HA demandera de confirmer le passage sans chiffrement (ou en recréera une). */
+    fun resetEncryption() {
+        server?.changeKey(null)
+    }
+
+    private fun isEmulatorNetwork(): Boolean {
+        val connectivity = getSystemService(ConnectivityManager::class.java) ?: return false
+        val properties = connectivity.getLinkProperties(connectivity.activeNetwork) ?: return false
+        return properties.linkAddresses.any { it.address.hostAddress?.startsWith("10.0.2.") == true }
+    }
+
+    /**
+     * Adresse « MAC » stable propre à WallDock, dérivée de l'identifiant Android de l'appareil.
+     * Home Assistant s'en sert d'identifiant unique.
+     */
+    @SuppressLint("HardwareIds")
+    private fun pseudoMac(): String {
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: "walldock"
+        val digest = MessageDigest.getInstance("SHA-256").digest(("walldock:$androidId").toByteArray())
+        val bytes = digest.copyOf(6)
+        bytes[0] = ((bytes[0].toInt() and 0xFC) or 0x02).toByte() // adresse locale, unicast
+        return bytes.joinToString(":") { "%02X".format(it.toInt() and 0xFF) }
+    }
+
+    private fun startInForeground() {
+        getSystemService(NotificationManager::class.java)?.createNotificationChannel(
+            NotificationChannel(CHANNEL_ID, "Home Assistant", NotificationManager.IMPORTANCE_MIN)
+        )
+        val notification = Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_walldock)
+            .setContentTitle("GladysWallDock")
+            .setContentText(tr(R.string.notif_available))
+            .setOngoing(true)
+            .build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            // Micro autorisé en arrière-plan (Jarvis) seulement si la permission est accordée
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            // Caméra (détection de mouvement) seulement si elle est activée et autorisée
+            if (Prefs(this).motionEnabled &&
+                checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+            try {
+                startForeground(NOTIFICATION_ID, notification, types)
+            } catch (e: Exception) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            }
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+    }
+
+    /** À appeler quand l'écran WallDock est au premier plan et que le micro vient d'être autorisé. */
+    fun onMicrophoneChanged() {
+        startInForeground()
+        jarvis?.onSettingsChanged()
+    }
+
+    companion object {
+        val DASHBOARD_OPTION: String get() = tr(R.string.dashboard)
+        private const val CHANNEL_ID = "walldock_api"
+        private const val NOTIFICATION_ID = 2
+        private const val UPDATE_INTERVAL_MS = 12 * 60 * 60 * 1000L
+        private const val UPDATE_RETRY_MS = 30 * 60 * 1000L
+        private val JARVIS_LABELS get() = mapOf(
+            Jarvis.State.OFF to tr(R.string.jarvis_state_off),
+            Jarvis.State.WAITING to tr(R.string.jarvis_state_waiting),
+            Jarvis.State.LISTENING to tr(R.string.jarvis_state_listening),
+            Jarvis.State.THINKING to tr(R.string.jarvis_state_thinking),
+            Jarvis.State.SPEAKING to tr(R.string.jarvis_state_speaking)
+        )
+
+        @Volatile
+        var instance: ApiService? = null
+            private set
+
+        fun start(context: Context) {
+            context.startForegroundService(Intent(context, ApiService::class.java))
+        }
+    }
+}
