@@ -51,6 +51,11 @@ object Updater {
             setStatus(tr(R.string.updates_play_status, BuildConfig.VERSION_NAME))
             return
         }
+        // GladysWallDock : installé et mis à jour à la main (APK signé avec sa propre clé)
+        if (!BuildConfig.SELF_UPDATE) {
+            setStatus(tr(R.string.updates_manual_status, BuildConfig.VERSION_NAME))
+            return
+        }
         val app = context.applicationContext
         executor.execute {
             if (busy) return@execute

@@ -1,3 +1,15 @@
+# GladysWallDock
+
+**Tablette murale Android pour [Gladys Assistant](https://gladysassistant.com/)** — dérivé de [WallDock](https://github.com/psycho1807/WallDock) de psycho1807 (GPL-3.0), qui est pensé pour Home Assistant.
+
+Ce que ce dérivé ajoute : connexion à Gladys par MQTT, gestion de la charge pour une tablette toujours branchée, extinction de l'écran quand il n'y a personne (voir « Gladys Assistant » plus bas). L'appli s'appelle **GladysWallDock**, a son propre identifiant (`fr.mcflypartages.gladyswalldock`) et sa propre clé de signature : elle peut cohabiter avec le WallDock d'origine et ne se met pas à jour toute seule.
+
+**Compiler** : `gradle assembleGithubRelease` avec Gradle 8.14, JDK 17 et le SDK Android 36 ; pour signer, donner le chemin du magasin de clés (PKCS12, alias `gladyswalldock`) dans `WALLDOCK_KEYSTORE` et son mot de passe dans `WALLDOCK_KEY_PASSWORD`. La clé n'est pas dans le dépôt.
+
+Le reste de ce document est celui de WallDock : les liens de téléchargement, Obtainium, la version Pro et les mises à jour automatiques concernent l'appli d'origine, pas ce dérivé.
+
+---
+
 # WallDock
 
 **Transformez votre tablette Android en tableau de bord mural Home Assistant, avec Jarvis intégré.**

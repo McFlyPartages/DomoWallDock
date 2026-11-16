@@ -344,6 +344,7 @@ class SettingsActivity : Activity() {
 
         column.addView(heading(tr(R.string.settings_updates), 18f))
         if (BuildConfig.PLAY_STORE) column.addView(label(tr(R.string.updates_play)))
+        else if (!BuildConfig.SELF_UPDATE) column.addView(label(tr(R.string.updates_manual)))
         updateText = TextView(this)
         updateText.setTextColor(0xFFB0C4E0.toInt())
         updateText.textSize = 14f
@@ -354,7 +355,7 @@ class SettingsActivity : Activity() {
         updateCheck.setTextColor(Color.WHITE)
         updateCheck.isChecked = prefs.autoUpdate
         // Version Google Play : les mises à jour passent par le Play Store
-        if (!BuildConfig.PLAY_STORE) {
+        if (!BuildConfig.PLAY_STORE && BuildConfig.SELF_UPDATE) {
             column.addView(updateCheck)
             column.addView(button(tr(R.string.settings_allow_install)) {
                 open(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))

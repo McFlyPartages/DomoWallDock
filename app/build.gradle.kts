@@ -8,18 +8,22 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.walldock"
+        // Dérivé de WallDock pour Gladys Assistant : identifiant propre, pour cohabiter avec l'appli d'origine.
+        // Le code reste dans le paquet app.walldock (fusions depuis le projet d'origine plus simples).
+        applicationId = "fr.mcflypartages.gladyswalldock"
         minSdk = 26
         targetSdk = 36
         versionCode = 36
         versionName = "0.17.2"
+        // Pas de mise à jour par l'appli : les releases GitHub de WallDock sont signées avec une autre clé
+        buildConfigField("boolean", "SELF_UPDATE", "false")
     }
 
     buildFeatures {
         buildConfig = true
     }
 
-    // Clé officielle : déchiffrée par GitHub Actions (secret WALLDOCK_KEY_PASSWORD), jamais en clair dans le dépôt
+    // Clé de signature de GladysWallDock : gardée hors du dépôt, chemin et mot de passe passés par l'environnement
     val releaseStore = System.getenv("WALLDOCK_KEYSTORE")
     val releasePassword = System.getenv("WALLDOCK_KEY_PASSWORD")
     signingConfigs {
@@ -28,7 +32,7 @@ android {
                 storeFile = file(releaseStore)
                 storeType = "PKCS12"
                 storePassword = releasePassword
-                keyAlias = "walldock"
+                keyAlias = "gladyswalldock"
                 keyPassword = releasePassword
             }
         }

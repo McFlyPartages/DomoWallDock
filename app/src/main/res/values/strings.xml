@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WallDock</string>
+    <string name="app_name">GladysWallDock</string>
     <string name="accessibility_label">WallDock – activity detection</string>
     <string name="accessibility_description">Lets WallDock know whether someone is still using the app opened from the dock, so it only goes back to the dashboard after real inactivity. WallDock does not read any content and sends nothing.</string>
-    <string name="settings_title">WallDock — settings</string>
+    <string name="settings_title">GladysWallDock — settings</string>
     <string name="settings_ha_address">Dashboard address (Home Assistant, Gladys Assistant…)</string>
     <string name="settings_pin">Admin code (at least 4 digits)</string>
     <string name="settings_return_delay">Back to the dashboard after (seconds of inactivity)</string>
@@ -312,4 +312,6 @@
     <string name="error_charge_levels">Charge levels: between 5 and 100 %, at least 10 points apart</string>
     <string name="error_charge_mqtt">Charge management needs the MQTT connection</string>
     <string name="entity_charge_wanted">Charge wanted</string>
+    <string name="updates_manual">GladysWallDock is installed and updated by hand: install the new APK over this one (same signing key, settings are kept).</string>
+    <string name="updates_manual_status">Version %1$s (manual updates)</string>
 </resources>
