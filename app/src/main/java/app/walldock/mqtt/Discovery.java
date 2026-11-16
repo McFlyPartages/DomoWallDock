@@ -10,7 +10,7 @@ public final class Discovery {
     private Discovery() {}
 
     public static String baseTopic(String deviceId) {
-        return "walldock/" + deviceId;
+        return "gladyswalldock/" + deviceId;
     }
 
     public static String configTopic(String component, String deviceId, String key) {
@@ -46,7 +46,7 @@ public final class Discovery {
         }
         json.append("\"device\":{\"identifiers\":[").append(quote(deviceId)).append("],");
         field(json, "name", deviceLabel).append(',');
-        field(json, "manufacturer", "WallDock").append(',');
+        field(json, "manufacturer", "GladysWallDock").append(',');
         field(json, "model", model).append(',');
         field(json, "sw_version", version);
         json.append("}}");

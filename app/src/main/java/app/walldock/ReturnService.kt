@@ -146,7 +146,7 @@ class ReturnService : Service() {
         else tr(R.string.return_tap)
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_walldock)
-            .setContentTitle("WallDock")
+            .setContentTitle("GladysWallDock")
             .setContentText(text)
             .setOngoing(true)
             .build()

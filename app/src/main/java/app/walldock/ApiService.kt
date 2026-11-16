@@ -581,15 +581,15 @@ class ApiService : Service(), EsphomeServer.Handler {
         startInForeground()
 
         val mac = pseudoMac()
-        deviceName = "walldock-" + mac.replace(":", "").takeLast(6).lowercase()
-        friendlyName = "WallDock " + Build.MODEL
+        deviceName = "gladyswalldock-" + mac.replace(":", "").takeLast(6).lowercase()
+        friendlyName = "GladysWallDock " + Build.MODEL
 
         val info = EsphomeServer.DeviceInfo()
         info.name = deviceName
         info.friendlyName = friendlyName
         info.macAddress = mac
         info.model = "${Build.MANUFACTURER} ${Build.MODEL}"
-        info.manufacturer = "WallDock"
+        info.manufacturer = "GladysWallDock"
         info.projectVersion = BuildConfig.VERSION_NAME
         info.voiceFeatures = Jarvis.FEATURES
 
@@ -1403,7 +1403,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         )
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_walldock)
-            .setContentTitle("WallDock")
+            .setContentTitle("GladysWallDock")
             .setContentText(tr(R.string.notif_available))
             .setOngoing(true)
             .build()

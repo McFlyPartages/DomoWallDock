@@ -1,1 +1,0 @@
-• Capteur « Dernière erreur » dans HA (diagnostic) pour comprendre un plantage.

@@ -1,1 +1,0 @@
-• afficher_camera accepte aussi une page du tableau de bord (vidéo en direct WebRTC/HLS)

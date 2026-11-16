@@ -104,11 +104,11 @@ public final class EsphomeServer {
 
     /** Fiche de l'appareil telle que Home Assistant l'affiche. */
     public static final class DeviceInfo {
-        public String name = "walldock";          // identifiant réseau, minuscules et tirets
-        public String friendlyName = "WallDock";   // nom affiché dans HA
+        public String name = "gladyswalldock";          // identifiant réseau, minuscules et tirets
+        public String friendlyName = "GladysWallDock";   // nom affiché dans HA
         public String macAddress = "02:00:00:00:00:00";
         public String model = "Android";
-        public String manufacturer = "WallDock";
+        public String manufacturer = "GladysWallDock";
         public String projectVersion = "0.2.0";
         public String suggestedArea = "";
         /** Fonctions vocales (VOICE_FEATURE_*), 0 = pas d'assistant vocal. */
@@ -526,7 +526,7 @@ public final class EsphomeServer {
                     send(HELLO_RESPONSE, new Proto.Writer()
                         .varint(1, API_VERSION_MAJOR)
                         .varint(2, API_VERSION_MINOR)
-                        .string(3, "WallDock " + info.projectVersion)
+                        .string(3, "GladysWallDock " + info.projectVersion)
                         .string(4, info.name)
                         .bytes());
                     return true;
@@ -739,9 +739,9 @@ public final class EsphomeServer {
                 .string(2, info.name)
                 .string(3, info.macAddress)
                 .string(4, "2025.10.0")
-                .string(5, "WallDock " + info.projectVersion)
+                .string(5, "GladysWallDock " + info.projectVersion)
                 .string(6, info.model)
-                .string(8, "walldock.walldock")
+                .string(8, "gladyswalldock.gladyswalldock")
                 .string(9, info.projectVersion)
                 .string(12, info.manufacturer)
                 .string(13, info.friendlyName)

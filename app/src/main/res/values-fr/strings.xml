@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_label">WallDock – détection d’activité</string>
-    <string name="accessibility_description">Permet à WallDock de savoir si quelqu’un utilise encore l’appli ouverte depuis le dock, pour ne revenir au tableau de bord qu’après une vraie inactivité. WallDock ne lit aucun contenu et n’envoie rien.</string>
+    <string name="accessibility_label">GladysWallDock – détection d’activité</string>
+    <string name="accessibility_description">Permet à GladysWallDock de savoir si quelqu’un utilise encore l’appli ouverte depuis le dock, pour ne revenir au tableau de bord qu’après une vraie inactivité. GladysWallDock ne lit aucun contenu et n’envoie rien.</string>
     <string name="settings_title">GladysWallDock — réglages</string>
     <string name="settings_ha_address">Adresse du tableau de bord (Home Assistant, Gladys Assistant…)</string>
     <string name="settings_pin">Code administrateur (4 chiffres minimum)</string>
@@ -15,7 +15,7 @@
     <string name="handle_right_middle">Au milieu du bord droit</string>
     <string name="handle_hidden">Cachée : glisser vers la gauche depuis le milieu du bord droit</string>
     <string name="settings_permissions">Autorisations</string>
-    <string name="settings_set_home">Définir WallDock comme écran d’accueil</string>
+    <string name="settings_set_home">Définir GladysWallDock comme écran d’accueil</string>
     <string name="settings_allow_overlay">Autoriser l’affichage par-dessus les autres applis</string>
     <string name="settings_enable_activity">Activer la détection d’activité (accessibilité)</string>
     <string name="settings_exit_kiosk">Quitter le mode kiosque</string>
@@ -89,7 +89,7 @@
     <string name="detect_tablet">Tablette</string>
     <string name="detect_preparing">Préparation des modèles…</string>
     <string name="jarvis_not_connected">Jarvis n’est pas encore connecté à Home Assistant</string>
-    <string name="jarvis_allow_mic">Autorise le micro dans les réglages de WallDock</string>
+    <string name="jarvis_allow_mic">Autorise le micro dans les réglages de GladysWallDock</string>
     <string name="jarvis_unavailable">Jarvis est indisponible</string>
     <string name="jarvis_not_understood">Je n’ai pas compris</string>
     <string name="jarvis_heard_nothing">Je n’ai rien entendu</string>
@@ -166,15 +166,15 @@
     <string name="entity_capture_ecran">Capture d’écran</string>
     <string name="camera_default_title">Caméra</string>
     <string name="camera_close">Fermer</string>
-    <string name="capture_unavailable">WallDock n’est pas affiché</string>
+    <string name="capture_unavailable">GladysWallDock n’est pas affiché</string>
     <string name="backup_title">Sauvegarde</string>
     <string name="backup_help">Enregistre tous les réglages (adresse, code, dock, Jarvis, voix apprises) dans un fichier, pour les remettre après une réinstallation ou les copier sur une autre tablette.</string>
     <string name="backup_export">Sauvegarder les réglages…</string>
     <string name="backup_import">Restaurer des réglages…</string>
     <string name="backup_saved">Réglages enregistrés dans le fichier</string>
     <string name="backup_failed">Impossible d’écrire le fichier</string>
-    <string name="backup_restored">Réglages restaurés, WallDock redémarre…</string>
-    <string name="backup_invalid">Ce fichier n’est pas une sauvegarde WallDock</string>
+    <string name="backup_restored">Réglages restaurés, GladysWallDock redémarre…</string>
+    <string name="backup_invalid">Ce fichier n’est pas une sauvegarde GladysWallDock</string>
     <string name="entity_set_listen">Écouter « Hey Jarvis »</string>
     <string name="entity_set_on_device">Reconnaître « Hey Jarvis » sur la tablette</string>
     <string name="entity_set_sensitivity">Sensibilité « Hey Jarvis »</string>
@@ -222,8 +222,8 @@
     <string name="settings_saver_url">Page de l’écran de veille (facultatif) : une vue du tableau de bord ou une adresse, à la place de l’horloge</string>
     <string name="settings_saver_url_hint">ex. /lovelace/veille</string>
     <string name="settings_system_brightness">Régler la luminosité du système (aussi dans les autres applis)</string>
-    <string name="settings_system_brightness_help">Il faut l’autorisation « Modifier les paramètres système », demandée à l’enregistrement. Sans elle, seule la fenêtre de WallDock est assombrie.</string>
-    <string name="settings_start_on_boot">Lancer WallDock au démarrage de la tablette (coupure de courant, redémarrage)</string>
+    <string name="settings_system_brightness_help">Il faut l’autorisation « Modifier les paramètres système », demandée à l’enregistrement. Sans elle, seule la fenêtre de GladysWallDock est assombrie.</string>
+    <string name="settings_start_on_boot">Lancer GladysWallDock au démarrage de la tablette (coupure de courant, redémarrage)</string>
     <string name="status_home_warning">Sans cela, après une coupure de courant, la tablette peut rester sur l’accueil Android si Android bloque le lancement automatique. Conseillé sur une tablette murale.</string>
     <string name="upd_waiting_screen">La version %1$s attend : confirmez « Mettre à jour » sur l’écran de la tablette</string>
     <string name="url_blocked">%1$s n’est pas autorisé sur cette tablette</string>
@@ -294,7 +294,7 @@
     <string name="settings_motion_off">Éteindre l’écran après ce délai sans mouvement ni toucher, en minutes (0 = ne jamais l’éteindre)</string>
     <string name="settings_mqtt_title">Gladys Assistant (MQTT)</string>
     <string name="settings_mqtt_enable">Connecter la tablette à Gladys par MQTT</string>
-    <string name="settings_mqtt_help">La tablette s’annonce toute seule : dans Gladys, Intégrations → MQTT → appareils découverts (Home Assistant), ajoutez « WallDock … ». Vous y trouverez la batterie, la charge, le mouvement, l’écran (allumer, éteindre) et deux boutons (recharger, revenir au tableau de bord). Fonctionne aussi avec tout broker MQTT qui comprend la découverte de Home Assistant.</string>
+    <string name="settings_mqtt_help">La tablette s’annonce toute seule : dans Gladys, Intégrations → MQTT → appareils découverts (Home Assistant), ajoutez « GladysWallDock … ». Vous y trouverez la batterie, la charge, le mouvement, l’écran (allumer, éteindre) et deux boutons (recharger, revenir au tableau de bord). Fonctionne aussi avec tout broker MQTT qui comprend la découverte de Home Assistant.</string>
     <string name="settings_mqtt_host">Adresse du broker MQTT (ex. 192.168.1.10)</string>
     <string name="settings_mqtt_user">Utilisateur MQTT (si le broker en demande un)</string>
     <string name="settings_mqtt_password">Mot de passe MQTT</string>
@@ -305,7 +305,7 @@
     <string name="error_mqtt_host">Indiquez l’adresse du broker MQTT</string>
     <string name="settings_charge_title">Batterie</string>
     <string name="settings_charge_enable">Gérer la charge (tablette toujours branchée)</string>
-    <string name="settings_charge_help">Une batterie gardée à 100 % en permanence s’abîme et peut gonfler. WallDock ne peut pas couper la charge lui-même (Android l’interdit) : il publie un capteur « Charge demandée » par MQTT, et une scène Gladys allume ou éteint la prise connectée du chargeur. Si la tablette disparaît du réseau, « Charge demandée » repasse tout seul à « oui » pour que la batterie ne se vide pas.</string>
+    <string name="settings_charge_help">Une batterie gardée à 100 % en permanence s’abîme et peut gonfler. GladysWallDock ne peut pas couper la charge lui-même (Android l’interdit) : il publie un capteur « Charge demandée » par MQTT, et une scène Gladys allume ou éteint la prise connectée du chargeur. Si la tablette disparaît du réseau, « Charge demandée » repasse tout seul à « oui » pour que la batterie ne se vide pas.</string>
     <string name="settings_charge_low">Recharger quand la batterie descend à (%)</string>
     <string name="settings_charge_high">Arrêter la charge quand elle atteint (%)</string>
     <string name="error_charge_levels">Seuils de charge : entre 5 et 100 %, avec au moins 10 points d’écart</string>
@@ -313,4 +313,5 @@
     <string name="entity_charge_wanted">Charge demandée</string>
     <string name="updates_manual">GladysWallDock s’installe et se met à jour à la main : installez le nouvel APK par-dessus celui-ci (même clé de signature, les réglages sont conservés).</string>
     <string name="updates_manual_status">Version %1$s (mises à jour manuelles)</string>
+    <string name="about_fork">GladysWallDock %1$s est un dérivé (fork) de WallDock de psycho1807 (github.com/psycho1807/WallDock, licence GPL-3.0), adapté pour Gladys Assistant.</string>
 </resources>

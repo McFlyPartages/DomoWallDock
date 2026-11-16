@@ -33,7 +33,7 @@ public final class MqttClient {
     public static final class Options {
         public String host = "";
         public int port = 1883;
-        public String clientId = "walldock";
+        public String clientId = "gladyswalldock";
         public String username = "";
         public String password = "";
         /** Secondes ; le broker considère la tablette perdue après 1,5 fois ce délai sans nouvelles. */

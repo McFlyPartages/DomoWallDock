@@ -33,7 +33,7 @@ object SettingsBackup {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
             .setType("application/json")
-            .putExtra(Intent.EXTRA_TITLE, "walldock-reglages.json")
+            .putExtra(Intent.EXTRA_TITLE, "gladyswalldock-reglages.json")
         @Suppress("DEPRECATION")
         activity.startActivityForResult(intent, REQUEST_EXPORT)
     }
@@ -68,7 +68,7 @@ object SettingsBackup {
             if (file.isFile) files.put(name, Base64.encodeToString(file.readBytes(), Base64.NO_WRAP))
         }
         val root = JSONObject()
-            .put("app", "WallDock")
+            .put("app", "GladysWallDock")
             .put("format", 1)
             .put("version", BuildConfig.VERSION_NAME)
             .put("prefs", prefs)
@@ -82,7 +82,8 @@ object SettingsBackup {
         val text = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
             ?: throw IllegalStateException("fichier illisible")
         val root = JSONObject(text)
-        if (root.optString("app") != "WallDock") throw IllegalStateException("pas une sauvegarde WallDock")
+        // Les sauvegardes du WallDock d'origine sont acceptées aussi (mêmes réglages)
+        if (root.optString("app") !in setOf("GladysWallDock", "WallDock")) throw IllegalStateException("pas une sauvegarde GladysWallDock")
         val prefs = root.getJSONObject("prefs")
         val editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
         for (key in prefs.keys()) {

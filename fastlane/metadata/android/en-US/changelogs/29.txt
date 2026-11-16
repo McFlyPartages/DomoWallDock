@@ -1,1 +1,0 @@
-• Motion detection with the front camera: "Motion" sensor in HA, screen turns on when someone passes, settings from HA

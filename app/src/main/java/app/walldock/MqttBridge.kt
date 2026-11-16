@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
  * mouvement et état de l'écran, et reçoit les commandes (écran, recharger, tableau de bord).
  *
  * Dans Gladys : Intégrations → MQTT → appareils découverts (Home Assistant), la tablette
- * apparaît sous le nom « WallDock … ».
+ * apparaît sous le nom « GladysWallDock … ».
  *
  * Gestion de la charge : « Charge demandée » passe à ON sous le seuil bas et à OFF au-dessus du
  * seuil haut ; une scène Gladys allume ou éteint la prise connectée du chargeur. Si la tablette

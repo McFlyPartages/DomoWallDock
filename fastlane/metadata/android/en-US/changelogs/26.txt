@@ -1,1 +1,0 @@
-• afficher_camera also accepts a dashboard page (live WebRTC/HLS video)

@@ -148,7 +148,7 @@ class WakeWordDetector private constructor(dir: File) {
                     connection.connectTimeout = 15_000
                     connection.readTimeout = 60_000
                     connection.instanceFollowRedirects = true
-                    connection.setRequestProperty("User-Agent", "WallDock/${BuildConfig.VERSION_NAME}")
+                    connection.setRequestProperty("User-Agent", "GladysWallDock/${BuildConfig.VERSION_NAME}")
                     try {
                         if (connection.responseCode != 200) {
                             lastError = tr(R.string.ww_download_http, name, connection.responseCode)

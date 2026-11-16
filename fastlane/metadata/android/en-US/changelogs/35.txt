@@ -1,1 +1,0 @@
-• "Last error" diagnostic sensor in HA to understand a crash.

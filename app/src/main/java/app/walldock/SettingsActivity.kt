@@ -397,6 +397,7 @@ class SettingsActivity : Activity() {
         for (app in Apps.listLaunchable(this)) column.addView(appRow(app))
 
         column.addView(button(tr(R.string.settings_save)) { save() })
+        column.addView(label(tr(R.string.about_fork, BuildConfig.VERSION_NAME)))
 
         val scroll = ScrollView(this)
         scroll.setBackgroundColor(0xFF050C1E.toInt())
@@ -419,7 +420,7 @@ class SettingsActivity : Activity() {
         override fun run() {
             val service = ApiService.instance
             mqttStatusText.text = when (service?.mqttStatus) {
-                "connected" -> tr(R.string.mqtt_connected, service.friendlyName)
+                "connected" -> tr(R.string.mqtt_connected, "${service.friendlyName} (${service.deviceName})")
                 "connecting" -> tr(R.string.mqtt_connecting)
                 "error" -> tr(R.string.mqtt_error, service.mqttError)
                 else -> tr(R.string.mqtt_off)

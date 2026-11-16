@@ -153,7 +153,7 @@ object Updater {
         connection.connectTimeout = 15_000
         connection.readTimeout = 60_000
         connection.instanceFollowRedirects = true
-        connection.setRequestProperty("User-Agent", "WallDock/${BuildConfig.VERSION_NAME}")
+        connection.setRequestProperty("User-Agent", "GladysWallDock/${BuildConfig.VERSION_NAME}")
         return connection
     }
 

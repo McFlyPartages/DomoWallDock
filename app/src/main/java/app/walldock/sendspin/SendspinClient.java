@@ -442,7 +442,7 @@ public final class SendspinClient {
                     .put("name", name.length() > 60 ? name.substring(0, 60) : name)
                     .put("device_info", new JSONObject()
                         .put("product_name", deviceModel.length() > 60 ? deviceModel.substring(0, 60) : deviceModel)
-                        .put("manufacturer", "WallDock")
+                        .put("manufacturer", "GladysWallDock")
                         .put("software_version", softwareVersion))
                     .put("supported_roles", new JSONArray().put("player@v1"))
                     .put("player@v1_support", new JSONObject()
