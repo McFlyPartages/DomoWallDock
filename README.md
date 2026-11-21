@@ -1,5 +1,7 @@
 # DomoWallDock
 
+> **Branche `android7` : version figée pour les tablettes Android 7.x.** Elle ne reçoit que des corrections ponctuelles ; les nouveautés arrivent sur `main` (Android 8 minimum). Pour une tablette Android 8 ou plus, prenez les versions de `main`.
+
 **Transformez une tablette Android en tableau de bord mural pour [Home Assistant](https://www.home-assistant.io/) ou [Gladys Assistant](https://gladysassistant.com/).**
 
 DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.

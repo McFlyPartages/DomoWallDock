@@ -14,7 +14,7 @@ android {
         minSdk = 24 // Android 7.0
         targetSdk = 36
         versionCode = 38
-        versionName = "0.18.1"
+        versionName = "0.18.1-android7"
         // Pas de mise à jour par l'appli : les releases GitHub de WallDock sont signées avec une autre clé
         buildConfigField("boolean", "SELF_UPDATE", "false")
     }
