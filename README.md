@@ -8,6 +8,8 @@
 
 DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.
 
+> 📘 **Tutoriel illustré : [utiliser DomoWallDock avec Gladys Assistant](docs/TUTO-GLADYS.md)** — installation, connexion, MQTT, gestion de la charge, écran de veille.
+
 ## Téléchargement
 
 Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/DomoWallDock/releases) (prenez la plus récente ; ce sont des pré-versions).
@@ -103,6 +105,6 @@ Le développement a lieu sur un Forgejo personnel ; ce dépôt GitHub en est une
 
 **DomoWallDock** (formerly GladysWallDock) turns an Android tablet into a wall panel for [Home Assistant](https://www.home-assistant.io/) or [Gladys Assistant](https://gladysassistant.com/), chosen with a radio button in the settings, with automatic sign-in. It is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807 (GPL-3.0). It adds an ESPHome Bluetooth proxy (the tablet forwards nearby BLE advertisements to Home Assistant, listening only) and, for Gladys: MQTT connection with automatic discovery (battery, charging, motion, screen switch, two buttons), charge management for always-plugged tablets (a “Charge wanted” sensor drives the charger's smart plug through two Gladys scenes), and a screen that turns on with motion and off when nobody is there. Everything WallDock does for Home Assistant is still there.
 
-**Download:** signed APKs are on the [Releases](https://github.com/McFlyPartages/DomoWallDock/releases) page — `DomoWallDock-x.y.z.apk` for Android 8+, `DomoWallDock-x.y.z-android7.apk` for Android 7.x (frozen branch, fixes only). Both use the same signing key, so updates install over the previous version. The README above is in French; the app itself ships French and English strings.
+**Download:** signed APKs are on the [Releases](https://github.com/McFlyPartages/DomoWallDock/releases) page — `DomoWallDock-x.y.z.apk` for Android 8+, `DomoWallDock-x.y.z-android7.apk` for Android 7.x (frozen branch, fixes only). Both use the same signing key, so updates install over the previous version. The README above is in French; the app itself ships French and English strings. A step-by-step illustrated guide for Gladys (French) is in [docs/TUTO-GLADYS.md](docs/TUTO-GLADYS.md).
 
 License: GPL-3.0.
