@@ -371,7 +371,7 @@
     <string name="dock_show">Afficher les applis (%1$d installées, %2$d dans le dock)</string>
     <string name="dock_hide">Masquer la liste des applis</string>
     <string name="about_author">Adapté et maintenu par McFly — https://mcflypartages.fr
-Mastodon : mcflypartages.fr
+Mastodon : @McFlyPartages@mastodon.social — https://mastodon.social/@McFlyPartages
 Facebook : https://www.facebook.com/McFlyPartages
 X : https://x.com/McFlyPartages</string>
     <string name="settings_save_quit">Enregistrer et quitter les réglages</string>
