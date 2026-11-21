@@ -66,6 +66,18 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
+    // Aperçu de l'écran des réglages sans tablette : ./gradlew testGithubDebugUnitTest
+    // (Robolectric dessine le vrai écran en PNG dans app/build/preview)
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.maxHeapSize = "1g"
+                it.systemProperty("preview.dir", layout.buildDirectory.dir("preview").get().asFile.path)
+            }
+        }
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -75,4 +87,6 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // Détection de « Hey Jarvis » sur la tablette (modèles openWakeWord au format TFLite)
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

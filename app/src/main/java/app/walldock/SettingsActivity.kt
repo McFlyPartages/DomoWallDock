@@ -1114,6 +1114,7 @@ class SettingsActivity : Activity() {
         val view = TextView(this)
         view.text = s
         view.textSize = 24f
+        view.tag = HEADING_TAG
         view.setTextColor(Color.WHITE)
         view.setPadding(0, dp(28), 0, dp(4))
         val line = android.graphics.drawable.GradientDrawable()
@@ -1150,6 +1151,7 @@ class SettingsActivity : Activity() {
         view.textSize = size
         view.setTextColor(0xFF3FD4FF.toInt())
         view.setPadding(0, dp(20), 0, dp(8))
+        view.tag = HEADING_TAG
         return view
     }
 
@@ -1260,5 +1262,7 @@ class SettingsActivity : Activity() {
     companion object {
         private const val REQUEST_PHOTO_FOLDER = 54 // 51 et 52 : sauvegarde (SettingsBackup)
         private const val REQUEST_BLE = 53
+        /** Repère des titres de section (captures du tutoriel). */
+        const val HEADING_TAG = "settings_heading"
     }
 }
