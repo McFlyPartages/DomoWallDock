@@ -1,5 +1,12 @@
 # DomoWallDock
 
+<p align="center">
+  <a href="README.md"><img src="docs/images/flags/fr.svg" width="32" alt="Français"></a>&nbsp;
+  <a href="README.en.md"><img src="docs/images/flags/gb.svg" width="32" alt="English"></a>&nbsp;
+  <a href="README.de.md"><img src="docs/images/flags/de.svg" width="32" alt="Deutsch"></a>&nbsp;
+  <a href="README.es.md"><img src="docs/images/flags/es.svg" width="32" alt="Español"></a>
+</p>
+
 [![Licence GPL-3.0](https://img.shields.io/badge/licence-GPL--3.0-64748b)](LICENSE)
 [![Android 7+](https://img.shields.io/badge/Android-7%2B-3ddc84)](#téléchargement)
 [![Dernière version](https://img.shields.io/github/v/release/McFlyPartages/DomoWallDock?include_prereleases&label=version)](https://github.com/McFlyPartages/DomoWallDock/releases)
@@ -9,6 +16,7 @@
 DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.
 
 > 📘 **Tutoriel illustré : [utiliser DomoWallDock avec Gladys Assistant](docs/TUTO-GLADYS.md)** — installation, connexion, MQTT, gestion de la charge, écran de veille.
+> L'appli est en français, anglais, allemand et espagnol (selon la langue de la tablette).
 
 ## Téléchargement
 
@@ -22,6 +30,27 @@ Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/Do
 - La version `android7` est une branche **figée** : elle ne reçoit que les corrections, reportées à la main. Sur Android 8+, utilisez toujours la version standard.
 - Les deux versions sont signées avec la **même clé** : on peut installer une nouvelle version par-dessus l'ancienne, les réglages sont conservés.
 - Pour les installer : autoriser « sources inconnues » pour le navigateur ou le gestionnaire de fichiers utilisé, ouvrir le fichier, puis suivre [Installation](#installation).
+
+## Compatibilité Home Assistant / Gladys Assistant
+
+| Fonction | Home Assistant | Gladys Assistant |
+|---|:---:|:---:|
+| Tableau de bord en plein écran, mode kiosque, dock d'applis, retour automatique | ✅ | ✅ |
+| Connexion automatique (compte et mot de passe) | ✅ ¹ | ✅ |
+| Accès local, externe ou les deux (bascule automatique) | ✅ | ✅ |
+| Écran de veille : horloge, album Immich, dossier de photos, page de la plateforme | ✅ | ✅ |
+| Écran éteint chaque nuit, allumage par la caméra frontale | ✅ | ✅ |
+| Calendrier plein écran (jour, semaine, mois, agenda) | ✅ | ✅ |
+| Réveils sur la tablette | ✅ (aussi pilotables depuis HA) | ✅ (réglés dans l'appli) |
+| Capteurs de la tablette : batterie, charge, mouvement, écran | ✅ (ESPHome ou MQTT) | ✅ (MQTT) |
+| Gestion de la charge avec une prise connectée | ✅ (MQTT + automatisation) | ✅ (MQTT + scènes) |
+| Lecteur Music Assistant synchronisé (Sendspin) | ✅ | ✅ ² |
+| Pilotage complet depuis la plateforme (luminosité, ouvrir une appli ou une page, alertes, caméras plein écran, sons, synthèse vocale…) | ✅ (ESPHome) | ➖ écran, recharger, retour au tableau de bord |
+| Assistant vocal Jarvis (« Hey Jarvis ») | ✅ | ❌ |
+| Proxy Bluetooth ESPHome | ✅ | ❌ |
+
+¹ Pas avec l'authentification à deux facteurs. ² Music Assistant est un serveur à part : il fonctionne avec ou sans Home Assistant.
+Quand vous choisissez Gladys sans avoir renseigné Home Assistant, l'appli décoche d'elle-même Jarvis et le proxy Bluetooth (vous pouvez les recocher).
 
 ## Ce que fait DomoWallDock
 
@@ -45,7 +74,7 @@ Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/Do
   - « Charge demandée » passe à 0 → éteindre la prise.
 
   Si la tablette disparaît du réseau (plantage, Wi-Fi coupé), le broker remet tout seul « Charge demandée » à oui (testament MQTT), pour que la batterie ne se vide pas.
-- **Écran piloté par la caméra frontale** : l'écran s'allume quand quelqu'un passe et s'éteint après un délai sans mouvement ni toucher (réglages → détection de mouvement → délai en minutes). Les images sont analysées sur la tablette et ne sont jamais envoyées ni enregistrées.
+- **Écran piloté par la caméra frontale** : l'écran s'allume quand quelqu'un passe et s'éteint après un délai sans mouvement ni toucher (réglages → détection de mouvement → délai en secondes). Les images sont analysées sur la tablette et ne sont jamais envoyées ni enregistrées.
 
 **Kiosque** (hérité de WallDock)
 - Plein écran, barres système masquées, écran toujours allumé, réglages protégés par un code.
@@ -56,7 +85,7 @@ Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/Do
 - Sauvegarde et restauration des réglages dans un fichier (les sauvegardes de WallDock sont acceptées).
 
 **Avec Home Assistant** (hérité de WallDock, toujours fonctionnel)
-- Intégration native ESPHome chiffrée, assistant vocal Jarvis, lecteur multimédia, lecteur Music Assistant synchronisé (Sendspin), réveils, calendrier. Ces fonctions ont besoin de Home Assistant ; avec Gladys seul, décochez l'écoute de « Hey Jarvis » dans les réglages.
+- Intégration native ESPHome chiffrée, assistant vocal Jarvis, lecteur multimédia, lecteur Music Assistant synchronisé (Sendspin), réveils, calendrier. Ces fonctions ont besoin de Home Assistant ; quand on choisit Gladys sans renseigner Home Assistant, Jarvis et le proxy Bluetooth sont décochés automatiquement.
 
 ## Sujets MQTT
 
@@ -87,7 +116,7 @@ Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/Do
 
 `gradle assembleGithubRelease` avec Gradle 8.14, JDK 17 et le SDK Android 36. Pour signer, donner le chemin du magasin de clés (PKCS12, alias `gladyswalldock`, nom d'origine de la clé) dans `WALLDOCK_KEYSTORE` et son mot de passe dans `WALLDOCK_KEY_PASSWORD` ; la clé n'est pas dans le dépôt. Sans elles, l'APK n'est pas signé (`assembleGithubDebug` donne un APK de test).
 
-Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement ses évolutions. Le client MQTT (`app/src/main/java/app/walldock/mqtt`) et le serveur ESPHome (`…/esphome`) sont en Java pur et se testent sur une JVM.
+Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement ses évolutions. Le client MQTT (`app/src/main/java/app/walldock/mqtt`) et le serveur ESPHome (`…/esphome`) sont en Java pur et se testent sur une JVM. `./gradlew testGithubDebugUnitTest` dessine l'écran des réglages en PNG (Robolectric) dans `app/build/preview`.
 
 ## Code source et dépôts
 
@@ -95,16 +124,9 @@ Le développement a lieu sur un Forgejo personnel ; ce dépôt GitHub en est une
 
 ## Crédits
 
-- **DomoWallDock** : adapté et maintenu par **McFly** — site [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
+- **DomoWallDock** : adapté et maintenu par **McFlyPartages** — site [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
 - **[WallDock](https://github.com/psycho1807/WallDock)** de psycho1807 (GPL-3.0) : toute la base de l'appli. DomoWallDock n'est ni affilié à son auteur ni soutenu par lui ; WallDock Pro est un produit distinct.
 - Mot « Stop » : modèle [microWakeWord](https://github.com/kahrendt/microWakeWord) de Kevin Ahrendt (Apache 2.0) ; extraction des caractéristiques portée du micro frontend de TensorFlow Lite Micro (Apache 2.0).
 - Mot d'activation : modèles [openWakeWord](https://github.com/dscripka/openWakeWord) (téléchargés au premier usage, CC BY-NC-SA 4.0), exécutés avec TensorFlow Lite.
 - Protocoles : [API native ESPHome](https://esphome.io/components/api.html), découverte MQTT de Home Assistant.
-
-## English
-
-**DomoWallDock** (formerly GladysWallDock) turns an Android tablet into a wall panel for [Home Assistant](https://www.home-assistant.io/) or [Gladys Assistant](https://gladysassistant.com/), chosen with a radio button in the settings, with automatic sign-in. It is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807 (GPL-3.0). It adds an ESPHome Bluetooth proxy (the tablet forwards nearby BLE advertisements to Home Assistant, listening only) and, for Gladys: MQTT connection with automatic discovery (battery, charging, motion, screen switch, two buttons), charge management for always-plugged tablets (a “Charge wanted” sensor drives the charger's smart plug through two Gladys scenes), and a screen that turns on with motion and off when nobody is there. Everything WallDock does for Home Assistant is still there.
-
-**Download:** signed APKs are on the [Releases](https://github.com/McFlyPartages/DomoWallDock/releases) page — `DomoWallDock-x.y.z.apk` for Android 8+, `DomoWallDock-x.y.z-android7.apk` for Android 7.x (frozen branch, fixes only). Both use the same signing key, so updates install over the previous version. The README above is in French; the app itself ships French and English strings. A step-by-step illustrated guide for Gladys (French) is in [docs/TUTO-GLADYS.md](docs/TUTO-GLADYS.md).
-
-License: GPL-3.0.
+- Icônes : [Simple Icons](https://simpleicons.org/) (CC0), [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0), [flag-icons](https://github.com/lipis/flag-icons) (MIT).

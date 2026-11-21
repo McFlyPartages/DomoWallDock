@@ -1,5 +1,12 @@
 # Tutoriel : DomoWallDock avec Gladys Assistant
 
+<p align="center">
+  <a href="TUTO-GLADYS.md"><img src="images/flags/fr.svg" width="32" alt="Français"></a>&nbsp;
+  <a href="TUTO-GLADYS.en.md"><img src="images/flags/gb.svg" width="32" alt="English"></a>&nbsp;
+  <a href="TUTO-GLADYS.de.md"><img src="images/flags/de.svg" width="32" alt="Deutsch"></a>&nbsp;
+  <a href="TUTO-GLADYS.es.md"><img src="images/flags/es.svg" width="32" alt="Español"></a>
+</p>
+
 Ce guide transforme une tablette Android en tableau de bord mural pour [Gladys Assistant](https://gladysassistant.com/) : écran toujours prêt, connexion automatique, capteurs de la tablette dans Gladys et batterie préservée.
 
 > Les adresses et comptes des captures (`192.168.1.20`, `tablette@exemple.fr`…) sont des exemples : remplacez-les par les vôtres.
@@ -16,17 +23,17 @@ Ce guide transforme une tablette Android en tableau de bord mural pour [Gladys A
 
 Plus tard, pour revenir aux réglages : touchez la petite poignée **▲** (en bas à droite par défaut) pour ouvrir le dock, puis **Réglages**, et tapez le code administrateur (la touche OK du pavé numérique valide).
 
-![Le dock ouvert sur l'écran principal](images/tuto-gladys/00-dock.png)
+![Le dock ouvert sur l'écran principal](images/tuto-gladys/fr/00-dock.png)
 
 Les réglages sont rangés en trois parties, accessibles à tout moment par la barre du haut. **Enregistrer** (en haut à droite) enregistre sans quitter ; le bouton tout en bas enregistre et ferme les réglages.
 
-![Barre du haut des réglages](images/tuto-gladys/01-barre.png)
+![Barre du haut des réglages](images/tuto-gladys/fr/01-barre.png)
 
 ---
 
 ## 2. Se connecter à Gladys (partie « Connexion »)
 
-![Connexion à Gladys](images/tuto-gladys/02-connexion.png)
+![Connexion à Gladys](images/tuto-gladys/fr/02-connexion.png)
 
 1. **Tableau de bord affiché** : choisissez **Gladys Assistant**. Sa colonne s'encadre en bleu. La colonne Home Assistant peut rester vide.
 2. **Accès** :
@@ -44,7 +51,7 @@ Les réglages sont rangés en trois parties, accessibles à tout moment par la b
 
 ## 3. Réglages communs
 
-![Réglages communs](images/tuto-gladys/03-communs.png)
+![Réglages communs](images/tuto-gladys/fr/03-communs.png)
 
 - **Code administrateur** (4 chiffres minimum) : il protège les réglages.
 - **Retour au tableau de bord** après quelques secondes sans toucher l'écran, quand une autre appli du dock est ouverte.
@@ -52,19 +59,19 @@ Les réglages sont rangés en trois parties, accessibles à tout moment par la b
 
 **Écran de veille** : une horloge (ou des photos, ou une page Gladys, voir plus bas) après un délai sans toucher l'écran, en secondes.
 
-![Écran de veille](images/tuto-gladys/04-veille.png)
+![Écran de veille](images/tuto-gladys/fr/04-veille.png)
 
 **Écran éteint chaque nuit** : touchez une heure pour la régler avec les roues heures / minutes.
 
-![Écran éteint chaque nuit](images/tuto-gladys/05-nuit.png)
+![Écran éteint chaque nuit](images/tuto-gladys/fr/05-nuit.png)
 
 **Détection de mouvement** : la caméra frontale allume l'écran quand quelqu'un passe, et peut l'éteindre après un délai sans personne (en secondes, 0 = jamais). Les images restent sur la tablette et ne sont jamais enregistrées.
 
-![Détection de mouvement](images/tuto-gladys/06-mouvement.png)
+![Détection de mouvement](images/tuto-gladys/fr/06-mouvement.png)
 
 **Autorisations** : pour un vrai mode kiosque, touchez **Définir DomoWallDock comme écran d'accueil** et **Autoriser l'affichage par-dessus les autres applis**.
 
-![Autorisations](images/tuto-gladys/07-autorisations.png)
+![Autorisations](images/tuto-gladys/fr/07-autorisations.png)
 
 Dans la même partie : **sauvegarde / restauration** des réglages dans un fichier, et la liste des **applis du dock** (repliée ; touchez « Afficher les applis » puis cochez celles à garder sous la main).
 
@@ -74,7 +81,7 @@ Pensez aussi à désactiver l'**optimisation de batterie** d'Android pour DomoWa
 
 ## 4. Le calendrier de Gladys
 
-![Calendrier](images/tuto-gladys/08-calendrier.png)
+![Calendrier](images/tuto-gladys/fr/08-calendrier.png)
 
 Cochez **Bouton « Calendrier » dans le dock** : quand Gladys est affiché, il montre les calendriers de Gladys (les vôtres et ceux partagés), en vue jour, semaine, mois ou agenda.
 
@@ -86,7 +93,7 @@ La tablette s'annonce toute seule à Gladys par MQTT et y apparaît comme un app
 
 **Prérequis** : l'intégration **MQTT** de Gladys configurée (Intégrations → MQTT), avec son broker (celui que Gladys installe, ou un broker existant) et un utilisateur / mot de passe.
 
-![Réglages MQTT](images/tuto-gladys/10-mqtt.png)
+![Réglages MQTT](images/tuto-gladys/fr/10-mqtt.png)
 
 1. Dans **Services annexes → MQTT**, cochez **Connecter la tablette à un broker MQTT**.
 2. Renseignez l'**adresse du broker**, le **port** (1883), l'**utilisateur** et le **mot de passe**.
@@ -103,6 +110,8 @@ Vous obtenez dans Gladys :
 | Écran | interrupteur (allumer / éteindre) |
 | Recharger, Retour au tableau de bord | boutons |
 
+![La tablette dans Gladys, avec ses 8 fonctionnalités](images/tuto-gladys/gladys-mqtt.png)
+
 Vous pouvez par exemple allumer l'écran de la tablette quand quelqu'un sonne, ou l'éteindre quand la maison passe en mode absent.
 
 ---
@@ -111,7 +120,7 @@ Vous pouvez par exemple allumer l'écran de la tablette quand quelqu'un sonne, o
 
 Une batterie gardée à 100 % en permanence s'abîme et peut gonfler. Android interdit à une appli de couper la charge : DomoWallDock publie donc un capteur **« Charge demandée »** et Gladys pilote une **prise connectée** sur le chargeur.
 
-![Gestion de la charge](images/tuto-gladys/09-batterie.png)
+![Gestion de la charge](images/tuto-gladys/fr/09-batterie.png)
 
 1. Branchez le chargeur de la tablette sur une prise connectée déjà gérée par Gladys.
 2. Dans **Services annexes → Batterie**, cochez **Gérer la charge** (MQTT doit être actif). Réglez les seuils : recharge sous 30 %, arrêt à 80 % par défaut.
@@ -125,7 +134,7 @@ Si la tablette disparaît du réseau (plantage, Wi-Fi coupé), le broker remet t
 
 ## 7. Écran de veille : photos ou page Gladys
 
-![Écran de veille photos ou page](images/tuto-gladys/11-photos.png)
+![Écran de veille photos ou page](images/tuto-gladys/fr/11-photos.png)
 
 Au lieu de l'horloge, l'écran de veille peut afficher :
 
@@ -137,7 +146,7 @@ Au lieu de l'horloge, l'écran de veille peut afficher :
 
 ## 8. Les autres services
 
-Music Assistant, le proxy Bluetooth et l'assistant vocal Jarvis passent par **Home Assistant**. Avec Gladys seul, ils ne servent pas : décochez l'écoute de « Hey Jarvis » dans la partie Jarvis.
+Le proxy Bluetooth et l'assistant vocal Jarvis passent par **Home Assistant** : quand vous choisissez Gladys sans renseigner Home Assistant, l'appli les décoche d'elle-même (vous pouvez les recocher). Le lecteur **Music Assistant** fonctionne avec un serveur Music Assistant, avec ou sans Home Assistant.
 
 ---
 
