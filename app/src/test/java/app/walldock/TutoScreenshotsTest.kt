@@ -107,6 +107,7 @@ class TutoScreenshotsTest {
         prefs.platform = Prefs.PLATFORM_GLADYS
         prefs.gladys.ip = "192.168.1.20"
         prefs.calendarInDock = true
+        prefs.jarvisWakeWord = false // Gladys : Jarvis décoché, donc absent du dock
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         ShadowLooper.idleMainLooper()
         val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup

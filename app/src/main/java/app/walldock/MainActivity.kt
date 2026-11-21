@@ -692,7 +692,8 @@ class MainActivity : Activity(), DashboardController {
             icon.setImageDrawable(app.icon)
             dockRow.addView(dockItem(app.label, icon) { launchApp(app.packageName) })
         }
-        dockRow.addView(dockItem("Jarvis", glyph("◉")) {
+        // Bouton Jarvis seulement si Jarvis est activé (écoute de « Hey Jarvis »)
+        if (prefs.jarvisWakeWord) dockRow.addView(dockItem("Jarvis", glyph("◉")) {
             setDockVisible(false)
             ApiService.instance?.jarvis?.talk()
         })
