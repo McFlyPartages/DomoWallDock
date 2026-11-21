@@ -347,4 +347,10 @@
     <string name="ble_status_bt_off">⚠️ Le Bluetooth de la tablette est éteint</string>
     <string name="ble_status_unsupported">⚠️ Cette tablette n’a pas de Bluetooth Low Energy</string>
     <string name="ble_status_error">⚠️ Écoute refusée par Android (code %1$d)</string>
+    <string name="settings_test_login">Tester la connexion</string>
+    <string name="autologin_test_running">Test en cours…</string>
+    <string name="autologin_test_missing">Remplis l’adresse, le compte et le mot de passe pour tester</string>
+    <string name="autologin_test_ok">✅ Adresse, compte et mot de passe acceptés : la connexion automatique marchera.</string>
+    <string name="autologin_unreachable">serveur injoignable depuis la tablette (%1$s)</string>
+    <string name="autologin_tls">certificat HTTPS refusé par la tablette (%1$s)</string>
 </resources>

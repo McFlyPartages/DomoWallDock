@@ -348,4 +348,10 @@
     <string name="ble_status_bt_off">⚠️ The tablet\'s Bluetooth is off</string>
     <string name="ble_status_unsupported">⚠️ This tablet has no Bluetooth Low Energy</string>
     <string name="ble_status_error">⚠️ Scan refused by Android (code %1$d)</string>
+    <string name="settings_test_login">Test the sign-in</string>
+    <string name="autologin_test_running">Testing…</string>
+    <string name="autologin_test_missing">Fill in the address, user and password to test</string>
+    <string name="autologin_test_ok">✅ Address, user and password accepted: automatic sign-in will work.</string>
+    <string name="autologin_unreachable">server not reachable from the tablet (%1$s)</string>
+    <string name="autologin_tls">HTTPS certificate refused by the tablet (%1$s)</string>
 </resources>
