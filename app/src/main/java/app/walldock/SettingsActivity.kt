@@ -30,11 +30,11 @@ class SettingsActivity : Activity() {
 
     private lateinit var prefs: Prefs
     private lateinit var platformGroup: RadioGroup
-    private lateinit var haUrlField: EditText
+    private lateinit var haForm: ServerForm
     private lateinit var haUserField: EditText
     private lateinit var haPasswordField: EditText
     private lateinit var haDashboardField: EditText
-    private lateinit var gladysUrlField: EditText
+    private lateinit var gladysForm: ServerForm
     private lateinit var gladysUserField: EditText
     private lateinit var gladysPasswordField: EditText
     private lateinit var gladysDashboardField: EditText
@@ -63,8 +63,8 @@ class SettingsActivity : Activity() {
     private lateinit var sendspinCheck: CheckBox
     private lateinit var calendarCheck: CheckBox
     private lateinit var scheduleCheck: CheckBox
-    private lateinit var sleepField: EditText
-    private lateinit var wakeField: EditText
+    private lateinit var sleepField: TextView
+    private lateinit var wakeField: TextView
     private lateinit var allowedField: EditText
     private lateinit var updateCheck: CheckBox
     private lateinit var jarvisCheck: CheckBox
@@ -132,9 +132,8 @@ class SettingsActivity : Activity() {
         platforms.orientation = if (wide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
         haPanel = panel()
         haPanel.addView(heading(tr(R.string.platform_ha), 18f))
-        haPanel.addView(label(tr(R.string.settings_server_address)))
-        haUrlField = field(prefs.haUrl, "http://homeassistant.local:8123", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        haPanel.addView(haUrlField)
+        haForm = ServerForm(this, prefs.ha, ::label, ::field)
+        haForm.build(haPanel)
         haPanel.addView(label(tr(R.string.settings_ha_user)))
         haUserField = field(prefs.haUser, "tablette", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
         haPanel.addView(haUserField)
@@ -161,9 +160,8 @@ class SettingsActivity : Activity() {
 
         gladysPanel = panel()
         gladysPanel.addView(heading(tr(R.string.platform_gladys), 18f))
-        gladysPanel.addView(label(tr(R.string.settings_server_address)))
-        gladysUrlField = field(prefs.gladysUrl, "http://192.168.1.20", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        gladysPanel.addView(gladysUrlField)
+        gladysForm = ServerForm(this, prefs.gladys, ::label, ::field)
+        gladysForm.build(gladysPanel)
         gladysPanel.addView(label(tr(R.string.settings_gladys_user)))
         gladysUserField = field(prefs.gladysUser, "tablette@maison.fr", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
         gladysPanel.addView(gladysUserField)
@@ -259,8 +257,8 @@ class SettingsActivity : Activity() {
         column.addView(scheduleCheck)
         val times = LinearLayout(this)
         times.orientation = LinearLayout.HORIZONTAL
-        sleepField = field(prefs.sleepTime, "23:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
-        wakeField = field(prefs.wakeTime, "07:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
+        sleepField = timeButton(prefs.sleepTime)
+        wakeField = timeButton(prefs.wakeTime)
         times.addView(label(tr(R.string.settings_schedule_off)))
         times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         times.addView(label(tr(R.string.settings_schedule_on)))
@@ -328,7 +326,20 @@ class SettingsActivity : Activity() {
 
         column.addView(heading(tr(R.string.settings_dock_apps), 18f))
         column.addView(label(tr(R.string.settings_dock_help)))
-        for (app in Apps.listLaunchable(this)) column.addView(appRow(app))
+        // Liste repliée par défaut : elle peut être longue
+        val appList = LinearLayout(this)
+        appList.orientation = LinearLayout.VERTICAL
+        appList.visibility = View.GONE
+        val apps = Apps.listLaunchable(this)
+        for (app in apps) appList.addView(appRow(app))
+        lateinit var toggle: Button
+        toggle = button(tr(R.string.dock_show, apps.size, dockSelection.size)) {
+            val show = appList.visibility != View.VISIBLE
+            appList.visibility = if (show) View.VISIBLE else View.GONE
+            toggle.text = if (show) tr(R.string.dock_hide) else tr(R.string.dock_show, apps.size, dockSelection.size)
+        }
+        column.addView(toggle)
+        column.addView(appList)
 
         // ===== 3. Services annexes =====
         val servicesAnchor = section(tr(R.string.settings_section_services))
@@ -524,8 +535,13 @@ class SettingsActivity : Activity() {
         column.addView(listenOffCheck)
         column.addView(button(tr(R.string.settings_test_jarvis)) { ApiService.instance?.jarvis?.talk() })
 
-        column.addView(button(tr(R.string.settings_save)) { save() })
+        column.addView(button(tr(R.string.settings_save_quit)) { save(close = true) })
         column.addView(label(tr(R.string.about_fork, BuildConfig.VERSION_NAME)))
+        val author = label(tr(R.string.about_author))
+        author.autoLinkMask = android.text.util.Linkify.WEB_URLS
+        author.setLinkTextColor(0xFF3FD4FF.toInt())
+        author.text = tr(R.string.about_author) // autoLink appliqué au texte posé après le masque
+        column.addView(author)
 
         val scroll = ScrollView(this)
         scroll.addView(column)
@@ -556,7 +572,7 @@ class SettingsActivity : Activity() {
         tabScroll.isHorizontalScrollBarEnabled = false
         tabScroll.addView(tabRow)
         bar.addView(tabScroll, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        val saveTop = button(tr(R.string.settings_save)) { save() }
+        val saveTop = button(tr(R.string.settings_save)) { save(close = false) }
         bar.addView(saveTop)
         // L'onglet de la partie affichée est mis en avant pendant le défilement
         fun highlightTab() {
@@ -687,12 +703,13 @@ class SettingsActivity : Activity() {
         }
     }
 
-    private fun save() {
-        val haUrl = haUrlField.text.toString().trim().trimEnd('/')
-        val gladysUrl = gladysUrlField.text.toString().trim().trimEnd('/')
+    /** [close] : bouton du bas, on quitte les réglages ; bouton du haut, on reste. */
+    private fun save(close: Boolean) {
         val platform = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) ?: Prefs.PLATFORM_HA
-        val activeUrl = if (platform == Prefs.PLATFORM_GLADYS) gladysUrl else haUrl
-        fun validUrl(u: String) = u.startsWith("http://") || u.startsWith("https://")
+        val gladysActive = platform == Prefs.PLATFORM_GLADYS
+        // La plateforme affichée doit être complète ; l'autre seulement si quelque chose est saisi
+        val haProblem = if (!gladysActive || !haForm.isEmpty()) haForm.validate() else null
+        val gladysProblem = if (gladysActive || !gladysForm.isEmpty()) gladysForm.validate() else null
         val pin = pinField.text.toString().trim()
         val delay = delayField.text.toString().trim().toIntOrNull() ?: 0
         val saverSeconds = saverField.text.toString().trim().toIntOrNull() ?: 0
@@ -705,19 +722,17 @@ class SettingsActivity : Activity() {
             chargeCheck.isChecked && (chargeLow < 5 || chargeHigh > 100 || chargeHigh - chargeLow < 10) ->
                 toast(tr(R.string.error_charge_levels))
             saverCheck.isChecked && saverSeconds < 10 -> toast(tr(R.string.error_saver_delay))
-            !validUrl(activeUrl) -> toast(tr(R.string.error_url_platform,
-                tr(if (platform == Prefs.PLATFORM_GLADYS) R.string.platform_gladys else R.string.platform_ha)))
-            haUrl.isNotEmpty() && !validUrl(haUrl) -> toast(tr(R.string.error_url_platform, tr(R.string.platform_ha)))
-            gladysUrl.isNotEmpty() && !validUrl(gladysUrl) -> toast(tr(R.string.error_url_platform, tr(R.string.platform_gladys)))
+            haProblem != null -> toast(tr(R.string.platform_ha) + " : " + haProblem)
+            gladysProblem != null -> toast(tr(R.string.platform_gladys) + " : " + gladysProblem)
             pin.length < 4 -> toast(tr(R.string.error_pin))
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
                 prefs.platform = platform
-                prefs.haUrl = haUrl
+                haForm.store()
                 prefs.haUser = haUserField.text.toString().trim()
                 prefs.haPassword = haPasswordField.text.toString()
                 prefs.haDashboard = haDashboardField.text.toString().trim()
-                prefs.gladysUrl = gladysUrl
+                gladysForm.store()
                 prefs.gladysUser = gladysUserField.text.toString().trim()
                 prefs.gladysPassword = gladysPasswordField.text.toString()
                 prefs.gladysDashboard = gladysDashboardField.text.toString().trim()
@@ -789,7 +804,7 @@ class SettingsActivity : Activity() {
                 ApiService.instance?.onDockChanged()
                 ApiService.instance?.reportSettings()
                 toast(tr(R.string.settings_saved))
-                finish()
+                if (close) finish()
             }
         }
     }
@@ -887,6 +902,37 @@ class SettingsActivity : Activity() {
         return row
     }
 
+    /** Heure « HH:mm » choisie avec des roues qui défilent (pas de saisie au clavier). */
+    private fun timeButton(value: String): TextView {
+        val view = TextView(this)
+        view.text = normalizeTime(value)
+        view.textSize = 20f
+        view.gravity = Gravity.CENTER
+        view.setTextColor(Color.WHITE)
+        view.setPadding(dp(12), dp(10), dp(12), dp(10))
+        val shape = android.graphics.drawable.GradientDrawable()
+        shape.cornerRadius = dp(10).toFloat()
+        shape.setColor(0xFF0C1C3E.toInt())
+        shape.setStroke(dp(1), 0xFF3FD4FF.toInt())
+        view.background = shape
+        view.setOnClickListener {
+            val (h, m) = normalizeTime(view.text.toString()).split(":").map { it.toInt() }
+            // Thème Holo : roues des heures et des minutes, sur toutes les versions d'Android
+            android.app.TimePickerDialog(this, android.R.style.Theme_Holo_Dialog, { _, hour, minute ->
+                view.text = "%02d:%02d".format(hour, minute)
+            }, h, m, true).show()
+        }
+        return view
+    }
+
+    /** « 7h », « 7:5 », « 07:05 » → « 07:05 ». */
+    private fun normalizeTime(value: String): String {
+        val parts = value.trim().split(':', 'h', 'H')
+        val h = parts.getOrNull(0)?.toIntOrNull()?.coerceIn(0, 23) ?: 0
+        val m = parts.getOrNull(1)?.toIntOrNull()?.coerceIn(0, 59) ?: 0
+        return "%02d:%02d".format(h, m)
+    }
+
     /** Cadre arrondi d'une plateforme ; celui de la plateforme choisie est souligné en bleu. */
     private fun panel(): LinearLayout {
         val view = LinearLayout(this)
@@ -899,18 +945,28 @@ class SettingsActivity : Activity() {
 
     /** Vérifie adresse, compte et mot de passe saisis (même s'ils ne sont pas encore enregistrés). */
     private fun testButton(gladys: Boolean): Button = button(tr(R.string.settings_test_login)) {
-        val address = (if (gladys) gladysUrlField else haUrlField).text.toString().trim().trimEnd('/')
+        val addresses = (if (gladys) gladysForm else haForm).addresses()
         val user = (if (gladys) gladysUserField else haUserField).text.toString().trim()
         val password = (if (gladys) gladysPasswordField else haPasswordField).text.toString()
-        if (user.isEmpty() || password.isEmpty()) {
+        if (user.isEmpty() || password.isEmpty() || addresses.isEmpty()) {
             toast(tr(R.string.autologin_test_missing))
             return@button
         }
         toast(tr(R.string.autologin_test_running))
-        loginTester.test(gladys, address, user, password) { problem ->
-            showResult(tr(if (gladys) R.string.platform_gladys else R.string.platform_ha),
-                if (problem == null) tr(R.string.autologin_test_ok) else tr(R.string.autologin_error, problem))
+        // Adresse locale puis externe (accès « les deux ») : un résultat par adresse
+        val lines = ArrayList<String>()
+        fun next(i: Int) {
+            if (i >= addresses.size) {
+                showResult(tr(if (gladys) R.string.platform_gladys else R.string.platform_ha), lines.joinToString("\n\n"))
+                return
+            }
+            val (name, address) = addresses[i]
+            loginTester.test(gladys, address, user, password) { problem ->
+                lines.add("$name — $address\n" + if (problem == null) tr(R.string.autologin_test_ok) else tr(R.string.autologin_error, problem))
+                next(i + 1)
+            }
         }
+        next(0)
     }
 
     private fun showResult(title: String, message: String) {
@@ -931,11 +987,17 @@ class SettingsActivity : Activity() {
         eye.alpha = 0.4f
         eye.contentDescription = tr(R.string.settings_show_password)
         var shown = false
+        // Code administrateur : on reste sur le pavé numérique
+        val numeric = field.inputType and InputType.TYPE_MASK_CLASS == InputType.TYPE_CLASS_NUMBER
         eye.setOnClickListener {
             shown = !shown
             val cursor = field.selectionEnd
-            field.inputType = InputType.TYPE_CLASS_TEXT or
-                if (shown) InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD else InputType.TYPE_TEXT_VARIATION_PASSWORD
+            field.inputType = when {
+                numeric && shown -> InputType.TYPE_CLASS_NUMBER
+                numeric -> InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+                shown -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                else -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
             // Le type « mot de passe » impose une police à chasse fixe : on garde la même partout
             field.typeface = android.graphics.Typeface.DEFAULT
             field.setSelection(cursor.coerceIn(0, field.text.length))
@@ -1026,8 +1088,9 @@ class SettingsActivity : Activity() {
         val view = EditText(this)
         view.setText(value)
         view.hint = hintText
-        view.inputType = type
+        // Une ligne AVANT le type : isSingleLine remplace le masquage des mots de passe
         view.isSingleLine = true
+        view.inputType = type
         view.setTextColor(Color.WHITE)
         view.setHintTextColor(0xFF7F9BC4.toInt())
         return view

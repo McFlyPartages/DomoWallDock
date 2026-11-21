@@ -368,4 +368,22 @@
     <string name="settings_section_services">Services annexes</string>
     <string name="settings_schedule_title">Écran éteint chaque nuit</string>
     <string name="settings_motion_title">Détection de mouvement (caméra frontale)</string>
+    <string name="dock_show">Afficher les applis (%1$d installées, %2$d dans le dock)</string>
+    <string name="dock_hide">Masquer la liste des applis</string>
+    <string name="about_author">Adapté et maintenu par McFly — https://mcflypartages.fr
+Mastodon : mcflypartages.fr
+Facebook : https://www.facebook.com/McFlyPartages
+X : https://x.com/McFlyPartages</string>
+    <string name="settings_save_quit">Enregistrer et quitter les réglages</string>
+    <string name="server_access">Accès</string>
+    <string name="server_access_local">Local</string>
+    <string name="server_access_external">Externe</string>
+    <string name="server_access_both">Les deux</string>
+    <string name="server_local">Adresse locale (IP et port)</string>
+    <string name="server_http">HTTP</string>
+    <string name="server_https">HTTPS</string>
+    <string name="server_external">Adresse externe (https obligatoire)</string>
+    <string name="server_error_ip">adresse IP incomplète (4 nombres de 0 à 255)</string>
+    <string name="server_error_port">port invalide (1 à 65535)</string>
+    <string name="server_error_external">l’adresse externe doit commencer par https://</string>
 </resources>

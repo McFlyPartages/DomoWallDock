@@ -73,6 +73,7 @@ Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement 
 
 ## Crédits
 
+- **DomoWallDock** : adapté et maintenu par **McFly** — site [mcflypartages.fr](https://mcflypartages.fr), Mastodon `mcflypartages.fr`, [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
 - **[WallDock](https://github.com/psycho1807/WallDock)** de psycho1807 (GPL-3.0) : toute la base de l'appli. DomoWallDock n'est ni affilié à son auteur ni soutenu par lui ; WallDock Pro est un produit distinct.
 - Mot « Stop » : modèle [microWakeWord](https://github.com/kahrendt/microWakeWord) de Kevin Ahrendt (Apache 2.0) ; extraction des caractéristiques portée du micro frontend de TensorFlow Lite Micro (Apache 2.0).
 - Mot d'activation : modèles [openWakeWord](https://github.com/dscripka/openWakeWord) (téléchargés au premier usage, CC BY-NC-SA 4.0), exécutés avec TensorFlow Lite.
