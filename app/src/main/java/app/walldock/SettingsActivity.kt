@@ -259,10 +259,15 @@ class SettingsActivity : Activity() {
         times.orientation = LinearLayout.HORIZONTAL
         sleepField = timeButton(prefs.sleepTime)
         wakeField = timeButton(prefs.wakeTime)
-        times.addView(label(tr(R.string.settings_schedule_off)))
-        times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        times.addView(label(tr(R.string.settings_schedule_on)))
-        times.addView(wakeField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val offLabel = label(tr(R.string.settings_schedule_off))
+        offLabel.setPadding(0, offLabel.paddingTop, dp(4), offLabel.paddingBottom)
+        times.addView(offLabel)
+        times.gravity = Gravity.CENTER_VERTICAL
+        times.addView(sleepField, LinearLayout.LayoutParams(dp(96), WRAP_CONTENT))
+        val onLabel = label(tr(R.string.settings_schedule_on))
+        onLabel.setPadding(dp(24), onLabel.paddingTop, dp(4), onLabel.paddingBottom)
+        times.addView(onLabel)
+        times.addView(wakeField, LinearLayout.LayoutParams(dp(96), WRAP_CONTENT))
         column.addView(times)
 
         // Détection de mouvement (caméra frontale)
@@ -552,14 +557,14 @@ class SettingsActivity : Activity() {
             val view = ImageView(this)
             view.setImageResource(icon)
             view.contentDescription = name
-            view.setPadding(dp(12), dp(12), dp(12), dp(12))
+            view.setPadding(dp(8), dp(8), dp(8), dp(8))
             val round = android.graphics.drawable.GradientDrawable()
             round.shape = android.graphics.drawable.GradientDrawable.OVAL
             round.setColor(0xFF0C1C3E.toInt())
             view.background = round
             view.setOnClickListener { open(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
-            val params = LinearLayout.LayoutParams(dp(64), dp(64))
-            params.setMargins(dp(10), dp(8), dp(10), dp(16))
+            val params = LinearLayout.LayoutParams(dp(43), dp(43))
+            params.setMargins(dp(8), dp(6), dp(8), dp(16))
             links.addView(view, params)
         }
         column.addView(links, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
