@@ -99,10 +99,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_SAVER, false)
         set(value) = sp.edit().putBoolean(KEY_SAVER, value).apply()
 
-    /** Délai avant l'écran de veille, en minutes. */
-    var screensaverMinutes: Int
-        get() = sp.getInt(KEY_SAVER_MINUTES, 5)
-        set(value) = sp.edit().putInt(KEY_SAVER_MINUTES, value).apply()
+    /** Délai avant l'écran de veille, en secondes (ancien réglage en minutes repris). */
+    var screensaverSeconds: Int
+        get() = if (sp.contains("screensaver_seconds")) sp.getInt("screensaver_seconds", 300)
+        else sp.getInt(KEY_SAVER_MINUTES, 5) * 60
+        set(value) = sp.edit().putInt("screensaver_seconds", value.coerceIn(10, 86_400)).remove(KEY_SAVER_MINUTES).apply()
 
     /** Installer automatiquement les nouvelles versions publiées sur GitHub. */
     var autoUpdate: Boolean
@@ -146,10 +147,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_MOTION_WAKE, true)
         set(value) = sp.edit().putBoolean(KEY_MOTION_WAKE, value).apply()
 
-    /** Éteindre l'écran après ce délai (minutes) sans mouvement ni toucher ; 0 = jamais. */
-    var motionOffMinutes: Int
-        get() = sp.getInt("motion_off_minutes", 0)
-        set(value) = sp.edit().putInt("motion_off_minutes", value.coerceIn(0, 720)).apply()
+    /** Éteindre l'écran après ce délai (secondes) sans mouvement ni toucher ; 0 = jamais. */
+    var motionOffSeconds: Int
+        get() = if (sp.contains("motion_off_seconds")) sp.getInt("motion_off_seconds", 0)
+        else sp.getInt("motion_off_minutes", 0) * 60
+        set(value) = sp.edit().putInt("motion_off_seconds", value.coerceIn(0, 43_200)).remove("motion_off_minutes").apply()
 
     // ---- MQTT : Gladys Assistant (ou tout broker) ----
     var mqttEnabled: Boolean

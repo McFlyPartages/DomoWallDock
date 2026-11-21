@@ -139,7 +139,7 @@ class SettingsActivity : Activity() {
         haPanel.addView(haUserField)
         haPanel.addView(label(tr(R.string.settings_password)))
         haPasswordField = field(prefs.haPassword, "••••••", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        haPanel.addView(haPasswordField)
+        haPanel.addView(secret(haPasswordField))
         haPanel.addView(label(tr(R.string.settings_dashboard_default)))
         haDashboardField = field(prefs.haDashboard, tr(R.string.settings_ha_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         haPanel.addView(haDashboardField)
@@ -168,7 +168,7 @@ class SettingsActivity : Activity() {
         gladysPanel.addView(gladysUserField)
         gladysPanel.addView(label(tr(R.string.settings_password)))
         gladysPasswordField = field(prefs.gladysPassword, "••••••", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        gladysPanel.addView(gladysPasswordField)
+        gladysPanel.addView(secret(gladysPasswordField))
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
         gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         gladysPanel.addView(gladysDashboardField)
@@ -207,7 +207,7 @@ class SettingsActivity : Activity() {
         saverCheck.isChecked = prefs.screensaverEnabled
         column.addView(saverCheck)
         column.addView(label(tr(R.string.settings_screensaver_delay)))
-        saverField = field(prefs.screensaverMinutes.toString(), "5", InputType.TYPE_CLASS_NUMBER)
+        saverField = field(prefs.screensaverSeconds.toString(), "300", InputType.TYPE_CLASS_NUMBER)
         column.addView(saverField)
         column.addView(label(tr(R.string.settings_zoom)))
         zoomField = field(prefs.zoom.toString(), "100", InputType.TYPE_CLASS_NUMBER)
@@ -218,9 +218,20 @@ class SettingsActivity : Activity() {
         immichUrlField = field(prefs.immichUrl, tr(R.string.photos_immich_url), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(immichUrlField)
         immichKeyField = field(prefs.immichKey, tr(R.string.photos_immich_key), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        column.addView(immichKeyField)
+        column.addView(secret(immichKeyField))
         immichAlbumField = field(prefs.immichAlbum, tr(R.string.photos_immich_album), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(immichAlbumField)
+        column.addView(button(tr(R.string.test_immich)) {
+            val url = immichUrlField.text.toString().trim()
+            val key = immichKeyField.text.toString().trim()
+            val album = immichAlbumField.text.toString().trim()
+            if (url.isEmpty() || key.isEmpty() || album.isEmpty()) {
+                toast(tr(R.string.test_immich_missing))
+                return@button
+            }
+            toast(tr(R.string.autologin_test_running))
+            ConnectionTests.immich(url, key, album) { _, message -> showResult("Immich", message) }
+        })
         photoFolderText = label(if (prefs.photoFolder.isBlank()) tr(R.string.photos_folder_none) else tr(R.string.photos_folder_set, Uri.parse(prefs.photoFolder).lastPathSegment ?: ""))
         column.addView(photoFolderText)
         column.addView(button(tr(R.string.photos_folder_choose)) {
@@ -326,7 +337,19 @@ class SettingsActivity : Activity() {
         mqttUserField = field(prefs.mqttUser, tr(R.string.settings_mqtt_user), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
         column.addView(mqttUserField)
         mqttPasswordField = field(prefs.mqttPassword, tr(R.string.settings_mqtt_password), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        column.addView(mqttPasswordField)
+        column.addView(secret(mqttPasswordField))
+        column.addView(button(tr(R.string.test_mqtt)) {
+            val host = mqttHostField.text.toString().trim()
+            if (host.isEmpty()) {
+                toast(tr(R.string.error_mqtt_host))
+                return@button
+            }
+            toast(tr(R.string.autologin_test_running))
+            ConnectionTests.mqtt(host, mqttPortField.text.toString().trim().toIntOrNull() ?: 1883,
+                mqttUserField.text.toString().trim(), mqttPasswordField.text.toString()) { _, message ->
+                showResult("MQTT", message)
+            }
+        })
 
         column.addView(heading(tr(R.string.settings_charge_title), 18f))
         chargeCheck = CheckBox(this)
@@ -365,7 +388,7 @@ class SettingsActivity : Activity() {
         column.addView(motionCheck)
         column.addView(label(tr(R.string.settings_motion_help)))
         column.addView(label(tr(R.string.settings_motion_off)))
-        motionOffField = field(prefs.motionOffMinutes.toString(), "0", InputType.TYPE_CLASS_NUMBER)
+        motionOffField = field(prefs.motionOffSeconds.toString(), "0", InputType.TYPE_CLASS_NUMBER)
         column.addView(motionOffField)
         column.addView(label(tr(R.string.settings_sensitivity)))
         sensitivityGroup = RadioGroup(this)
@@ -616,7 +639,7 @@ class SettingsActivity : Activity() {
         fun validUrl(u: String) = u.startsWith("http://") || u.startsWith("https://")
         val pin = pinField.text.toString().trim()
         val delay = delayField.text.toString().trim().toIntOrNull() ?: 0
-        val saverMinutes = saverField.text.toString().trim().toIntOrNull() ?: 0
+        val saverSeconds = saverField.text.toString().trim().toIntOrNull() ?: 0
         val chargeLow = chargeLowField.text.toString().trim().toIntOrNull() ?: -1
         val chargeHigh = chargeHighField.text.toString().trim().toIntOrNull() ?: -1
         val mqttHost = mqttHostField.text.toString().trim()
@@ -625,7 +648,7 @@ class SettingsActivity : Activity() {
             chargeCheck.isChecked && !mqttCheck.isChecked -> toast(tr(R.string.error_charge_mqtt))
             chargeCheck.isChecked && (chargeLow < 5 || chargeHigh > 100 || chargeHigh - chargeLow < 10) ->
                 toast(tr(R.string.error_charge_levels))
-            saverCheck.isChecked && saverMinutes < 1 -> toast(tr(R.string.error_saver_delay))
+            saverCheck.isChecked && saverSeconds < 10 -> toast(tr(R.string.error_saver_delay))
             !validUrl(activeUrl) -> toast(tr(R.string.error_url_platform,
                 tr(if (platform == Prefs.PLATFORM_GLADYS) R.string.platform_gladys else R.string.platform_ha)))
             haUrl.isNotEmpty() && !validUrl(haUrl) -> toast(tr(R.string.error_url_platform, tr(R.string.platform_ha)))
@@ -685,7 +708,7 @@ class SettingsActivity : Activity() {
                 ) {
                     requestPermissions(arrayOf(android.Manifest.permission.CAMERA), MainActivity.REQUEST_CAMERA)
                 }
-                prefs.motionOffMinutes = motionOffField.text.toString().trim().toIntOrNull() ?: 0
+                prefs.motionOffSeconds = motionOffField.text.toString().trim().toIntOrNull() ?: 0
                 ApiService.instance?.applyMotionSettings()
                 prefs.mqttEnabled = mqttCheck.isChecked
                 prefs.mqttHost = mqttHost
@@ -702,7 +725,7 @@ class SettingsActivity : Activity() {
                 prefs.jarvisSensitivity = (level?.tag as? Int) ?: 0
                 ApiService.instance?.jarvis?.reloadVoiceSettings()
                 if (wakeChanged || modeChanged) ApiService.instance?.jarvis?.onSettingsChanged()
-                if (saverMinutes >= 1) prefs.screensaverMinutes = saverMinutes
+                if (saverSeconds >= 10) prefs.screensaverSeconds = saverSeconds
                 prefs.dockApps = dockSelection.toList()
                 prefs.videoApps = videoSelection.toSet()
                 val checked = handleGroup.findViewById<RadioButton>(handleGroup.checkedRadioButtonId)
@@ -829,12 +852,44 @@ class SettingsActivity : Activity() {
         }
         toast(tr(R.string.autologin_test_running))
         loginTester.test(gladys, address, user, password) { problem ->
-            AlertDialog.Builder(this)
-                .setTitle(tr(if (gladys) R.string.platform_gladys else R.string.platform_ha))
-                .setMessage(if (problem == null) tr(R.string.autologin_test_ok) else tr(R.string.autologin_error, problem))
-                .setPositiveButton("OK", null)
-                .show()
+            showResult(tr(if (gladys) R.string.platform_gladys else R.string.platform_ha),
+                if (problem == null) tr(R.string.autologin_test_ok) else tr(R.string.autologin_error, problem))
         }
+    }
+
+    private fun showResult(title: String, message: String) {
+        if (isFinishing) return
+        AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton("OK", null).show()
+    }
+
+    /** Champ secret avec un œil pour afficher ou masquer ce qui est saisi. */
+    private fun secret(field: EditText): View {
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.addView(field, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val eye = TextView(this)
+        eye.text = "👁"
+        eye.textSize = 20f
+        eye.setPadding(dp(12), dp(6), dp(8), dp(6))
+        eye.alpha = 0.4f
+        eye.contentDescription = tr(R.string.settings_show_password)
+        var shown = false
+        eye.setOnClickListener {
+            shown = !shown
+            val cursor = field.selectionEnd
+            field.inputType = InputType.TYPE_CLASS_TEXT or
+                if (shown) InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD else InputType.TYPE_TEXT_VARIATION_PASSWORD
+            // Le type « mot de passe » impose une police à chasse fixe : on garde la même partout
+            field.typeface = android.graphics.Typeface.DEFAULT
+            field.setSelection(cursor.coerceIn(0, field.text.length))
+            eye.alpha = if (shown) 1f else 0.4f
+            eye.contentDescription = tr(if (shown) R.string.settings_hide_password else R.string.settings_show_password)
+        }
+        row.addView(eye)
+        // Même police dès l'ouverture, avant le premier appui sur l'œil
+        field.typeface = android.graphics.Typeface.DEFAULT
+        return row
     }
 
     private fun highlightPlatform() {

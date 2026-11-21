@@ -8,7 +8,7 @@
     <string name="settings_return_delay">Retour au tableau de bord après (secondes d’inactivité)</string>
     <string name="settings_screensaver">Écran de veille</string>
     <string name="settings_screensaver_check">Afficher une horloge sur fond noir après une période sans toucher l’écran</string>
-    <string name="settings_screensaver_delay">Délai avant l’écran de veille (minutes)</string>
+    <string name="settings_screensaver_delay">Délai avant l’écran de veille (secondes)</string>
     <string name="settings_handle">Poignée du dock</string>
     <string name="handle_bottom_right">En bas à droite</string>
     <string name="handle_bottom_left">En bas à gauche</string>
@@ -42,7 +42,7 @@
     <string name="update_install_allowed">✅ Installation des mises à jour autorisée</string>
     <string name="update_install_denied">⚠️ Installation des mises à jour non autorisée</string>
     <string name="settings_save_first">Enregistre d’abord les réglages</string>
-    <string name="error_saver_delay">Le délai de l’écran de veille doit être d’au moins 1 minute</string>
+    <string name="error_saver_delay">Le délai de l’écran de veille doit être d’au moins 10 secondes</string>
     <string name="error_url">L’adresse doit commencer par http:// ou https://</string>
     <string name="error_pin">Le code doit faire au moins 4 chiffres</string>
     <string name="error_delay">Le délai doit être d’au moins 10 secondes</string>
@@ -291,7 +291,7 @@
     <string name="sendspin_error">Le port 8928 est déjà utilisé</string>
     <string name="entity_last_crash">Dernière erreur</string>
     <string name="no_crash">aucune</string>
-    <string name="settings_motion_off">Éteindre l’écran après ce délai sans mouvement ni toucher, en minutes (0 = ne jamais l’éteindre)</string>
+    <string name="settings_motion_off">Éteindre l’écran après ce délai sans mouvement ni toucher, en secondes (0 = ne jamais l’éteindre)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Connecter la tablette à un broker MQTT</string>
     <string name="settings_mqtt_help">La tablette s’annonce toute seule : dans Gladys, Intégrations → MQTT → appareils découverts (Home Assistant), ajoutez « DomoWallDock … ». Vous y trouverez la batterie, la charge, le mouvement, l’écran (allumer, éteindre) et deux boutons (recharger, revenir au tableau de bord). Fonctionne aussi avec tout broker MQTT qui comprend la découverte de Home Assistant.</string>
@@ -353,4 +353,15 @@
     <string name="autologin_test_ok">✅ Adresse, compte et mot de passe acceptés : la connexion automatique marchera.</string>
     <string name="autologin_unreachable">serveur injoignable depuis la tablette (%1$s)</string>
     <string name="autologin_tls">certificat HTTPS refusé par la tablette (%1$s)</string>
+    <string name="settings_show_password">Afficher le mot de passe</string>
+    <string name="settings_hide_password">Masquer le mot de passe</string>
+    <string name="test_mqtt">Tester la connexion MQTT</string>
+    <string name="test_mqtt_ok">✅ Broker %1$s joint, compte accepté.</string>
+    <string name="test_immich">Tester Immich</string>
+    <string name="test_immich_ok">✅ Album « %1$s » : %2$d photos et vidéos.</string>
+    <string name="test_immich_missing">Remplis l’adresse, la clé d’API et l’album pour tester</string>
+    <string name="test_immich_key">clé d’API refusée</string>
+    <string name="test_immich_album">album introuvable, ou la clé n’y a pas accès</string>
+    <string name="test_failed">❌ Échec : %1$s</string>
+    <string name="test_timeout">pas de réponse en 12 secondes</string>
 </resources>

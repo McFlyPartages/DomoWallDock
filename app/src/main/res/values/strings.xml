@@ -9,7 +9,7 @@
     <string name="settings_return_delay">Back to the dashboard after (seconds of inactivity)</string>
     <string name="settings_screensaver">Screensaver</string>
     <string name="settings_screensaver_check">Show a clock on a black background after a while without touching the screen</string>
-    <string name="settings_screensaver_delay">Delay before the screensaver (minutes)</string>
+    <string name="settings_screensaver_delay">Delay before the screensaver (seconds)</string>
     <string name="settings_handle">Dock handle</string>
     <string name="handle_bottom_right">Bottom right</string>
     <string name="handle_bottom_left">Bottom left</string>
@@ -43,7 +43,7 @@
     <string name="update_install_allowed">✅ Installing updates allowed</string>
     <string name="update_install_denied">⚠️ Installing updates not allowed</string>
     <string name="settings_save_first">Save the settings first</string>
-    <string name="error_saver_delay">The screensaver delay must be at least 1 minute</string>
+    <string name="error_saver_delay">The screensaver delay must be at least 10 seconds</string>
     <string name="error_url">The address must start with http:// or https://</string>
     <string name="error_pin">The code must be at least 4 digits</string>
     <string name="error_delay">The delay must be at least 10 seconds</string>
@@ -292,7 +292,7 @@
     <string name="sendspin_error">Port 8928 is already in use</string>
     <string name="entity_last_crash">Last error</string>
     <string name="no_crash">none</string>
-    <string name="settings_motion_off">Turn the screen off after this many minutes without motion or touch (0 = never turn it off)</string>
+    <string name="settings_motion_off">Turn the screen off after this many seconds without motion or touch (0 = never turn it off)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Connect the tablet to an MQTT broker</string>
     <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “DomoWallDock …”. You get battery, charging, motion, the screen (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
@@ -354,4 +354,15 @@
     <string name="autologin_test_ok">✅ Address, user and password accepted: automatic sign-in will work.</string>
     <string name="autologin_unreachable">server not reachable from the tablet (%1$s)</string>
     <string name="autologin_tls">HTTPS certificate refused by the tablet (%1$s)</string>
+    <string name="settings_show_password">Show the password</string>
+    <string name="settings_hide_password">Hide the password</string>
+    <string name="test_mqtt">Test the MQTT connection</string>
+    <string name="test_mqtt_ok">✅ Broker %1$s reached, account accepted.</string>
+    <string name="test_immich">Test Immich</string>
+    <string name="test_immich_ok">✅ Album “%1$s”: %2$d photos and videos.</string>
+    <string name="test_immich_missing">Fill in the address, the API key and the album to test</string>
+    <string name="test_immich_key">API key refused</string>
+    <string name="test_immich_album">album not found, or the key cannot access it</string>
+    <string name="test_failed">❌ Failed: %1$s</string>
+    <string name="test_timeout">no answer within 12 seconds</string>
 </resources>
