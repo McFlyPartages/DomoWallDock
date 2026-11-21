@@ -39,6 +39,10 @@ class ApiService : Service(), EsphomeServer.Handler {
 
     private val main = Handler(Looper.getMainLooper())
     private var server: EsphomeServer? = null
+    private var deviceInfo: EsphomeServer.DeviceInfo? = null
+    private var bleProxy: BleProxy? = null
+    /** Le service tourne avec le type « position » (proxy Bluetooth). */
+    private var foregroundLocation = false
     private var mediaPlayer: TabletPlayer? = null
     private var nsdManager: NsdManager? = null
     private var nsdListener: NsdManager.RegistrationListener? = null
@@ -581,21 +585,25 @@ class ApiService : Service(), EsphomeServer.Handler {
         startInForeground()
 
         val mac = pseudoMac()
-        deviceName = "gladyswalldock-" + mac.replace(":", "").takeLast(6).lowercase()
-        friendlyName = "GladysWallDock " + Build.MODEL
+        deviceName = "domowalldock-" + mac.replace(":", "").takeLast(6).lowercase()
+        friendlyName = "DomoWallDock " + Build.MODEL
 
         val info = EsphomeServer.DeviceInfo()
         info.name = deviceName
         info.friendlyName = friendlyName
         info.macAddress = mac
         info.model = "${Build.MANUFACTURER} ${Build.MODEL}"
-        info.manufacturer = "GladysWallDock"
+        info.manufacturer = "DomoWallDock"
         info.projectVersion = BuildConfig.VERSION_NAME
         info.voiceFeatures = Jarvis.FEATURES
+        info.bluetoothFeatures = if (Prefs(this).bleProxyEnabled) BleProxy.FEATURES else 0
+        deviceInfo = info
 
         refreshOpenTargets()
         val srv = EsphomeServer(info, entities, services, this, EsphomeServer.DEFAULT_PORT)
         server = srv
+        bleProxy = BleProxy(this, srv)
+        applyBleProxy()
         // Chiffrement de l'API (Noise) : HA crée et envoie la clé tout seul, elle est gardée ici
         srv.setKeyStore(object : EsphomeServer.KeyStore {
             override fun loadKey(): ByteArray? = Prefs(this@ApiService).noiseKey
@@ -690,6 +698,8 @@ class ApiService : Service(), EsphomeServer.Handler {
 
     override fun onDestroy() {
         instance = null
+        bleProxy?.release()
+        bleProxy = null
         jarvis?.release()
         jarvis = null
         motionDetector?.stop()
@@ -841,8 +851,8 @@ class ApiService : Service(), EsphomeServer.Handler {
             }
             if (entity === setUrl) {
                 val url = value.trim().trimEnd('/')
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    Prefs(this).haUrl = url
+                if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) {
+                    Prefs(this).setDashboard(url)
                     AppState.controller?.applySettings()
                 }
             }
@@ -863,7 +873,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         srv.setState(setZoom, prefs.zoom.toFloat())
         srv.setState(setAutoUpdate, prefs.autoUpdate)
         srv.setState(setHandle, handleLabels[prefs.handlePosition] ?: handleLabels.values.first())
-        srv.setState(setUrl, prefs.haUrl)
+        srv.setState(setUrl, prefs.dashboardUrl)
         srv.setState(setSaverUrl, prefs.screensaverUrl)
         srv.setState(setSystemBrightness, prefs.systemBrightness)
         srv.setState(setStartOnBoot, prefs.startOnBoot)
@@ -943,11 +953,11 @@ class ApiService : Service(), EsphomeServer.Handler {
             pendingCamera = Triple(target, title, seconds)
             if (server?.requestHomeAssistantState(target, "entity_picture") != true) pendingCamera = null
         } else if (isImageAddress(target)) {
-            displayCamera(Prefs(this).absoluteUrl(target), title, seconds)
+            displayCamera(Prefs(this).let { it.absoluteUrl(target, it.haBase) }, title, seconds)
         } else {
             // Une page du tableau de bord (ex. /sonnette-ring/live) : la vidéo en direct
             // passe par l'interface de HA (WebRTC/HLS), comme sur le tableau de bord
-            val url = resolvePageUrl(target) ?: return
+            val url = resolvePageUrl(target, Prefs(this).haBase) ?: return
             wakeUp()
             if (!AppState.screenOn) setScreen(true)
             if (cameraOverlay.showPage(url, title, seconds)) server?.setState(alertShown, true)
@@ -974,7 +984,7 @@ class ApiService : Service(), EsphomeServer.Handler {
             if (state.isBlank() || state == "None") return@post
             // Image fixe → flux vidéo MJPEG (même jeton d'accès)
             val stream = state.replace("/api/camera_proxy/", "/api/camera_proxy_stream/")
-            displayCamera(Prefs(this).absoluteUrl(stream), pending.second, pending.third)
+            displayCamera(Prefs(this).let { it.absoluteUrl(stream, it.haBase) }, pending.second, pending.third)
         }
     }
 
@@ -1243,10 +1253,10 @@ class ApiService : Service(), EsphomeServer.Handler {
      * « /dashboard-home/plan » → adresse complète sur le même Home Assistant ;
      * le mode kiosque (?kiosk) est conservé s'il est utilisé dans l'adresse configurée.
      */
-    private fun resolvePageUrl(address: String): String? {
+    private fun resolvePageUrl(address: String, server: String = Prefs(this).dashboardUrl): String? {
         if (address.isEmpty()) return null
         if (address.startsWith("http://") || address.startsWith("https://")) return address
-        val base = Uri.parse(Prefs(this).haUrl)
+        val base = Uri.parse(server)
         val scheme = base.scheme ?: return null
         val authority = base.encodedAuthority ?: return null
         val path = if (address.startsWith("/")) address else "/$address"
@@ -1260,7 +1270,7 @@ class ApiService : Service(), EsphomeServer.Handler {
     private fun playSound(address: String) {
         val trimmed = address.trim()
         if (trimmed.isEmpty()) return
-        val url = Prefs(this).absoluteUrl(trimmed)
+        val url = Prefs(this).let { it.absoluteUrl(trimmed, it.haBase) }
         wakeUp()
         player?.release()
         val media = MediaPlayer()
@@ -1403,7 +1413,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         )
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_walldock)
-            .setContentTitle("GladysWallDock")
+            .setContentTitle("DomoWallDock")
             .setContentText(tr(R.string.notif_available))
             .setOngoing(true)
             .build()
@@ -1419,10 +1429,23 @@ class ApiService : Service(), EsphomeServer.Handler {
             ) {
                 types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
             }
+            // Proxy Bluetooth : les annonces BLE demandent l'accès à la position, y compris en arrière-plan
+            if (Prefs(this).bleProxyEnabled &&
+                checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            }
             try {
                 startForeground(NOTIFICATION_ID, notification, types)
             } catch (e: Exception) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+                // Position refusée par Android (service lancé en arrière-plan) : on garde le reste
+                val withoutLocation = types and ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION.inv()
+                try {
+                    if (withoutLocation == types) throw e
+                    startForeground(NOTIFICATION_ID, notification, withoutLocation)
+                } catch (e2: Exception) {
+                    startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+                }
             }
         } else {
             startForeground(NOTIFICATION_ID, notification)
@@ -1430,6 +1453,28 @@ class ApiService : Service(), EsphomeServer.Handler {
     }
 
     /** À appeler quand l'écran WallDock est au premier plan et que le micro vient d'être autorisé. */
+    /**
+     * Proxy Bluetooth : écoute seulement si l'option est active et que HA est abonné.
+     * featuresChanged : l'option vient d'être (dés)activée, HA doit relire la fiche de l'appareil.
+     */
+    fun applyBleProxy(featuresChanged: Boolean = false) {
+        val enabled = Prefs(this).bleProxyEnabled
+        deviceInfo?.bluetoothFeatures = if (enabled) BleProxy.FEATURES else 0
+        // Type « position » du service à jour (option ou autorisation qui vient de changer)
+        val location = enabled && checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (location != foregroundLocation) {
+            foregroundLocation = location
+            startInForeground()
+        }
+        if (featuresChanged) server?.reconnectClients()
+        bleProxy?.update(enabled, server?.isBluetoothSubscribed() == true)
+    }
+
+    override fun onBluetoothSubscription(subscribed: Boolean) {
+        bleProxy?.update(Prefs(this).bleProxyEnabled, subscribed)
+    }
+
     fun onMicrophoneChanged() {
         startInForeground()
         jarvis?.onSettingsChanged()

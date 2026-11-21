@@ -688,7 +688,7 @@ class Jarvis(
 
     private fun play(address: String, onDone: () -> Unit) {
         stopPlayback()
-        val url = Prefs(context).absoluteUrl(address)
+        val url = Prefs(context).let { it.absoluteUrl(address, it.haBase) }
         val media = MediaPlayer()
         player = media
         var finished = false

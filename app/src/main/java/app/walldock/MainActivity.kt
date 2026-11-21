@@ -79,6 +79,7 @@ class MainActivity : Activity(), DashboardController {
     }
 
     private var loadedUrl = ""
+    private val autoLogin by lazy { AutoLogin(prefs) { toast(tr(R.string.autologin_error, it)) } }
     private val handler = Handler(Looper.getMainLooper())
     private val autoHideDock = Runnable { setDockVisible(false) }
 
@@ -104,6 +105,12 @@ class MainActivity : Activity(), DashboardController {
                 toast(tr(R.string.url_blocked, request.url.host ?: url))
                 return true
             }
+
+            // Page de connexion : connexion automatique avec le compte des réglages
+            override fun onPageFinished(view: WebView, url: String?) = autoLogin.onPage(view, url)
+
+            // Gladys change d'adresse sans recharger la page (/dashboard → /login)
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) = autoLogin.onPage(view, url)
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
                 // Seule la page principale compte (pas une image ou un script)
@@ -289,8 +296,8 @@ class MainActivity : Activity(), DashboardController {
             startActivity(Intent(this, SettingsActivity::class.java))
             return
         }
-        if (prefs.haUrl != loadedUrl) {
-            loadedUrl = prefs.haUrl
+        if (prefs.dashboardUrl != loadedUrl) {
+            loadedUrl = prefs.dashboardUrl
             web.loadUrl(loadedUrl)
         }
         web.onResume()
@@ -299,6 +306,8 @@ class MainActivity : Activity(), DashboardController {
         overlayWarning.visibility = if (Settings.canDrawOverlays(this)) View.GONE else View.VISIBLE
         handlePendingRequests()
         askMicrophoneOnce()
+        // Retour d'une demande d'autorisation (Bluetooth, position) faite depuis les réglages
+        ApiService.instance?.applyBleProxy()
         lastTouch = SystemClock.elapsedRealtime()
         handler.removeCallbacks(screensaverCheck)
         handler.postDelayed(screensaverCheck, 15_000)
@@ -327,7 +336,7 @@ class MainActivity : Activity(), DashboardController {
 
     /** Teste Home Assistant en arrière-plan ; bascule sur l'écran de secours ou recharge au retour. */
     private fun checkHomeAssistant() {
-        val address = prefs.haUrl
+        val address = prefs.serverUrl
         if (address.isBlank()) return
         healthExecutor.execute {
             val reachable = try {
@@ -593,7 +602,7 @@ class MainActivity : Activity(), DashboardController {
 
     override fun showHome() {
         if (calendarScreen.isOpen) calendarScreen.close()
-        if (prefs.haUrl.isNotBlank() && web.url != prefs.haUrl) web.loadUrl(prefs.haUrl)
+        if (prefs.dashboardUrl.isNotBlank() && web.url != prefs.dashboardUrl) web.loadUrl(prefs.dashboardUrl)
     }
 
     override fun openApp(packageName: String) {

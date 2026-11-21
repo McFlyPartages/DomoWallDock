@@ -43,7 +43,33 @@ public final class EsphomeServer {
         default void onText(Entity entity, String value) {}
         /** Réponse de HA à requestHomeAssistantState() (état ou attribut d'une entité HA). */
         default void onHomeAssistantState(String entityId, String attribute, String state) {}
+        /** HA commence (vrai) ou arrête (faux) d'écouter les annonces Bluetooth du proxy. */
+        default void onBluetoothSubscription(boolean subscribed) {}
     }
+
+    /** Annonce Bluetooth LE reçue par la tablette, transmise telle quelle à HA. */
+    public static final class BleAdvertisement {
+        public final long address;
+        public final int rssi;
+        public final int addressType;
+        public final byte[] data;
+
+        public BleAdvertisement(long address, int rssi, int addressType, byte[] data) {
+            this.address = address;
+            this.rssi = rssi;
+            this.addressType = addressType;
+            this.data = data;
+        }
+    }
+
+    // Proxy Bluetooth (BluetoothProxyFeature) : écoute seule, annonces brutes
+    public static final int BLE_FEATURE_PASSIVE_SCAN = 1;
+    public static final int BLE_FEATURE_RAW_ADVERTISEMENTS = 1 << 5;
+    public static final int BLE_FEATURE_STATE_AND_MODE = 1 << 6;
+    /** HA groupe ses demandes d'annonces brutes avec ce drapeau (BluetoothProxySubscriptionFlag). */
+    private static final int BLE_SUBSCRIPTION_RAW = 1;
+    /** Annonces par message, comme ESPHome. */
+    private static final int BLE_BATCH = 16;
 
     // Commandes du lecteur multimédia (MediaPlayerCommand)
     public static final int MEDIA_COMMAND_PLAY = 0;
@@ -104,15 +130,17 @@ public final class EsphomeServer {
 
     /** Fiche de l'appareil telle que Home Assistant l'affiche. */
     public static final class DeviceInfo {
-        public String name = "gladyswalldock";          // identifiant réseau, minuscules et tirets
-        public String friendlyName = "GladysWallDock";   // nom affiché dans HA
+        public String name = "domowalldock";          // identifiant réseau, minuscules et tirets
+        public String friendlyName = "DomoWallDock";   // nom affiché dans HA
         public String macAddress = "02:00:00:00:00:00";
         public String model = "Android";
-        public String manufacturer = "GladysWallDock";
+        public String manufacturer = "DomoWallDock";
         public String projectVersion = "0.2.0";
         public String suggestedArea = "";
         /** Fonctions vocales (VOICE_FEATURE_*), 0 = pas d'assistant vocal. */
         public int voiceFeatures = 0;
+        /** Fonctions du proxy Bluetooth (BLE_FEATURE_*), 0 = pas de proxy. Lu à chaque connexion de HA. */
+        public volatile int bluetoothFeatures = 0;
     }
 
     /** Où l'appareil garde sa clé de chiffrement (32 octets, ou null : pas de chiffrement). */
@@ -210,6 +238,15 @@ public final class EsphomeServer {
     private static final int VOICE_ASSISTANT_CONFIGURATION_REQUEST = 121;
     private static final int VOICE_ASSISTANT_CONFIGURATION_RESPONSE = 122;
     private static final int VOICE_ASSISTANT_SET_CONFIGURATION = 123;
+    private static final int SUBSCRIBE_BLE_ADVERTISEMENTS = 66;
+    private static final int UNSUBSCRIBE_BLE_ADVERTISEMENTS = 87;
+    private static final int BLE_RAW_ADVERTISEMENTS = 93;
+    private static final int BLE_SCANNER_STATE = 126;
+    private static final int BLE_SCANNER_SET_MODE = 127;
+    /** BluetoothScannerState : RUNNING ; BluetoothScannerMode : ACTIVE (Android interroge toujours). */
+    private static final int BLE_STATE_IDLE = 0;
+    private static final int BLE_STATE_RUNNING = 2;
+    private static final int BLE_MODE_ACTIVE = 1;
 
     private static final int API_VERSION_MAJOR = 1;
     private static final int API_VERSION_MINOR = 10;
@@ -384,6 +421,52 @@ public final class EsphomeServer {
         return true;
     }
 
+    /** Vrai si au moins une connexion HA écoute les annonces Bluetooth. */
+    public boolean isBluetoothSubscribed() {
+        for (Client client : clients) if (client.bleSubscribed) return true;
+        return false;
+    }
+
+    /** Transmet des annonces Bluetooth aux connexions abonnées (fil quelconque). */
+    public void sendBleAdvertisements(List<BleAdvertisement> adverts) {
+        if (adverts.isEmpty()) return;
+        sender.execute(() -> {
+            for (int start = 0; start < adverts.size(); start += BLE_BATCH) {
+                Proto.Writer w = new Proto.Writer();
+                for (BleAdvertisement a : adverts.subList(start, Math.min(adverts.size(), start + BLE_BATCH))) {
+                    w.message(1, new Proto.Writer()
+                        .varint(1, a.address)
+                        .varint(2, ((long) a.rssi << 1) ^ (a.rssi >> 31)) // sint32 : codage zigzag
+                        .varint(3, a.addressType)
+                        .message(4, a.data)
+                        .bytes());
+                }
+                byte[] payload = w.bytes();
+                for (Client client : clients) if (client.bleSubscribed) client.trySend(BLE_RAW_ADVERTISEMENTS, payload);
+            }
+        });
+    }
+
+    /** État de l'écoute Bluetooth affiché dans HA (en marche ou arrêtée). */
+    public void setBluetoothScanning(boolean running) {
+        bleRunning = running;
+        sender.execute(() -> {
+            for (Client client : clients) if (client.bleSubscribed) client.sendScannerState();
+        });
+    }
+
+    private volatile boolean bleRunning;
+
+    /** Prévient le Handler quand le nombre de connexions abonnées passe de 0 à 1 ou de 1 à 0. */
+    private void bleSubscriptionChanged() {
+        boolean now = isBluetoothSubscribed();
+        if (now == bleNotified) return;
+        bleNotified = now;
+        if (handler != null) handler.onBluetoothSubscription(now);
+    }
+
+    private volatile boolean bleNotified;
+
     public void voiceAnnounceFinished(boolean success) {
         sender.execute(() -> {
             Client client = voiceClient;
@@ -414,6 +497,8 @@ public final class EsphomeServer {
         volatile boolean subscribed;
         /** HA accepte de nous donner l'état de ses entités. */
         volatile boolean haStates;
+        /** HA écoute les annonces Bluetooth (proxy). */
+        volatile boolean bleSubscribed;
 
         Client(Socket socket) throws IOException {
             this.socket = socket;
@@ -526,7 +611,7 @@ public final class EsphomeServer {
                     send(HELLO_RESPONSE, new Proto.Writer()
                         .varint(1, API_VERSION_MAJOR)
                         .varint(2, API_VERSION_MINOR)
-                        .string(3, "GladysWallDock " + info.projectVersion)
+                        .string(3, "DomoWallDock " + info.projectVersion)
                         .string(4, info.name)
                         .bytes());
                     return true;
@@ -727,6 +812,27 @@ public final class EsphomeServer {
                     return true;
                 case VOICE_ASSISTANT_SET_CONFIGURATION:
                     return true;
+                case SUBSCRIBE_BLE_ADVERTISEMENTS: {
+                    if (info.bluetoothFeatures == 0) return true;
+                    // Seules les annonces brutes sont proposées (RAW_ADVERTISEMENTS)
+                    if ((Proto.getInt(Proto.read(payload), 1) & BLE_SUBSCRIPTION_RAW) == 0) return true;
+                    bleSubscribed = true;
+                    sendScannerState();
+                    synchronized (EsphomeServer.this) {
+                        bleSubscriptionChanged();
+                    }
+                    return true;
+                }
+                case UNSUBSCRIBE_BLE_ADVERTISEMENTS:
+                    bleSubscribed = false;
+                    synchronized (EsphomeServer.this) {
+                        bleSubscriptionChanged();
+                    }
+                    return true;
+                case BLE_SCANNER_SET_MODE:
+                    // Android ne propose pas d'écoute passive : le mode reste « actif »
+                    sendScannerState();
+                    return true;
                 default:
                     // Abonnements aux journaux, services HA, états HA, heure… : ignorés sans erreur
                     return true;
@@ -739,17 +845,28 @@ public final class EsphomeServer {
                 .string(2, info.name)
                 .string(3, info.macAddress)
                 .string(4, "2025.10.0")
-                .string(5, "GladysWallDock " + info.projectVersion)
+                .string(5, "DomoWallDock " + info.projectVersion)
                 .string(6, info.model)
-                .string(8, "gladyswalldock.gladyswalldock")
+                .string(8, "domowalldock.domowalldock")
                 .string(9, info.projectVersion)
                 .string(12, info.manufacturer)
                 .string(13, info.friendlyName)
                 .string(16, info.suggestedArea)
+                .varint(15, info.bluetoothFeatures)
                 .varint(17, info.voiceFeatures)
+                .string(18, info.bluetoothFeatures != 0 ? info.macAddress : "")
                 .bool(19, keyStore != null)   // sait recevoir et garder une clé (HA la crée tout seul)
                 .bool(26, keyStore != null)   // accepte la clé « zéro » pour la recevoir chiffrée
                 .bytes();
+        }
+
+        void sendScannerState() {
+            if ((info.bluetoothFeatures & BLE_FEATURE_STATE_AND_MODE) == 0) return;
+            trySend(BLE_SCANNER_STATE, new Proto.Writer()
+                .varint(1, bleRunning ? BLE_STATE_RUNNING : BLE_STATE_IDLE)
+                .varint(2, BLE_MODE_ACTIVE)
+                .varint(3, BLE_MODE_ACTIVE)
+                .bytes());
         }
 
         private Entity find(int key, Entity.Kind kind) {
@@ -955,6 +1072,12 @@ public final class EsphomeServer {
                 if (vh != null) vh.onVoiceSubscribed(false);
             }
             clients.remove(this);
+            if (bleSubscribed) {
+                bleSubscribed = false;
+                synchronized (EsphomeServer.this) {
+                    bleSubscriptionChanged();
+                }
+            }
             try {
                 socket.close();
             } catch (IOException ignored) {

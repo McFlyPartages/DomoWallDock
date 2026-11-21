@@ -7,10 +7,67 @@ class Prefs(context: Context) {
 
     private val sp = context.getSharedPreferences("walldock", Context.MODE_PRIVATE)
 
-    /** Adresse du tableau de bord Home Assistant, ex. http://192.168.1.10:8123 */
+    /** Plateforme affichée au lancement : [PLATFORM_HA] ou [PLATFORM_GLADYS]. */
+    var platform: String
+        get() = sp.getString("platform", PLATFORM_HA) ?: PLATFORM_HA
+        set(value) = sp.edit().putString("platform", value).apply()
+
+    val isGladys: Boolean
+        get() = platform == PLATFORM_GLADYS
+
+    // ---- Home Assistant ----
+    /** Adresse de Home Assistant, ex. http://192.168.1.10:8123 */
     var haUrl: String
         get() = sp.getString(KEY_URL, "") ?: ""
         set(value) = sp.edit().putString(KEY_URL, value).apply()
+    /** Compte HA pour la connexion automatique (vide = connexion à la main dans la page). */
+    var haUser: String
+        get() = sp.getString("ha_user", "") ?: ""
+        set(value) = sp.edit().putString("ha_user", value).apply()
+    var haPassword: String
+        get() = sp.getString("ha_password", "") ?: ""
+        set(value) = sp.edit().putString("ha_password", value).apply()
+    /** Tableau de bord par défaut (chemin comme /lovelace/0 ou adresse complète) ; vide = accueil. */
+    var haDashboard: String
+        get() = sp.getString("ha_dashboard", "") ?: ""
+        set(value) = sp.edit().putString("ha_dashboard", value).apply()
+
+    // ---- Gladys Assistant ----
+    /** Adresse de Gladys, ex. http://192.168.1.20 */
+    var gladysUrl: String
+        get() = sp.getString("gladys_url", "") ?: ""
+        set(value) = sp.edit().putString("gladys_url", value).apply()
+    /** Adresse e-mail du compte Gladys (connexion automatique). */
+    var gladysUser: String
+        get() = sp.getString("gladys_user", "") ?: ""
+        set(value) = sp.edit().putString("gladys_user", value).apply()
+    var gladysPassword: String
+        get() = sp.getString("gladys_password", "") ?: ""
+        set(value) = sp.edit().putString("gladys_password", value).apply()
+    /** Tableau de bord par défaut (chemin comme /dashboard/salon) ; vide = accueil. */
+    var gladysDashboard: String
+        get() = sp.getString("gladys_dashboard", "") ?: ""
+        set(value) = sp.edit().putString("gladys_dashboard", value).apply()
+
+    /** Adresse du serveur de la plateforme choisie. */
+    val serverUrl: String
+        get() = if (isGladys) gladysUrl else haUrl
+
+    /** Page chargée au lancement : tableau de bord par défaut de la plateforme choisie. */
+    val dashboardUrl: String
+        get() {
+            val page = (if (isGladys) gladysDashboard else haDashboard).trim()
+            return if (page.isEmpty()) serverUrl else absoluteUrl(page, serverUrl)
+        }
+
+    /** Serveur Home Assistant pour ce qui vient de HA (sons /local/…, caméras, réponses de Jarvis). */
+    val haBase: String
+        get() = haUrl.ifBlank { serverUrl }
+
+    /** Change le tableau de bord par défaut de la plateforme choisie (commande venue de HA). */
+    fun setDashboard(value: String) {
+        if (isGladys) gladysDashboard = value else haDashboard = value
+    }
 
     /** Code administrateur demandé pour ouvrir les réglages. */
     var pin: String
@@ -184,8 +241,8 @@ class Prefs(context: Context) {
         if (url.startsWith("about:") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("javascript:")) return true
         val uri = android.net.Uri.parse(url)
         val host = uri.host?.lowercase() ?: return false
-        val haHost = android.net.Uri.parse(haUrl).host?.lowercase()
-        if (host == haHost) return true
+        val servers = listOf(haUrl, gladysUrl, dashboardUrl).mapNotNull { android.net.Uri.parse(it).host?.lowercase() }
+        if (host in servers) return true
         return rules.any { rule ->
             val r = rule.lowercase()
             if (r.contains("://")) url.lowercase().startsWith(r)
@@ -202,6 +259,11 @@ class Prefs(context: Context) {
     var listenScreenOff: Boolean
         get() = sp.getBoolean("listen_screen_off", true)
         set(value) = sp.edit().putBoolean("listen_screen_off", value).apply()
+
+    /** Proxy Bluetooth ESPHome : annonces BLE des appareils proches transmises à HA. */
+    var bleProxyEnabled: Boolean
+        get() = sp.getBoolean("ble_proxy_enabled", false)
+        set(value) = sp.edit().putBoolean("ble_proxy_enabled", value).apply()
 
     // ---- Lecteur Music Assistant (Sendspin) ----
     var sendspinEnabled: Boolean
@@ -255,19 +317,24 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_JARVIS_ON_DEVICE, true)
         set(value) = sp.edit().putBoolean(KEY_JARVIS_ON_DEVICE, value).apply()
 
-    /** Adresse complète d'un son ou d'une page : les chemins (/local/…) sont rattachés à HA. */
-    fun absoluteUrl(address: String): String {
+    /**
+     * Adresse complète d'un son ou d'une page : les chemins (/local/…) sont rattachés au
+     * serveur [base] (par défaut celui de la plateforme choisie).
+     */
+    fun absoluteUrl(address: String, base: String = serverUrl): String {
         val trimmed = address.trim()
         if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
-        val base = haUrl
         val origin = base.substringBefore("://") + "://" + base.substringAfter("://").substringBefore("/")
         return origin + "/" + trimmed.trimStart('/')
     }
 
     val isConfigured: Boolean
-        get() = haUrl.isNotBlank() && pin.isNotBlank()
+        get() = serverUrl.isNotBlank() && pin.isNotBlank()
 
     companion object {
+        const val PLATFORM_HA = "ha"
+        const val PLATFORM_GLADYS = "gladys"
+
         const val HANDLE_BOTTOM_RIGHT = "bottom_right"
         const val HANDLE_BOTTOM_LEFT = "bottom_left"
         const val HANDLE_RIGHT_MIDDLE = "right_middle"
