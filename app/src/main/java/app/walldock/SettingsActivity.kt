@@ -122,7 +122,7 @@ class SettingsActivity : Activity() {
             platformGroup.addView(choice, spacing)
             if (value == prefs.platform) platformGroup.check(choice.id)
         }
-        platformGroup.setOnCheckedChangeListener { _, _ -> highlightPlatform() }
+        platformGroup.setOnCheckedChangeListener { _, _ -> onPlatformChanged() }
         column.addView(platformGroup)
         column.addView(label(tr(R.string.settings_platform_help)))
 
@@ -1027,6 +1027,31 @@ class SettingsActivity : Activity() {
         // Même police dès l'ouverture, avant le premier appui sur l'œil
         field.typeface = android.graphics.Typeface.DEFAULT
         return row
+    }
+
+    /** Cases décochées au passage à Gladys, pour les remettre si l'on revient à Home Assistant. */
+    private var haOnlySnapshot: List<Boolean>? = null
+
+    /** Fonctions qui passent par Home Assistant : Jarvis (écoute, écran éteint) et proxy Bluetooth. */
+    private fun haOnlyChecks() = listOf(jarvisCheck, listenOffCheck, bleCheck)
+
+    /**
+     * Passage à Gladys sans Home Assistant configuré : les fonctions propres à HA sont
+     * décochées (on peut les recocher). Retour à HA : elles reprennent leur état d'avant.
+     */
+    private fun onPlatformChanged() {
+        highlightPlatform()
+        val gladys = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) == Prefs.PLATFORM_GLADYS
+        val boxes = haOnlyChecks()
+        if (gladys && haForm.isEmpty()) {
+            if (boxes.none { it.isChecked }) return
+            haOnlySnapshot = boxes.map { it.isChecked }
+            boxes.forEach { it.isChecked = false }
+            toast(tr(R.string.gladys_ha_features_off))
+        } else if (!gladys) {
+            haOnlySnapshot?.let { saved -> boxes.forEachIndexed { i, box -> box.isChecked = saved[i] } }
+            haOnlySnapshot = null
+        }
     }
 
     private fun highlightPlatform() {
