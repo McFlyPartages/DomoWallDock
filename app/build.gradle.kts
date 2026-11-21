@@ -11,10 +11,10 @@ android {
         // Dérivé de WallDock (Home Assistant et Gladys Assistant) : identifiant propre, pour cohabiter avec l'appli d'origine.
         // Le code reste dans le paquet app.walldock (fusions depuis le projet d'origine plus simples).
         applicationId = "fr.mcflypartages.domowalldock"
-        minSdk = 26
+        minSdk = 24 // Android 7.0
         targetSdk = 36
-        versionCode = 37
-        versionName = "0.18.0"
+        versionCode = 38
+        versionName = "0.18.1"
         // Pas de mise à jour par l'appli : les releases GitHub de WallDock sont signées avec une autre clé
         buildConfigField("boolean", "SELF_UPDATE", "false")
     }
@@ -62,6 +62,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Android 7 : java.util.Base64 (code Java pur du serveur ESPHome et de Sendspin) n'arrive qu'avec Android 8
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -70,6 +72,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // Détection de « Hey Jarvis » sur la tablette (modèles openWakeWord au format TFLite)
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
 }

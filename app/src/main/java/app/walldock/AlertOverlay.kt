@@ -97,7 +97,7 @@ class AlertOverlay(private val context: Context, private val onDismissed: () -> 
         val params = WindowManager.LayoutParams(
             MATCH_PARENT,
             MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,

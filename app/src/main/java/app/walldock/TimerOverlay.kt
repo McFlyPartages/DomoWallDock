@@ -168,7 +168,7 @@ class TimerOverlay(private val context: Context, private val wakeUp: () -> Unit)
         row.gravity = Gravity.CENTER
         val params = WindowManager.LayoutParams(
             WRAP_CONTENT, WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -249,7 +249,7 @@ class TimerOverlay(private val context: Context, private val wakeUp: () -> Unit)
 
         val params = WindowManager.LayoutParams(
             MATCH_PARENT, MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or

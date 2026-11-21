@@ -12,6 +12,24 @@ import android.widget.Toast
 
 fun Context.dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
+/** Fenêtre par-dessus les autres applis : TYPE_APPLICATION_OVERLAY à partir d'Android 8, TYPE_PHONE avant. */
+@Suppress("DEPRECATION")
+val overlayWindowType: Int
+    get() = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+    } else {
+        android.view.WindowManager.LayoutParams.TYPE_PHONE
+    }
+
+/** Service au premier plan : startForegroundService n'existe qu'à partir d'Android 8. */
+fun Context.startServiceCompat(intent: android.content.Intent) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
+}
+
+/** Autorisation « installer des applis inconnues » : réglage global avant Android 8. */
+fun Context.canInstallPackages(): Boolean =
+    android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O || packageManager.canRequestPackageInstalls()
+
 fun Context.toast(message: String) {
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }

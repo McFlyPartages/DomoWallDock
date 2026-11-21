@@ -91,7 +91,7 @@ object Updater {
             setStatus(tr(R.string.upd_available, latest))
             return
         }
-        if (!context.packageManager.canRequestPackageInstalls()) {
+        if (!context.canInstallPackages()) {
             setStatus(tr(R.string.upd_available_allow, latest))
             return
         }

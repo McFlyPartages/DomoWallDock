@@ -112,7 +112,7 @@ class ReturnService : Service() {
         val params = WindowManager.LayoutParams(
             dp(48),
             dp(48),
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -139,12 +139,14 @@ class ReturnService : Service() {
     }
 
     private fun startInForeground(seconds: Int) {
-        getSystemService(NotificationManager::class.java)?.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, tr(R.string.channel_return), NotificationManager.IMPORTANCE_LOW)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getSystemService(NotificationManager::class.java)?.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, tr(R.string.channel_return), NotificationManager.IMPORTANCE_LOW)
+            )
+        }
         val text = if (seconds > 0) tr(R.string.return_after, seconds)
         else tr(R.string.return_tap)
-        val notification = Notification.Builder(this, CHANNEL_ID)
+        val notification = notificationBuilder(Notification.PRIORITY_LOW)
             .setSmallIcon(R.drawable.ic_stat_walldock)
             .setContentTitle("DomoWallDock")
             .setContentText(text)
@@ -156,6 +158,15 @@ class ReturnService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
     }
+
+    /** Android 8+ : canal de notification ; Android 7 : priorité de la notification. */
+    private fun notificationBuilder(priority: Int): Notification.Builder =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this).setPriority(priority)
+        }
 
     companion object {
         private const val EXTRA_PACKAGE = "package"
@@ -169,7 +180,7 @@ class ReturnService : Service() {
             val intent = Intent(context, ReturnService::class.java)
             intent.putExtra(EXTRA_PACKAGE, packageName)
             intent.putExtra(EXTRA_TIMEOUT, seconds)
-            context.startForegroundService(intent)
+            context.startServiceCompat(intent)
         }
     }
 }

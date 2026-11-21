@@ -97,7 +97,7 @@ class CameraOverlay(private val context: Context, private val onClosed: () -> Un
 
         val params = WindowManager.LayoutParams(
             MATCH_PARENT, MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or

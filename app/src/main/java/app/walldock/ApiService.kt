@@ -1408,10 +1408,12 @@ class ApiService : Service(), EsphomeServer.Handler {
     }
 
     private fun startInForeground() {
-        getSystemService(NotificationManager::class.java)?.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Home Assistant", NotificationManager.IMPORTANCE_MIN)
-        )
-        val notification = Notification.Builder(this, CHANNEL_ID)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getSystemService(NotificationManager::class.java)?.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Home Assistant", NotificationManager.IMPORTANCE_MIN)
+            )
+        }
+        val notification = notificationBuilder(Notification.PRIORITY_MIN)
             .setSmallIcon(R.drawable.ic_stat_walldock)
             .setContentTitle("DomoWallDock")
             .setContentText(tr(R.string.notif_available))
@@ -1480,6 +1482,15 @@ class ApiService : Service(), EsphomeServer.Handler {
         jarvis?.onSettingsChanged()
     }
 
+    /** Android 8+ : canal de notification ; Android 7 : priorité de la notification. */
+    private fun notificationBuilder(priority: Int): Notification.Builder =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this).setPriority(priority)
+        }
+
     companion object {
         val DASHBOARD_OPTION: String get() = tr(R.string.dashboard)
         private const val CHANNEL_ID = "walldock_api"
@@ -1499,7 +1510,7 @@ class ApiService : Service(), EsphomeServer.Handler {
             private set
 
         fun start(context: Context) {
-            context.startForegroundService(Intent(context, ApiService::class.java))
+            context.startServiceCompat(Intent(context, ApiService::class.java))
         }
     }
 }

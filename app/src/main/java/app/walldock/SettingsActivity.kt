@@ -557,7 +557,7 @@ class SettingsActivity : Activity() {
     }
 
     private fun updateLine(status: String): String {
-        val allowed = packageManager.canRequestPackageInstalls()
+        val allowed = canInstallPackages()
         return tr(R.string.update_installed_version, BuildConfig.VERSION_NAME) + "\n" +
             (if (allowed) tr(R.string.update_install_allowed) else tr(R.string.update_install_denied)) +
             "\n$status"

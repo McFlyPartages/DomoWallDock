@@ -532,6 +532,16 @@ class MainActivity : Activity(), DashboardController {
         }
         // PixelCopy copie la vraie image de la fenêtre (y compris la page web accélérée)
         val bitmap = android.graphics.Bitmap.createBitmap(decor.width, decor.height, android.graphics.Bitmap.Config.ARGB_8888)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // Android 7 : pas de PixelCopy, on dessine la vue (la page web peut sortir moins fidèle)
+            try {
+                decor.draw(android.graphics.Canvas(bitmap))
+                done(bitmap)
+            } catch (e: Exception) {
+                done(null)
+            }
+            return
+        }
         try {
             android.view.PixelCopy.request(window, bitmap, { result ->
                 done(if (result == android.view.PixelCopy.SUCCESS) bitmap else null)

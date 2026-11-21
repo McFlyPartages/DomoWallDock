@@ -146,7 +146,7 @@ class JarvisOverlay(private val context: Context, private val onTouched: () -> U
 
         val params = WindowManager.LayoutParams(
             MATCH_PARENT, MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
