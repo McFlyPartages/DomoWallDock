@@ -1,8 +1,8 @@
-# GladysWallDock — Politique de confidentialité
+# DomoWallDock — Politique de confidentialité
 
-GladysWallDock est un dérivé de [WallDock](https://github.com/psycho1807/WallDock) adapté pour Gladys Assistant.
+DomoWallDock est un dérivé de [WallDock](https://github.com/psycho1807/WallDock) adapté pour Gladys Assistant.
 
-**En bref : GladysWallDock ne collecte aucune donnée personnelle. Rien n'est envoyé au développeur ni à un tiers.** L'appli échange uniquement avec les services que vous configurez sur votre réseau : votre Gladys Assistant, votre broker MQTT et, si vous l'utilisez, votre Home Assistant.
+**En bref : DomoWallDock ne collecte aucune donnée personnelle. Rien n'est envoyé au développeur ni à un tiers.** L'appli échange uniquement avec les services que vous configurez sur votre réseau : votre Gladys Assistant, votre broker MQTT et, si vous l'utilisez, votre Home Assistant.
 
 ## Données traitées sur la tablette
 
@@ -20,6 +20,6 @@ GladysWallDock est un dérivé de [WallDock](https://github.com/psycho1807/WallD
 
 L'appli ne vérifie pas les mises à jour sur Internet.
 
-## Ce que GladysWallDock ne fait pas
+## Ce que DomoWallDock ne fait pas
 
 Pas de compte, pas de publicité, pas de statistiques d'utilisation, pas de traceur, pas de revente de données.

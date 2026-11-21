@@ -51,7 +51,7 @@ object Updater {
             setStatus(tr(R.string.updates_play_status, BuildConfig.VERSION_NAME))
             return
         }
-        // GladysWallDock : installé et mis à jour à la main (APK signé avec sa propre clé)
+        // DomoWallDock : installé et mis à jour à la main (APK signé avec sa propre clé)
         if (!BuildConfig.SELF_UPDATE) {
             setStatus(tr(R.string.updates_manual_status, BuildConfig.VERSION_NAME))
             return
@@ -153,7 +153,7 @@ object Updater {
         connection.connectTimeout = 15_000
         connection.readTimeout = 60_000
         connection.instanceFollowRedirects = true
-        connection.setRequestProperty("User-Agent", "GladysWallDock/${BuildConfig.VERSION_NAME}")
+        connection.setRequestProperty("User-Agent", "DomoWallDock/${BuildConfig.VERSION_NAME}")
         return connection
     }
 
