@@ -369,4 +369,22 @@
     <string name="settings_section_services">Extra services</string>
     <string name="settings_schedule_title">Screen off every night</string>
     <string name="settings_motion_title">Motion detection (front camera)</string>
+    <string name="dock_show">Show the apps (%1$d installed, %2$d in the dock)</string>
+    <string name="dock_hide">Hide the app list</string>
+    <string name="about_author">Adapted and maintained by McFly — https://mcflypartages.fr
+Mastodon: @McFlyPartages@mastodon.social — https://mastodon.social/@McFlyPartages
+Facebook: https://www.facebook.com/McFlyPartages
+X: https://x.com/McFlyPartages</string>
+    <string name="settings_save_quit">Save and leave the settings</string>
+    <string name="server_access">Access</string>
+    <string name="server_access_local">Local</string>
+    <string name="server_access_external">External</string>
+    <string name="server_access_both">Both</string>
+    <string name="server_local">Local address (IP and port)</string>
+    <string name="server_http">HTTP</string>
+    <string name="server_https">HTTPS</string>
+    <string name="server_external">External address (https required)</string>
+    <string name="server_error_ip">incomplete IP address (4 numbers from 0 to 255)</string>
+    <string name="server_error_port">invalid port (1 to 65535)</string>
+    <string name="server_error_external">the external address must start with https://</string>
 </resources>

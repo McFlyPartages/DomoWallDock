@@ -314,7 +314,7 @@ class MainActivity : Activity(), DashboardController {
         handler.removeCallbacks(screensaverCheck)
         handler.postDelayed(screensaverCheck, 15_000)
         handler.removeCallbacks(healthCheck)
-        handler.postDelayed(healthCheck, 5_000)
+        handler.postDelayed(healthCheck, 1_000)
     }
 
     /** Jarvis : demande l'accès au micro une seule fois (ensuite via les réglages). */
@@ -338,9 +338,12 @@ class MainActivity : Activity(), DashboardController {
 
     /** Teste Home Assistant en arrière-plan ; bascule sur l'écran de secours ou recharge au retour. */
     private fun checkHomeAssistant() {
-        val address = prefs.serverUrl
-        if (address.isBlank()) return
+        if (prefs.serverUrl.isBlank() && prefs.ha.access != Prefs.ACCESS_BOTH && prefs.gladys.access != Prefs.ACCESS_BOTH) return
         healthExecutor.execute {
+            // Accès « les deux » : adresse locale si elle répond, sinon externe
+            val switched = Endpoints.probe(prefs)
+            val address = prefs.serverUrl
+            if (address.isBlank()) return@execute
             val reachable = try {
                 val connection = URL(address).openConnection() as HttpURLConnection
                 connection.connectTimeout = 4_000
@@ -354,7 +357,15 @@ class MainActivity : Activity(), DashboardController {
             } catch (e: Exception) {
                 false
             }
-            handler.post { onHealthResult(reachable) }
+            handler.post {
+                if (switched && reachable) {
+                    // Passage local ↔ externe : le tableau de bord est rechargé sur la nouvelle adresse
+                    loadedUrl = prefs.dashboardUrl
+                    offlineScreen.visibility = View.GONE
+                    web.loadUrl(loadedUrl)
+                }
+                onHealthResult(reachable)
+            }
         }
     }
 
