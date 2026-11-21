@@ -9,7 +9,7 @@
     <string name="settings_return_delay">Back to the dashboard after (seconds of inactivity)</string>
     <string name="settings_screensaver">Screensaver</string>
     <string name="settings_screensaver_check">Show a clock on a black background after a while without touching the screen</string>
-    <string name="settings_screensaver_delay">Delay before the screensaver (minutes)</string>
+    <string name="settings_screensaver_delay">Delay before the screensaver (seconds)</string>
     <string name="settings_handle">Dock handle</string>
     <string name="handle_bottom_right">Bottom right</string>
     <string name="handle_bottom_left">Bottom left</string>
@@ -43,7 +43,7 @@
     <string name="update_install_allowed">✅ Installing updates allowed</string>
     <string name="update_install_denied">⚠️ Installing updates not allowed</string>
     <string name="settings_save_first">Save the settings first</string>
-    <string name="error_saver_delay">The screensaver delay must be at least 1 minute</string>
+    <string name="error_saver_delay">The screensaver delay must be at least 10 seconds</string>
     <string name="error_url">The address must start with http:// or https://</string>
     <string name="error_pin">The code must be at least 4 digits</string>
     <string name="error_delay">The delay must be at least 10 seconds</string>
@@ -220,8 +220,8 @@
     <string name="entity_set_saver_url">Screensaver page</string>
     <string name="entity_set_system_brightness">System brightness</string>
     <string name="entity_set_start_on_boot">Start on boot</string>
-    <string name="settings_saver_url">Screensaver page (optional): a dashboard view or any address, instead of the clock</string>
-    <string name="settings_saver_url_hint">e.g. /lovelace/screensaver</string>
+    <string name="settings_saver_url">Screensaver page (optional): a Home Assistant or Gladys page (path on the platform shown) or a full address, instead of the photos and the clock</string>
+    <string name="settings_saver_url_hint">e.g. /lovelace/screensaver or /dashboard/screensaver</string>
     <string name="settings_system_brightness">Set the system brightness (also in other apps)</string>
     <string name="settings_system_brightness_help">Needs the “Modify system settings” permission, asked when you save. Without it, only the DomoWallDock window is dimmed.</string>
     <string name="settings_start_on_boot">Start DomoWallDock when the tablet starts (power cut, restart)</string>
@@ -279,8 +279,8 @@
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_today">Today</string>
     <string name="calendar_empty">Nothing planned</string>
-    <string name="calendar_unavailable">Calendars unavailable: the dashboard must be loaded and signed in to Home Assistant</string>
-    <string name="calendar_in_dock">“Calendar” button in the dock (Home Assistant calendars: day, week, month, agenda; also the “afficher_calendrier” action from HA)</string>
+    <string name="calendar_unavailable">Calendars unavailable: the dashboard must be loaded and signed in (Home Assistant or Gladys)</string>
+    <string name="calendar_in_dock">“Calendar” button in the dock: Home Assistant or Gladys calendars, depending on the platform shown (day, week, month, agenda; also the “afficher_calendrier” action from HA)</string>
     <string name="entity_set_sendspin">Music Assistant player</string>
     <string name="settings_sendspin_title">Music Assistant</string>
     <string name="settings_sendspin">Music Assistant player (Sendspin, synchronised with your other speakers)</string>
@@ -292,7 +292,7 @@
     <string name="sendspin_error">Port 8928 is already in use</string>
     <string name="entity_last_crash">Last error</string>
     <string name="no_crash">none</string>
-    <string name="settings_motion_off">Turn the screen off after this many minutes without motion or touch (0 = never turn it off)</string>
+    <string name="settings_motion_off">Turn the screen off after this many seconds without motion or touch (0 = never turn it off)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Connect the tablet to an MQTT broker</string>
     <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “DomoWallDock …”. You get battery, charging, motion, the screen (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
@@ -329,7 +329,7 @@
     <string name="settings_gladys_dashboard_hint">/dashboard/living-room</string>
     <string name="settings_autologin_help">With a user and a password, the tablet signs in by itself when the login page shows. Tip: use an account dedicated to the tablet, without admin rights.</string>
     <string name="settings_common">Common settings</string>
-    <string name="settings_photos_title">Photos (Immich or a tablet folder)</string>
+    <string name="settings_photos_title">Screensaver: photos (Immich or a folder) or a Home Assistant / Gladys page</string>
     <string name="error_url_platform">%1$s: the address must start with http:// or https://</string>
     <string name="autologin_error">Automatic sign-in failed: %1$s</string>
     <string name="autologin_failed">unexpected answer from the server</string>
@@ -354,4 +354,19 @@
     <string name="autologin_test_ok">✅ Address, user and password accepted: automatic sign-in will work.</string>
     <string name="autologin_unreachable">server not reachable from the tablet (%1$s)</string>
     <string name="autologin_tls">HTTPS certificate refused by the tablet (%1$s)</string>
+    <string name="settings_show_password">Show the password</string>
+    <string name="settings_hide_password">Hide the password</string>
+    <string name="test_mqtt">Test the MQTT connection</string>
+    <string name="test_mqtt_ok">✅ Broker %1$s reached, account accepted.</string>
+    <string name="test_immich">Test Immich</string>
+    <string name="test_immich_ok">✅ Album “%1$s”: %2$d photos and videos.</string>
+    <string name="test_immich_missing">Fill in the address, the API key and the album to test</string>
+    <string name="test_immich_key">API key refused</string>
+    <string name="test_immich_album">album not found, or the key cannot access it</string>
+    <string name="test_failed">❌ Failed: %1$s</string>
+    <string name="test_timeout">no answer within 12 seconds</string>
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_section_services">Extra services</string>
+    <string name="settings_schedule_title">Screen off every night</string>
+    <string name="settings_motion_title">Motion detection (front camera)</string>
 </resources>
