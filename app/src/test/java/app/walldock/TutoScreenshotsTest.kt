@@ -20,15 +20,24 @@ import java.io.File
  * Captures du tutoriel Gladys (docs/images/tuto-gladys) : le vrai écran des réglages,
  * configuré pour Gladys avec des valeurs d'exemple, découpé section par section.
  * Régénérer : ./gradlew testGithubDebugUnitTest --tests app.walldock.TutoScreenshotsTest
- * puis copier app/build/preview/tuto/ dans docs/images/tuto-gladys/.
+ * puis copier app/build/preview/tuto/<langue>/ dans docs/images/tuto-gladys/<langue>/.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "fr-w800dp-h1280dp-port-mdpi")
+@Config(sdk = [34])
 class TutoScreenshotsTest {
 
-    @Test
-    fun gladys() {
+    @Test @Config(qualifiers = "fr-w800dp-h1280dp-port-mdpi") fun gladysFr() = gladys("fr", "tablette@exemple.fr", "/dashboard/salon", "/dashboard/veille")
+    @Test @Config(qualifiers = "en-w800dp-h1280dp-port-mdpi") fun gladysEn() = gladys("en", "tablet@example.com", "/dashboard/living-room", "/dashboard/screensaver")
+    @Test @Config(qualifiers = "de-w800dp-h1280dp-port-mdpi") fun gladysDe() = gladys("de", "tablet@beispiel.de", "/dashboard/wohnzimmer", "/dashboard/bildschirmschoner")
+    @Test @Config(qualifiers = "es-w800dp-h1280dp-port-mdpi") fun gladysEs() = gladys("es", "tableta@ejemplo.es", "/dashboard/salon", "/dashboard/salvapantallas")
+
+    @Test @Config(qualifiers = "fr-w1280dp-h800dp-land-mdpi") fun dockFr() = dock("fr")
+    @Test @Config(qualifiers = "en-w1280dp-h800dp-land-mdpi") fun dockEn() = dock("en")
+    @Test @Config(qualifiers = "de-w1280dp-h800dp-land-mdpi") fun dockDe() = dock("de")
+    @Test @Config(qualifiers = "es-w1280dp-h800dp-land-mdpi") fun dockEs() = dock("es")
+
+    private fun gladys(lang: String, email: String, dashboard: String, saver: String) {
         val app = RuntimeEnvironment.getApplication()
         val prefs = Prefs(app)
         prefs.pin = "1234"
@@ -36,19 +45,19 @@ class TutoScreenshotsTest {
         prefs.gladys.access = Prefs.ACCESS_LOCAL
         prefs.gladys.ip = "192.168.1.20"
         prefs.gladys.port = 80
-        prefs.gladysUser = "tablette@exemple.fr"
+        prefs.gladysUser = email
         prefs.gladysPassword = "motdepasse"
-        prefs.gladysDashboard = "/dashboard/salon"
+        prefs.gladysDashboard = dashboard
         prefs.mqttEnabled = true
         prefs.mqttHost = "192.168.1.20"
-        prefs.mqttUser = "tablette"
+        prefs.mqttUser = "tablet"
         prefs.mqttPassword = "motdepasse"
         prefs.chargeEnabled = true
         prefs.scheduleEnabled = true
         prefs.motionEnabled = true
         prefs.motionOffSeconds = 300
         prefs.screensaverEnabled = true
-        prefs.screensaverUrl = "/dashboard/veille"
+        prefs.screensaverUrl = saver
 
         val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         ShadowLooper.idleMainLooper()
@@ -61,7 +70,7 @@ class TutoScreenshotsTest {
         val full = Bitmap.createBitmap(width, column.measuredHeight, Bitmap.Config.ARGB_8888)
         Canvas(full).also { it.drawColor(0xFF050C1E.toInt()); column.draw(it) }
 
-        val dir = File(System.getProperty("preview.dir") ?: "build/preview", "tuto").also { it.mkdirs() }
+        val dir = File(System.getProperty("preview.dir") ?: "build/preview", "tuto/$lang").also { it.mkdirs() }
         fun save(name: String, bitmap: Bitmap) =
             File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
 
@@ -92,9 +101,7 @@ class TutoScreenshotsTest {
     }
 
     /** Écran principal, dock ouvert (la page Gladys elle-même n'est pas dessinée : pas de navigateur ici). */
-    @Test
-    @Config(qualifiers = "fr-w1280dp-h800dp-land-mdpi")
-    fun dock() {
+    private fun dock(lang: String) {
         val prefs = Prefs(RuntimeEnvironment.getApplication())
         prefs.pin = "1234"
         prefs.platform = Prefs.PLATFORM_GLADYS
@@ -109,7 +116,7 @@ class TutoScreenshotsTest {
         ShadowLooper.idleMainLooper()
         val shot = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
         Canvas(shot).also { it.drawColor(0xFF1B2433.toInt()); root.draw(it) }
-        val dir = File(System.getProperty("preview.dir") ?: "build/preview", "tuto").also { it.mkdirs() }
+        val dir = File(System.getProperty("preview.dir") ?: "build/preview", "tuto/$lang").also { it.mkdirs() }
         val dock = Bitmap.createBitmap(shot, 0, root.height - 260, root.width, 260)
         File(dir, "00-dock.png").outputStream().use { dock.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }

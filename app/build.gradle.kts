@@ -13,8 +13,8 @@ android {
         applicationId = "fr.mcflypartages.domowalldock"
         minSdk = 26
         targetSdk = 36
-        versionCode = 43
-        versionName = "0.19.1"
+        versionCode = 44
+        versionName = "0.20.0"
         // Pas de mise à jour par l'appli : les releases GitHub de WallDock sont signées avec une autre clé
         buildConfigField("boolean", "SELF_UPDATE", "false")
     }

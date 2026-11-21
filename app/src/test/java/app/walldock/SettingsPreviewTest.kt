@@ -33,6 +33,18 @@ class SettingsPreviewTest {
     @Config(qualifiers = "fr-w800dp-h1280dp-port-mdpi")
     fun portrait() = shoot("portrait")
 
+    @Test
+    @Config(qualifiers = "de-w1280dp-h800dp-land-mdpi")
+    fun allemand() = shoot("de")
+
+    @Test
+    @Config(qualifiers = "es-w1280dp-h800dp-land-mdpi")
+    fun espagnol() = shoot("es")
+
+    @Test
+    @Config(qualifiers = "en-w1280dp-h800dp-land-mdpi")
+    fun anglais() = shoot("en")
+
     private fun shoot(name: String) {
         val prefs = Prefs(RuntimeEnvironment.getApplication())
         prefs.pin = "1234"

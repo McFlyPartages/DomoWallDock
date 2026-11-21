@@ -383,4 +383,5 @@
     <string name="server_error_port">port invalide (1 à 65535)</string>
     <string name="server_error_external">l’adresse externe doit commencer par https://</string>
     <string name="about_credits">DomoWallDock %1$s — fork de WallDock (psycho1807, licence GPL-3.0), adapté et maintenu par McFlyPartages</string>
+    <string name="gladys_ha_features_off">Gladys choisi : Jarvis et le proxy Bluetooth (fonctions de Home Assistant) sont décochés. Vous pouvez les recocher si vous utilisez aussi Home Assistant.</string>
 </resources>
