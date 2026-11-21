@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">DomoWallDock</string>
+    <string name="app_name" translatable="false">DomoWallDock</string>
     <string name="accessibility_label">DomoWallDock – activity detection</string>
     <string name="accessibility_description">Lets DomoWallDock know whether someone is still using the app opened from the dock, so it only goes back to the dashboard after real inactivity. DomoWallDock does not read any content and sends nothing.</string>
     <string name="settings_title">DomoWallDock — settings</string>
@@ -306,10 +306,10 @@
     <string name="error_mqtt_host">Enter the MQTT broker address</string>
     <string name="settings_charge_title">Battery</string>
     <string name="settings_charge_enable">Manage charging (tablet always plugged in)</string>
-    <string name="settings_charge_help">A battery kept at 100 % all the time wears out and can swell. DomoWallDock cannot cut charging itself (Android forbids it): it publishes a “Charge wanted” sensor over MQTT, and a Gladys scene turns the charger’s smart plug on or off. If the tablet drops off the network, “Charge wanted” goes back to “yes” by itself so the battery does not run flat.</string>
+    <string name="settings_charge_help" formatted="false">A battery kept at 100 % all the time wears out and can swell. DomoWallDock cannot cut charging itself (Android forbids it): it publishes a “Charge wanted” sensor over MQTT, and a Gladys scene turns the charger’s smart plug on or off. If the tablet drops off the network, “Charge wanted” goes back to “yes” by itself so the battery does not run flat.</string>
     <string name="settings_charge_low">Recharge when the battery falls to (%)</string>
     <string name="settings_charge_high">Stop charging when it reaches (%)</string>
-    <string name="error_charge_levels">Charge levels: between 5 and 100 %, at least 10 points apart</string>
+    <string name="error_charge_levels" formatted="false">Charge levels: between 5 and 100 %, at least 10 points apart</string>
     <string name="error_charge_mqtt">Charge management needs the MQTT connection</string>
     <string name="entity_charge_wanted">Charge wanted</string>
     <string name="updates_manual">DomoWallDock is installed and updated by hand: install the new APK over this one (same signing key, settings are kept).</string>

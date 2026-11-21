@@ -305,10 +305,10 @@
     <string name="error_mqtt_host">Indiquez l’adresse du broker MQTT</string>
     <string name="settings_charge_title">Batterie</string>
     <string name="settings_charge_enable">Gérer la charge (tablette toujours branchée)</string>
-    <string name="settings_charge_help">Une batterie gardée à 100 % en permanence s’abîme et peut gonfler. DomoWallDock ne peut pas couper la charge lui-même (Android l’interdit) : il publie un capteur « Charge demandée » par MQTT, et une scène Gladys allume ou éteint la prise connectée du chargeur. Si la tablette disparaît du réseau, « Charge demandée » repasse tout seul à « oui » pour que la batterie ne se vide pas.</string>
+    <string name="settings_charge_help" formatted="false">Une batterie gardée à 100 % en permanence s’abîme et peut gonfler. DomoWallDock ne peut pas couper la charge lui-même (Android l’interdit) : il publie un capteur « Charge demandée » par MQTT, et une scène Gladys allume ou éteint la prise connectée du chargeur. Si la tablette disparaît du réseau, « Charge demandée » repasse tout seul à « oui » pour que la batterie ne se vide pas.</string>
     <string name="settings_charge_low">Recharger quand la batterie descend à (%)</string>
     <string name="settings_charge_high">Arrêter la charge quand elle atteint (%)</string>
-    <string name="error_charge_levels">Seuils de charge : entre 5 et 100 %, avec au moins 10 points d’écart</string>
+    <string name="error_charge_levels" formatted="false">Seuils de charge : entre 5 et 100 %, avec au moins 10 points d’écart</string>
     <string name="error_charge_mqtt">La gestion de la charge a besoin de la connexion MQTT</string>
     <string name="entity_charge_wanted">Charge demandée</string>
     <string name="updates_manual">DomoWallDock s’installe et se met à jour à la main : installez le nouvel APK par-dessus celui-ci (même clé de signature, les réglages sont conservés).</string>
