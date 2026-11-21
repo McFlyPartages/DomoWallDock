@@ -78,7 +78,7 @@ Quand vous choisissez Gladys, l'appli décoche d'elle-même Jarvis, le proxy Blu
 
 **Kiosque** (hérité de WallDock)
 - Plein écran, barres système masquées, écran toujours allumé, réglages protégés par un code.
-- Dock d'applis autorisées, retour automatique au tableau de bord après inactivité.
+- Dock d'applis autorisées (le bouton Jarvis n'y apparaît que si Jarvis est activé), retour automatique au tableau de bord après inactivité.
 - Peut devenir l'écran d'accueil de la tablette ; se relance au démarrage (coupure de courant).
 - Zoom du tableau de bord (50 à 200 %), écran de veille (horloge, page au choix, diaporama Immich ou dossier de photos).
 - Planification : écran éteint chaque nuit. Liste blanche d'adresses. Écran de secours quand le serveur ne répond pas.

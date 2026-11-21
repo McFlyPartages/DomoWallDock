@@ -78,7 +78,7 @@ When you choose Gladys, the app unticks Jarvis, the Bluetooth proxy and Music As
 
 **Kiosk** (inherited from WallDock)
 - Full screen, system bars hidden, screen always on, settings protected by a code.
-- Dock of allowed apps, automatic return to the dashboard after inactivity.
+- Dock of allowed apps (the Jarvis button only shows when Jarvis is enabled), automatic return to the dashboard after inactivity.
 - Can become the tablet's home screen; restarts on boot (power cut).
 - Dashboard zoom (50 to 200 %), screensaver (clock, any page, Immich slideshow or photo folder).
 - Schedule: screen off every night. Address allow-list. Fallback screen when the server does not answer.

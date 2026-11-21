@@ -25,7 +25,7 @@ Later, to get back to the settings: tap the small **▲** handle (bottom right b
 
 ![The dock open on the main screen](images/tuto-gladys/en/00-dock.png)
 
-The settings are split into three parts, always reachable from the top bar. **Save** (top right) saves without leaving; the button at the very bottom saves and closes the settings.
+At the very top: the **app language** (the tablet's, or French, English, German, Spanish; the app restarts to apply it). The settings are then split into three parts, always reachable from the top bar. **Save** (top right) saves without leaving; the button at the very bottom saves and closes the settings.
 
 ![Top bar of the settings](images/tuto-gladys/en/01-barre.png)
 
@@ -53,7 +53,6 @@ The settings are split into three parts, always reachable from the top bar. **Sa
 
 ![Common settings](images/tuto-gladys/en/03-communs.png)
 
-- **App language**: the tablet's, or French, English, German, Spanish (the app restarts to apply it).
 - **Admin code** (at least 4 digits): it protects the settings.
 - **Back to the dashboard** after a few seconds without touching the screen, when another dock app is open.
 - Dashboard **zoom**, position of the **dock handle**, **allowed addresses**, automatic start of the app.

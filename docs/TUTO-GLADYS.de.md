@@ -25,7 +25,7 @@ Später gelangst du so zu den Einstellungen: Tippe auf den kleinen Griff **▲**
 
 ![Das geöffnete Dock auf dem Hauptbildschirm](images/tuto-gladys/de/00-dock.png)
 
-Die Einstellungen sind in drei Teile gegliedert, jederzeit über die obere Leiste erreichbar. **Speichern** (oben rechts) speichert, ohne die Einstellungen zu verlassen; die Schaltfläche ganz unten speichert und schließt sie.
+Ganz oben: die **Sprache der App** (die des Tablets oder Französisch, Englisch, Deutsch, Spanisch; die App startet neu, um sie zu übernehmen). Danach sind die Einstellungen in drei Teile gegliedert, jederzeit über die obere Leiste erreichbar. **Speichern** (oben rechts) speichert, ohne die Einstellungen zu verlassen; die Schaltfläche ganz unten speichert und schließt sie.
 
 ![Obere Leiste der Einstellungen](images/tuto-gladys/de/01-barre.png)
 
@@ -53,7 +53,6 @@ Die Einstellungen sind in drei Teile gegliedert, jederzeit über die obere Leist
 
 ![Allgemeine Einstellungen](images/tuto-gladys/de/03-communs.png)
 
-- **Sprache der App**: die des Tablets oder Französisch, Englisch, Deutsch, Spanisch (die App startet neu, um sie zu übernehmen).
 - **Admin-Code** (mindestens 4 Ziffern): Er schützt die Einstellungen.
 - **Zurück zum Dashboard** nach einigen Sekunden ohne Berührung, wenn eine andere Dock-App geöffnet ist.
 - **Zoom** des Dashboards, Position des **Dock-Griffs**, **erlaubte Adressen**, automatischer Start der App.
