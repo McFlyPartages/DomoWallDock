@@ -76,6 +76,10 @@ class CalendarScreen(private val activity: Activity, private val container: Fram
         loadedFrom = from
         loadedTo = to
         val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US)
+        if (Prefs(activity).isGladys) {
+            web.evaluateJavascript(gladysScript(iso.format(Date(from)), iso.format(Date(to))), null)
+            return
+        }
         val js = """
             (async () => {
               try {
@@ -97,6 +101,47 @@ class CalendarScreen(private val activity: Activity, private val container: Fram
         """.trimIndent()
         web.evaluateJavascript(js, null)
     }
+
+    /**
+     * Gladys : événements de tous les calendriers visibles par le compte connecté dans la page
+     * (jeton de localStorage.user ; renouvelé comme le fait Gladys s'il a expiré).
+     * Journées entières renvoyées en date locale {date: "AAAA-MM-JJ"}, comme HA.
+     */
+    private fun gladysScript(from: String, to: String): String = """
+        (async () => {
+          const send = o => WallDockCalendar.onEvents(JSON.stringify(o));
+          try {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (!user || !user.access_token) { send({error: 'nogladys'}); return; }
+            const url = '/api/v1/calendar/event?shared=true&from=' + encodeURIComponent('$from') + '&to=' + encodeURIComponent('$to');
+            const get = () => fetch(url, {headers: {authorization: 'Bearer ' + user.access_token}});
+            let r = await get();
+            if (r.status === 401 && user.refresh_token) {
+              const t = await fetch('/api/v1/access_token', {method: 'POST', headers: {'content-type': 'application/json'},
+                body: JSON.stringify({refresh_token: user.refresh_token})});
+              if (t.ok) {
+                user.access_token = (await t.json()).access_token;
+                localStorage.setItem('user', JSON.stringify(user));
+                r = await get();
+              }
+            }
+            if (!r.ok) { send({error: 'http ' + r.status}); return; }
+            const pad = n => (n < 10 ? '0' : '') + n;
+            const day = s => { const d = new Date(s); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+            const out = {calendars: [], events: []};
+            for (const e of await r.json()) {
+              const name = (e.calendar && e.calendar.name) || 'Gladys';
+              let c = out.calendars.indexOf(name);
+              if (c < 0) { out.calendars.push(name); c = out.calendars.length - 1; }
+              const end = e.end || e.start;
+              out.events.push(e.full_day
+                ? {c, s: e.name || '', a: {date: day(e.start)}, b: {date: day(end)}, l: e.location || ''}
+                : {c, s: e.name || '', a: e.start, b: end, l: e.location || ''});
+            }
+            send(out);
+          } catch (err) { send({error: String(err)}); }
+        })();
+    """.trimIndent()
 
     private fun receive(json: String) {
         val o = try {

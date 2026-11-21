@@ -101,10 +101,11 @@ class SettingsActivity : Activity() {
 
         val column = LinearLayout(this)
         column.orientation = LinearLayout.VERTICAL
-        column.setPadding(dp(24), dp(24), dp(24), dp(24))
+        column.setPadding(dp(24), dp(8), dp(24), dp(24))
 
-        column.addView(heading(tr(R.string.settings_title), 22f))
-
+        // ===== 1. Connexion =====
+        val connectionAnchor = section(tr(R.string.settings_section_connection))
+        column.addView(connectionAnchor)
         // Plateforme lancée : Home Assistant ou Gladys Assistant
         column.addView(heading(tr(R.string.settings_platform), 18f))
         platformGroup = RadioGroup(this)
@@ -191,16 +192,55 @@ class SettingsActivity : Activity() {
         column.addView(label(tr(R.string.settings_autologin_help)))
         highlightPlatform()
 
-        column.addView(heading(tr(R.string.settings_common), 20f))
+        // ===== 2. Réglages communs =====
+        val commonAnchor = section(tr(R.string.settings_common))
+        column.addView(commonAnchor)
         column.addView(label(tr(R.string.settings_pin)))
         pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
-        column.addView(pinField)
+        column.addView(secret(pinField))
 
         column.addView(label(tr(R.string.settings_return_delay)))
         delayField = field(prefs.returnSeconds.toString(), "120", InputType.TYPE_CLASS_NUMBER)
         column.addView(delayField)
+        column.addView(label(tr(R.string.settings_zoom)))
+        zoomField = field(prefs.zoom.toString(), "100", InputType.TYPE_CLASS_NUMBER)
+        column.addView(zoomField)
 
-        column.addView(label(tr(R.string.settings_screensaver)))
+        column.addView(label(tr(R.string.settings_handle)))
+        handleGroup = RadioGroup(this)
+        val handleChoices = listOf(
+            Prefs.HANDLE_BOTTOM_RIGHT to tr(R.string.handle_bottom_right),
+            Prefs.HANDLE_BOTTOM_LEFT to tr(R.string.handle_bottom_left),
+            Prefs.HANDLE_RIGHT_MIDDLE to tr(R.string.handle_right_middle),
+            Prefs.HANDLE_HIDDEN to tr(R.string.handle_hidden)
+        )
+        for ((value, text) in handleChoices) {
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = text
+            choice.tag = value
+            choice.setTextColor(Color.WHITE)
+            handleGroup.addView(choice)
+            if (value == prefs.handlePosition) handleGroup.check(choice.id)
+        }
+        column.addView(handleGroup)
+        column.addView(label(tr(R.string.settings_allowed_urls)))
+        allowedField = field(prefs.allowedUrls, tr(R.string.settings_allowed_urls_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(allowedField)
+        systemBrightnessCheck = CheckBox(this)
+        systemBrightnessCheck.text = tr(R.string.settings_system_brightness)
+        systemBrightnessCheck.setTextColor(Color.WHITE)
+        systemBrightnessCheck.isChecked = prefs.systemBrightness
+        column.addView(systemBrightnessCheck)
+        column.addView(label(tr(R.string.settings_system_brightness_help)))
+        bootCheck = CheckBox(this)
+        bootCheck.text = tr(R.string.settings_start_on_boot)
+        bootCheck.setTextColor(Color.WHITE)
+        bootCheck.isChecked = prefs.startOnBoot
+        column.addView(bootCheck)
+
+        // Écran de veille : activation et délai (son contenu est dans les services)
+        column.addView(heading(tr(R.string.settings_screensaver), 18f))
         saverCheck = CheckBox(this)
         saverCheck.text = tr(R.string.settings_screensaver_check)
         saverCheck.setTextColor(Color.WHITE)
@@ -209,9 +249,159 @@ class SettingsActivity : Activity() {
         column.addView(label(tr(R.string.settings_screensaver_delay)))
         saverField = field(prefs.screensaverSeconds.toString(), "300", InputType.TYPE_CLASS_NUMBER)
         column.addView(saverField)
-        column.addView(label(tr(R.string.settings_zoom)))
-        zoomField = field(prefs.zoom.toString(), "100", InputType.TYPE_CLASS_NUMBER)
-        column.addView(zoomField)
+
+        // Écran éteint chaque nuit
+        column.addView(heading(tr(R.string.settings_schedule_title), 18f))
+        scheduleCheck = CheckBox(this)
+        scheduleCheck.text = tr(R.string.settings_schedule)
+        scheduleCheck.setTextColor(Color.WHITE)
+        scheduleCheck.isChecked = prefs.scheduleEnabled
+        column.addView(scheduleCheck)
+        val times = LinearLayout(this)
+        times.orientation = LinearLayout.HORIZONTAL
+        sleepField = field(prefs.sleepTime, "23:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
+        wakeField = field(prefs.wakeTime, "07:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
+        times.addView(label(tr(R.string.settings_schedule_off)))
+        times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        times.addView(label(tr(R.string.settings_schedule_on)))
+        times.addView(wakeField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        column.addView(times)
+
+        // Détection de mouvement (caméra frontale)
+        column.addView(heading(tr(R.string.settings_motion_title), 18f))
+        motionCheck = CheckBox(this)
+        motionCheck.text = tr(R.string.settings_motion)
+        motionCheck.setTextColor(Color.WHITE)
+        motionCheck.isChecked = prefs.motionEnabled
+        column.addView(motionCheck)
+        column.addView(label(tr(R.string.settings_motion_help)))
+        column.addView(label(tr(R.string.settings_motion_off)))
+        motionOffField = field(prefs.motionOffSeconds.toString(), "0", InputType.TYPE_CLASS_NUMBER)
+        column.addView(motionOffField)
+
+        column.addView(heading(tr(R.string.settings_permissions), 18f))
+        statusText = TextView(this)
+        statusText.setTextColor(0xFFB0C4E0.toInt())
+        statusText.textSize = 14f
+        statusText.setLineSpacing(0f, 1.3f)
+        column.addView(statusText)
+        column.addView(button(tr(R.string.settings_set_home)) {
+            open(Intent(Settings.ACTION_HOME_SETTINGS))
+        })
+        column.addView(button(tr(R.string.settings_allow_overlay)) {
+            open(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        })
+        // Version Google Play : pas de service d'accessibilité
+        if (!BuildConfig.PLAY_STORE) column.addView(button(tr(R.string.settings_enable_activity)) {
+            open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        })
+        column.addView(button(tr(R.string.settings_exit_kiosk)) {
+            toast(tr(R.string.settings_choose_home))
+            open(Intent(Settings.ACTION_HOME_SETTINGS))
+        })
+
+        column.addView(heading(tr(R.string.backup_title), 18f))
+        column.addView(label(tr(R.string.backup_help)))
+        column.addView(button(tr(R.string.backup_export)) { SettingsBackup.startExport(this) })
+        column.addView(button(tr(R.string.backup_import)) { SettingsBackup.startImport(this) })
+
+        column.addView(heading(tr(R.string.settings_updates), 18f))
+        if (BuildConfig.PLAY_STORE) column.addView(label(tr(R.string.updates_play)))
+        else if (!BuildConfig.SELF_UPDATE) column.addView(label(tr(R.string.updates_manual)))
+        updateText = TextView(this)
+        updateText.setTextColor(0xFFB0C4E0.toInt())
+        updateText.textSize = 14f
+        updateText.setLineSpacing(0f, 1.3f)
+        column.addView(updateText)
+        updateCheck = CheckBox(this)
+        updateCheck.text = tr(R.string.settings_auto_update)
+        updateCheck.setTextColor(Color.WHITE)
+        updateCheck.isChecked = prefs.autoUpdate
+        // Version Google Play : les mises à jour passent par le Play Store
+        if (!BuildConfig.PLAY_STORE && BuildConfig.SELF_UPDATE) {
+            column.addView(updateCheck)
+            column.addView(button(tr(R.string.settings_allow_install)) {
+                open(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            })
+            column.addView(button(tr(R.string.settings_check_now)) { Updater.check(this, install = true) })
+        }
+
+        column.addView(heading(tr(R.string.settings_dock_apps), 18f))
+        column.addView(label(tr(R.string.settings_dock_help)))
+        for (app in Apps.listLaunchable(this)) column.addView(appRow(app))
+
+        // ===== 3. Services annexes =====
+        val servicesAnchor = section(tr(R.string.settings_section_services))
+        column.addView(servicesAnchor)
+        // Réveils
+        column.addView(heading(tr(R.string.alarm_section), 18f))
+        column.addView(label(tr(R.string.alarm_help)))
+        alarmList = LinearLayout(this)
+        alarmList.orientation = LinearLayout.VERTICAL
+        column.addView(alarmList)
+        refreshAlarms()
+        column.addView(button(tr(R.string.alarm_add)) { addAlarm() })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == false
+        ) {
+            column.addView(button(tr(R.string.alarm_exact)) {
+                open(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))
+            })
+        }
+
+        // Calendrier
+        column.addView(heading(tr(R.string.calendar_title), 18f))
+        calendarCheck = CheckBox(this)
+        calendarCheck.text = tr(R.string.calendar_in_dock)
+        calendarCheck.setTextColor(Color.WHITE)
+        calendarCheck.isChecked = prefs.calendarInDock
+        column.addView(calendarCheck)
+
+        column.addView(heading(tr(R.string.settings_charge_title), 18f))
+        chargeCheck = CheckBox(this)
+        chargeCheck.text = tr(R.string.settings_charge_enable)
+        chargeCheck.setTextColor(Color.WHITE)
+        chargeCheck.isChecked = prefs.chargeEnabled
+        column.addView(chargeCheck)
+        column.addView(label(tr(R.string.settings_charge_help)))
+        column.addView(label(tr(R.string.settings_charge_low)))
+        chargeLowField = field(prefs.chargeLow.toString(), "30", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeLowField)
+        column.addView(label(tr(R.string.settings_charge_high)))
+        chargeHighField = field(prefs.chargeHigh.toString(), "80", InputType.TYPE_CLASS_NUMBER)
+        column.addView(chargeHighField)
+
+        // MQTT (Gladys Assistant, ou tout broker) : capteurs, commandes et gestion de la charge
+        column.addView(heading(tr(R.string.settings_mqtt_title), 18f))
+        mqttStatusText = label("")
+        column.addView(mqttStatusText)
+        mqttCheck = CheckBox(this)
+        mqttCheck.text = tr(R.string.settings_mqtt_enable)
+        mqttCheck.setTextColor(Color.WHITE)
+        mqttCheck.isChecked = prefs.mqttEnabled
+        column.addView(mqttCheck)
+        column.addView(label(tr(R.string.settings_mqtt_help)))
+        mqttHostField = field(prefs.mqttHost, tr(R.string.settings_mqtt_host), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        column.addView(mqttHostField)
+        mqttPortField = field(prefs.mqttPort.toString(), "1883", InputType.TYPE_CLASS_NUMBER)
+        column.addView(mqttPortField)
+        mqttUserField = field(prefs.mqttUser, tr(R.string.settings_mqtt_user), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+        column.addView(mqttUserField)
+        mqttPasswordField = field(prefs.mqttPassword, tr(R.string.settings_mqtt_password), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        column.addView(secret(mqttPasswordField))
+        column.addView(button(tr(R.string.test_mqtt)) {
+            val host = mqttHostField.text.toString().trim()
+            if (host.isEmpty()) {
+                toast(tr(R.string.error_mqtt_host))
+                return@button
+            }
+            toast(tr(R.string.autologin_test_running))
+            ConnectionTests.mqtt(host, mqttPortField.text.toString().trim().toIntOrNull() ?: 1883,
+                mqttUserField.text.toString().trim(), mqttPasswordField.text.toString()) { _, message ->
+                showResult("MQTT", message)
+            }
+        })
+
         // Écran de veille photos
         column.addView(heading(tr(R.string.settings_photos_title), 18f))
         column.addView(label(tr(R.string.photos_help)))
@@ -251,119 +441,33 @@ class SettingsActivity : Activity() {
         column.addView(label(tr(R.string.settings_saver_url)))
         saverUrlField = field(prefs.screensaverUrl, tr(R.string.settings_saver_url_hint), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(saverUrlField)
-        systemBrightnessCheck = CheckBox(this)
-        systemBrightnessCheck.text = tr(R.string.settings_system_brightness)
-        systemBrightnessCheck.setTextColor(Color.WHITE)
-        systemBrightnessCheck.isChecked = prefs.systemBrightness
-        column.addView(systemBrightnessCheck)
-        column.addView(label(tr(R.string.settings_system_brightness_help)))
-        bootCheck = CheckBox(this)
-        bootCheck.text = tr(R.string.settings_start_on_boot)
-        bootCheck.setTextColor(Color.WHITE)
-        bootCheck.isChecked = prefs.startOnBoot
-        column.addView(bootCheck)
-        scheduleCheck = CheckBox(this)
-        scheduleCheck.text = tr(R.string.settings_schedule)
-        scheduleCheck.setTextColor(Color.WHITE)
-        scheduleCheck.isChecked = prefs.scheduleEnabled
-        column.addView(scheduleCheck)
-        val times = LinearLayout(this)
-        times.orientation = LinearLayout.HORIZONTAL
-        sleepField = field(prefs.sleepTime, "23:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
-        wakeField = field(prefs.wakeTime, "07:00", InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME)
-        times.addView(label(tr(R.string.settings_schedule_off)))
-        times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        times.addView(label(tr(R.string.settings_schedule_on)))
-        times.addView(wakeField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        column.addView(times)
-        column.addView(label(tr(R.string.settings_allowed_urls)))
-        allowedField = field(prefs.allowedUrls, tr(R.string.settings_allowed_urls_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        column.addView(allowedField)
 
-        column.addView(label(tr(R.string.settings_handle)))
-        handleGroup = RadioGroup(this)
-        val handleChoices = listOf(
-            Prefs.HANDLE_BOTTOM_RIGHT to tr(R.string.handle_bottom_right),
-            Prefs.HANDLE_BOTTOM_LEFT to tr(R.string.handle_bottom_left),
-            Prefs.HANDLE_RIGHT_MIDDLE to tr(R.string.handle_right_middle),
-            Prefs.HANDLE_HIDDEN to tr(R.string.handle_hidden)
-        )
-        for ((value, text) in handleChoices) {
-            val choice = RadioButton(this)
-            choice.id = View.generateViewId()
-            choice.text = text
-            choice.tag = value
-            choice.setTextColor(Color.WHITE)
-            handleGroup.addView(choice)
-            if (value == prefs.handlePosition) handleGroup.check(choice.id)
-        }
-        column.addView(handleGroup)
+        column.addView(heading(tr(R.string.settings_sendspin_title), 18f))
+        sendspinCheck = CheckBox(this)
+        sendspinCheck.text = tr(R.string.settings_sendspin)
+        sendspinCheck.setTextColor(Color.WHITE)
+        sendspinCheck.isChecked = prefs.sendspinEnabled
+        column.addView(sendspinCheck)
+        column.addView(label(tr(R.string.settings_sendspin_help)))
+        column.addView(label(tr(when (AppState.sendspinStatus) {
+            "waiting" -> R.string.sendspin_waiting
+            "connected" -> R.string.sendspin_connected
+            "playing" -> R.string.sendspin_playing
+            "error" -> R.string.sendspin_error
+            else -> R.string.sendspin_off
+        })))
 
-        column.addView(heading(tr(R.string.settings_permissions), 18f))
-        statusText = TextView(this)
-        statusText.setTextColor(0xFFB0C4E0.toInt())
-        statusText.textSize = 14f
-        statusText.setLineSpacing(0f, 1.3f)
-        column.addView(statusText)
-        column.addView(button(tr(R.string.settings_set_home)) {
-            open(Intent(Settings.ACTION_HOME_SETTINGS))
-        })
-        column.addView(button(tr(R.string.settings_allow_overlay)) {
-            open(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-        })
-        // Version Google Play : pas de service d'accessibilité
-        if (!BuildConfig.PLAY_STORE) column.addView(button(tr(R.string.settings_enable_activity)) {
-            open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        })
-        column.addView(button(tr(R.string.settings_exit_kiosk)) {
-            toast(tr(R.string.settings_choose_home))
-            open(Intent(Settings.ACTION_HOME_SETTINGS))
-        })
-
-        // MQTT (Gladys Assistant, ou tout broker) : capteurs, commandes et gestion de la charge
-        column.addView(heading(tr(R.string.settings_mqtt_title), 18f))
-        mqttStatusText = label("")
-        column.addView(mqttStatusText)
-        mqttCheck = CheckBox(this)
-        mqttCheck.text = tr(R.string.settings_mqtt_enable)
-        mqttCheck.setTextColor(Color.WHITE)
-        mqttCheck.isChecked = prefs.mqttEnabled
-        column.addView(mqttCheck)
-        column.addView(label(tr(R.string.settings_mqtt_help)))
-        mqttHostField = field(prefs.mqttHost, tr(R.string.settings_mqtt_host), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        column.addView(mqttHostField)
-        mqttPortField = field(prefs.mqttPort.toString(), "1883", InputType.TYPE_CLASS_NUMBER)
-        column.addView(mqttPortField)
-        mqttUserField = field(prefs.mqttUser, tr(R.string.settings_mqtt_user), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
-        column.addView(mqttUserField)
-        mqttPasswordField = field(prefs.mqttPassword, tr(R.string.settings_mqtt_password), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        column.addView(secret(mqttPasswordField))
-        column.addView(button(tr(R.string.test_mqtt)) {
-            val host = mqttHostField.text.toString().trim()
-            if (host.isEmpty()) {
-                toast(tr(R.string.error_mqtt_host))
-                return@button
-            }
-            toast(tr(R.string.autologin_test_running))
-            ConnectionTests.mqtt(host, mqttPortField.text.toString().trim().toIntOrNull() ?: 1883,
-                mqttUserField.text.toString().trim(), mqttPasswordField.text.toString()) { _, message ->
-                showResult("MQTT", message)
-            }
-        })
-
-        column.addView(heading(tr(R.string.settings_charge_title), 18f))
-        chargeCheck = CheckBox(this)
-        chargeCheck.text = tr(R.string.settings_charge_enable)
-        chargeCheck.setTextColor(Color.WHITE)
-        chargeCheck.isChecked = prefs.chargeEnabled
-        column.addView(chargeCheck)
-        column.addView(label(tr(R.string.settings_charge_help)))
-        column.addView(label(tr(R.string.settings_charge_low)))
-        chargeLowField = field(prefs.chargeLow.toString(), "30", InputType.TYPE_CLASS_NUMBER)
-        column.addView(chargeLowField)
-        column.addView(label(tr(R.string.settings_charge_high)))
-        chargeHighField = field(prefs.chargeHigh.toString(), "80", InputType.TYPE_CLASS_NUMBER)
-        column.addView(chargeHighField)
+        // Proxy Bluetooth ESPHome : annonces BLE des appareils proches transmises à HA
+        column.addView(heading(tr(R.string.settings_ble_title), 18f))
+        bleStatusText = label("")
+        column.addView(bleStatusText)
+        bleCheck = CheckBox(this)
+        bleCheck.text = tr(R.string.settings_ble_enable)
+        bleCheck.setTextColor(Color.WHITE)
+        bleCheck.isChecked = prefs.bleProxyEnabled
+        column.addView(bleCheck)
+        column.addView(label(tr(R.string.settings_ble_help)))
+        column.addView(button(tr(R.string.settings_allow_ble)) { requestBlePermissions() })
 
         column.addView(heading("Jarvis", 18f))
         jarvisText = TextView(this)
@@ -381,15 +485,6 @@ class SettingsActivity : Activity() {
         onDeviceCheck.setTextColor(Color.WHITE)
         onDeviceCheck.isChecked = prefs.jarvisOnDevice
         column.addView(onDeviceCheck)
-        motionCheck = CheckBox(this)
-        motionCheck.text = tr(R.string.settings_motion)
-        motionCheck.setTextColor(Color.WHITE)
-        motionCheck.isChecked = prefs.motionEnabled
-        column.addView(motionCheck)
-        column.addView(label(tr(R.string.settings_motion_help)))
-        column.addView(label(tr(R.string.settings_motion_off)))
-        motionOffField = field(prefs.motionOffSeconds.toString(), "0", InputType.TYPE_CLASS_NUMBER)
-        column.addView(motionOffField)
         column.addView(label(tr(R.string.settings_sensitivity)))
         sensitivityGroup = RadioGroup(this)
         val levels = listOf(
@@ -429,94 +524,55 @@ class SettingsActivity : Activity() {
         column.addView(listenOffCheck)
         column.addView(button(tr(R.string.settings_test_jarvis)) { ApiService.instance?.jarvis?.talk() })
 
-        column.addView(heading(tr(R.string.settings_sendspin_title), 18f))
-        sendspinCheck = CheckBox(this)
-        sendspinCheck.text = tr(R.string.settings_sendspin)
-        sendspinCheck.setTextColor(Color.WHITE)
-        sendspinCheck.isChecked = prefs.sendspinEnabled
-        column.addView(sendspinCheck)
-        column.addView(label(tr(R.string.settings_sendspin_help)))
-        column.addView(label(tr(when (AppState.sendspinStatus) {
-            "waiting" -> R.string.sendspin_waiting
-            "connected" -> R.string.sendspin_connected
-            "playing" -> R.string.sendspin_playing
-            "error" -> R.string.sendspin_error
-            else -> R.string.sendspin_off
-        })))
-
-        // Proxy Bluetooth ESPHome : annonces BLE des appareils proches transmises à HA
-        column.addView(heading(tr(R.string.settings_ble_title), 18f))
-        bleStatusText = label("")
-        column.addView(bleStatusText)
-        bleCheck = CheckBox(this)
-        bleCheck.text = tr(R.string.settings_ble_enable)
-        bleCheck.setTextColor(Color.WHITE)
-        bleCheck.isChecked = prefs.bleProxyEnabled
-        column.addView(bleCheck)
-        column.addView(label(tr(R.string.settings_ble_help)))
-        column.addView(button(tr(R.string.settings_allow_ble)) { requestBlePermissions() })
-
-        column.addView(heading(tr(R.string.settings_updates), 18f))
-        if (BuildConfig.PLAY_STORE) column.addView(label(tr(R.string.updates_play)))
-        else if (!BuildConfig.SELF_UPDATE) column.addView(label(tr(R.string.updates_manual)))
-        updateText = TextView(this)
-        updateText.setTextColor(0xFFB0C4E0.toInt())
-        updateText.textSize = 14f
-        updateText.setLineSpacing(0f, 1.3f)
-        column.addView(updateText)
-        updateCheck = CheckBox(this)
-        updateCheck.text = tr(R.string.settings_auto_update)
-        updateCheck.setTextColor(Color.WHITE)
-        updateCheck.isChecked = prefs.autoUpdate
-        // Version Google Play : les mises à jour passent par le Play Store
-        if (!BuildConfig.PLAY_STORE && BuildConfig.SELF_UPDATE) {
-            column.addView(updateCheck)
-            column.addView(button(tr(R.string.settings_allow_install)) {
-                open(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
-            })
-            column.addView(button(tr(R.string.settings_check_now)) { Updater.check(this, install = true) })
-        }
-
-        // Calendrier
-        column.addView(heading(tr(R.string.calendar_title), 18f))
-        calendarCheck = CheckBox(this)
-        calendarCheck.text = tr(R.string.calendar_in_dock)
-        calendarCheck.setTextColor(Color.WHITE)
-        calendarCheck.isChecked = prefs.calendarInDock
-        column.addView(calendarCheck)
-
-        // Réveils
-        column.addView(heading(tr(R.string.alarm_section), 18f))
-        column.addView(label(tr(R.string.alarm_help)))
-        alarmList = LinearLayout(this)
-        alarmList.orientation = LinearLayout.VERTICAL
-        column.addView(alarmList)
-        refreshAlarms()
-        column.addView(button(tr(R.string.alarm_add)) { addAlarm() })
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == false
-        ) {
-            column.addView(button(tr(R.string.alarm_exact)) {
-                open(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))
-            })
-        }
-
-        column.addView(heading(tr(R.string.backup_title), 18f))
-        column.addView(label(tr(R.string.backup_help)))
-        column.addView(button(tr(R.string.backup_export)) { SettingsBackup.startExport(this) })
-        column.addView(button(tr(R.string.backup_import)) { SettingsBackup.startImport(this) })
-
-        column.addView(heading(tr(R.string.settings_dock_apps), 18f))
-        column.addView(label(tr(R.string.settings_dock_help)))
-        for (app in Apps.listLaunchable(this)) column.addView(appRow(app))
-
         column.addView(button(tr(R.string.settings_save)) { save() })
         column.addView(label(tr(R.string.about_fork, BuildConfig.VERSION_NAME)))
 
         val scroll = ScrollView(this)
-        scroll.setBackgroundColor(0xFF050C1E.toInt())
         scroll.addView(column)
-        setContentView(scroll)
+
+        // Barre fixe : accès rapide aux trois parties et bouton Enregistrer
+        val bar = LinearLayout(this)
+        bar.orientation = LinearLayout.HORIZONTAL
+        bar.gravity = Gravity.CENTER_VERTICAL
+        bar.setPadding(dp(16), dp(8), dp(16), dp(8))
+        bar.setBackgroundColor(0xFF0A1634.toInt())
+        bar.elevation = dp(4).toFloat()
+        if (resources.configuration.screenWidthDp >= 720) {
+            val title = TextView(this)
+            title.text = tr(R.string.settings_title)
+            title.textSize = 18f
+            title.setTextColor(0xFF3FD4FF.toInt())
+            title.setPadding(dp(8), 0, dp(24), 0)
+            bar.addView(title)
+        }
+        val tabRow = LinearLayout(this)
+        tabRow.orientation = LinearLayout.HORIZONTAL
+        val anchors = listOf(connectionAnchor, commonAnchor, servicesAnchor)
+        val tabs = listOf(R.string.settings_section_connection, R.string.settings_common, R.string.settings_section_services)
+            .mapIndexed { i, text ->
+                tab(tr(text)) { scroll.smoothScrollTo(0, (anchors[i].top - dp(4)).coerceAtLeast(0)) }.also { tabRow.addView(it) }
+            }
+        val tabScroll = android.widget.HorizontalScrollView(this)
+        tabScroll.isHorizontalScrollBarEnabled = false
+        tabScroll.addView(tabRow)
+        bar.addView(tabScroll, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val saveTop = button(tr(R.string.settings_save)) { save() }
+        bar.addView(saveTop)
+        // L'onglet de la partie affichée est mis en avant pendant le défilement
+        fun highlightTab() {
+            val y = scroll.scrollY + dp(16)
+            val current = anchors.indexOfLast { it.top <= y }.coerceAtLeast(0)
+            tabs.forEachIndexed { i, t -> styleTab(t, i == current) }
+        }
+        scroll.setOnScrollChangeListener { _, _, _, _, _ -> highlightTab() }
+        scroll.post { highlightTab() }
+
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.setBackgroundColor(0xFF050C1E.toInt())
+        root.addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        setContentView(root)
     }
 
     override fun onResume() {
@@ -911,6 +967,41 @@ class SettingsActivity : Activity() {
         } else {
             requestPermissions(missing.toTypedArray(), REQUEST_BLE)
         }
+    }
+
+    /** Titre d'une grande partie (cible des onglets de la barre du haut). */
+    private fun section(s: String): TextView {
+        val view = TextView(this)
+        view.text = s
+        view.textSize = 24f
+        view.setTextColor(Color.WHITE)
+        view.setPadding(0, dp(28), 0, dp(4))
+        val line = android.graphics.drawable.GradientDrawable()
+        line.setColor(0x00000000)
+        view.background = line
+        return view
+    }
+
+    private fun tab(s: String, action: () -> Unit): TextView {
+        val view = TextView(this)
+        view.text = s
+        view.textSize = 15f
+        view.setPadding(dp(16), dp(8), dp(16), dp(8))
+        view.setOnClickListener { action() }
+        val params = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+        params.marginEnd = dp(8)
+        view.layoutParams = params
+        styleTab(view, false)
+        return view
+    }
+
+    private fun styleTab(view: TextView, active: Boolean) {
+        val shape = android.graphics.drawable.GradientDrawable()
+        shape.cornerRadius = dp(18).toFloat()
+        shape.setColor(if (active) 0xFF3FD4FF.toInt() else 0x00000000)
+        shape.setStroke(dp(1), 0xFF3FD4FF.toInt())
+        view.background = shape
+        view.setTextColor(if (active) 0xFF050C1E.toInt() else 0xFF3FD4FF.toInt())
     }
 
     private fun heading(s: String, size: Float): TextView {
