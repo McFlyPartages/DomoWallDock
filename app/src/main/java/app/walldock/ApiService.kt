@@ -37,6 +37,8 @@ import java.util.Locale
  */
 class ApiService : Service(), EsphomeServer.Handler {
 
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(Language.wrap(base))
+
     private val main = Handler(Looper.getMainLooper())
     private var server: EsphomeServer? = null
     private var deviceInfo: EsphomeServer.DeviceInfo? = null

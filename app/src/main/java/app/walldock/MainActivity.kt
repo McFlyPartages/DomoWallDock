@@ -42,6 +42,8 @@ import java.util.concurrent.Executors
  */
 class MainActivity : Activity(), DashboardController {
 
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(Language.wrap(base))
+
     private lateinit var prefs: Prefs
     private lateinit var web: WebView
     private lateinit var dockPanel: HorizontalScrollView
@@ -95,6 +97,7 @@ class MainActivity : Activity(), DashboardController {
 
         // Tableau de bord Home Assistant
         web = WebView(this)
+        Language.reapply(this)
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
         web.settings.mediaPlaybackRequiresUserGesture = false
@@ -448,6 +451,7 @@ class MainActivity : Activity(), DashboardController {
             return
         }
         val page = saverWeb ?: WebView(this).also {
+            Language.reapply(this)
             it.settings.javaScriptEnabled = true
             it.settings.domStorageEnabled = true
             it.settings.mediaPlaybackRequiresUserGesture = false

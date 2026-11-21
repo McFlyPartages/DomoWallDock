@@ -380,5 +380,8 @@
     <string name="server_error_port">puerto no válido (1 a 65535)</string>
     <string name="server_error_external">la dirección externa debe empezar por https://</string>
     <string name="about_credits">DomoWallDock %1$s — fork de WallDock (psycho1807, licencia GPL-3.0), adaptado y mantenido por McFlyPartages</string>
-    <string name="gladys_ha_features_off">Gladys elegido: Jarvis y el proxy Bluetooth (funciones de Home Assistant) se han desmarcado. Vuelve a marcarlos si también usas Home Assistant.</string>
+    <string name="gladys_ha_features_off">Gladys elegido: Jarvis, el proxy Bluetooth y Music Assistant (vinculados a Home Assistant) se han desmarcado. Vuelve a marcarlos si también los usas.</string>
+    <string name="settings_language">Idioma de la app</string>
+    <string name="language_system">Idioma de la tableta</string>
+    <string name="language_restart">Idioma cambiado: la app se reinicia…</string>
 </resources>
