@@ -2,12 +2,10 @@ package app.walldock
 
 import android.app.Activity
 import android.graphics.Color
-import android.text.Editable
 import android.text.InputFilter
 import android.text.InputType
-import android.text.TextWatcher
+import android.text.method.DigitsKeyListener
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.EditText
@@ -18,8 +16,8 @@ import android.widget.TextView
 
 /**
  * Formulaire d'accès à un serveur (Home Assistant ou Gladys) dans les réglages :
- * accès local / externe / les deux, HTTP ou HTTPS, IP en quatre cases (chiffres seulement,
- * points fixes), port, adresse externe en https.
+ * accès local / externe / les deux, HTTP ou HTTPS, IP (chiffres et points), port,
+ * adresse externe en https.
  */
 class ServerForm(
     private val activity: Activity,
@@ -31,7 +29,7 @@ class ServerForm(
 
     private lateinit var accessGroup: RadioGroup
     private lateinit var schemeGroup: RadioGroup
-    private val ipParts = ArrayList<EditText>()
+    private lateinit var ipField: EditText
     private lateinit var portField: EditText
     private lateinit var externalField: EditText
     private lateinit var localBlock: LinearLayout
@@ -55,39 +53,16 @@ class ServerForm(
         val row = LinearLayout(activity)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER_VERTICAL
-        val parts = server.ip.split('.')
-        for (i in 0 until 4) {
-            val part = field(parts.getOrNull(i) ?: "", if (i == 0) "192" else "0", InputType.TYPE_CLASS_NUMBER)
-            part.filters = arrayOf(InputFilter.LengthFilter(3))
-            part.gravity = Gravity.CENTER
-            ipParts.add(part)
-            row.addView(part, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-            if (i < 3) row.addView(separator("."))
-        }
-        // 3 chiffres saisis : case suivante ; effacement dans une case vide : case précédente
-        ipParts.forEachIndexed { i, part ->
-            part.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    if ((s?.length ?: 0) == 3 && part.hasFocus()) (ipParts.getOrNull(i + 1) ?: portField).requestFocus()
-                }
-            })
-            part.setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN && part.text.isEmpty() && i > 0) {
-                    ipParts[i - 1].requestFocus()
-                    ipParts[i - 1].setSelection(ipParts[i - 1].text.length)
-                    true
-                } else {
-                    false
-                }
-            }
-        }
+        // IP : un seul champ, chiffres et points seulement
+        ipField = field(server.ip, "192.168.1.10", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        ipField.keyListener = DigitsKeyListener.getInstance("0123456789.")
+        ipField.filters = arrayOf(InputFilter.LengthFilter(15))
+        row.addView(ipField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 3f))
         row.addView(separator(":"))
         portField = field(server.port.toString(), server.defaultPort.toString(), InputType.TYPE_CLASS_NUMBER)
         portField.filters = arrayOf(InputFilter.LengthFilter(5))
         portField.gravity = Gravity.CENTER
-        row.addView(portField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1.4f))
+        row.addView(portField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         localBlock.addView(row)
         panel.addView(localBlock)
 
@@ -112,14 +87,14 @@ class ServerForm(
 
     private fun access(): String = checked(accessGroup) ?: Prefs.ACCESS_LOCAL
     private fun scheme(): String = checked(schemeGroup) ?: "http"
-    private fun ip(): String = ipParts.joinToString(".") { it.text.toString().trim() }
+    private fun ip(): String = ipField.text.toString().trim()
     private fun port(): Int = portField.text.toString().trim().toIntOrNull() ?: server.defaultPort
     private fun external(): String {
         val text = externalField.text.toString().trim().trimEnd('/')
         return if (text == "https:" || text == "https://" || text.isEmpty()) "" else text
     }
 
-    private fun hasLocal() = ipParts.any { it.text.isNotBlank() }
+    private fun hasLocal() = ip().isNotEmpty()
 
     /** Rien de saisi : plateforme non configurée. */
     fun isEmpty(): Boolean = !hasLocal() && external().isEmpty()
@@ -128,8 +103,8 @@ class ServerForm(
     fun validate(): String? {
         val access = access()
         if (access != Prefs.ACCESS_EXTERNAL) {
-            val parts = ipParts.map { it.text.toString().trim().toIntOrNull() }
-            if (parts.any { it == null || it > 255 }) return tr(R.string.server_error_ip)
+            val parts = ip().split('.').map { it.toIntOrNull() }
+            if (parts.size != 4 || parts.any { it == null || it > 255 }) return tr(R.string.server_error_ip)
             if (port() !in 1..65535) return tr(R.string.server_error_port)
         }
         if (access != Prefs.ACCESS_LOCAL) {

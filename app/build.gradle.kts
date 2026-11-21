@@ -13,8 +13,8 @@ android {
         applicationId = "fr.mcflypartages.domowalldock"
         minSdk = 26
         targetSdk = 36
-        versionCode = 42
-        versionName = "0.19.0"
+        versionCode = 43
+        versionName = "0.19.1"
         // Pas de mise à jour par l'appli : les releases GitHub de WallDock sont signées avec une autre clé
         buildConfigField("boolean", "SELF_UPDATE", "false")
     }
@@ -64,6 +64,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Aperçu de l'écran des réglages sans tablette : ./gradlew testGithubDebugUnitTest
+    // (Robolectric dessine le vrai écran en PNG dans app/build/preview)
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.maxHeapSize = "1g"
+                it.systemProperty("preview.dir", layout.buildDirectory.dir("preview").get().asFile.path)
+            }
+        }
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -72,4 +84,6 @@ android {
 dependencies {
     // Détection de « Hey Jarvis » sur la tablette (modèles openWakeWord au format TFLite)
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

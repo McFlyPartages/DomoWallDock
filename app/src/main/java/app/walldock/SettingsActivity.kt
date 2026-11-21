@@ -259,10 +259,15 @@ class SettingsActivity : Activity() {
         times.orientation = LinearLayout.HORIZONTAL
         sleepField = timeButton(prefs.sleepTime)
         wakeField = timeButton(prefs.wakeTime)
-        times.addView(label(tr(R.string.settings_schedule_off)))
-        times.addView(sleepField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        times.addView(label(tr(R.string.settings_schedule_on)))
-        times.addView(wakeField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val offLabel = label(tr(R.string.settings_schedule_off))
+        offLabel.setPadding(0, offLabel.paddingTop, dp(4), offLabel.paddingBottom)
+        times.addView(offLabel)
+        times.gravity = Gravity.CENTER_VERTICAL
+        times.addView(sleepField, LinearLayout.LayoutParams(dp(96), WRAP_CONTENT))
+        val onLabel = label(tr(R.string.settings_schedule_on))
+        onLabel.setPadding(dp(24), onLabel.paddingTop, dp(4), onLabel.paddingBottom)
+        times.addView(onLabel)
+        times.addView(wakeField, LinearLayout.LayoutParams(dp(96), WRAP_CONTENT))
         column.addView(times)
 
         // Détection de mouvement (caméra frontale)
@@ -536,12 +541,33 @@ class SettingsActivity : Activity() {
         column.addView(button(tr(R.string.settings_test_jarvis)) { ApiService.instance?.jarvis?.talk() })
 
         column.addView(button(tr(R.string.settings_save_quit)) { save(close = true) })
-        column.addView(label(tr(R.string.about_fork, BuildConfig.VERSION_NAME)))
-        val author = label(tr(R.string.about_author))
-        author.autoLinkMask = android.text.util.Linkify.WEB_URLS
-        author.setLinkTextColor(0xFF3FD4FF.toInt())
-        author.text = tr(R.string.about_author) // autoLink appliqué au texte posé après le masque
-        column.addView(author)
+        // Crédits : une ligne et les liens en icônes
+        val credits = label(tr(R.string.about_credits, BuildConfig.VERSION_NAME))
+        credits.gravity = Gravity.CENTER
+        column.addView(credits, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        val links = LinearLayout(this)
+        links.orientation = LinearLayout.HORIZONTAL
+        links.gravity = Gravity.CENTER
+        for ((icon, name, url) in listOf(
+            Triple(R.drawable.ic_link_web, "mcflypartages.fr", "https://mcflypartages.fr"),
+            Triple(R.drawable.ic_link_mastodon, "Mastodon @McFlyPartages@mastodon.social", "https://mastodon.social/@McFlyPartages"),
+            Triple(R.drawable.ic_link_facebook, "Facebook McFlyPartages", "https://www.facebook.com/McFlyPartages"),
+            Triple(R.drawable.ic_link_x, "X @McFlyPartages", "https://x.com/McFlyPartages")
+        )) {
+            val view = ImageView(this)
+            view.setImageResource(icon)
+            view.contentDescription = name
+            view.setPadding(dp(8), dp(8), dp(8), dp(8))
+            val round = android.graphics.drawable.GradientDrawable()
+            round.shape = android.graphics.drawable.GradientDrawable.OVAL
+            round.setColor(0xFF0C1C3E.toInt())
+            view.background = round
+            view.setOnClickListener { open(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+            val params = LinearLayout.LayoutParams(dp(43), dp(43))
+            params.setMargins(dp(8), dp(6), dp(8), dp(16))
+            links.addView(view, params)
+        }
+        column.addView(links, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
 
         val scroll = ScrollView(this)
         scroll.addView(column)
@@ -902,24 +928,17 @@ class SettingsActivity : Activity() {
         return row
     }
 
-    /** Heure « HH:mm » choisie avec des roues qui défilent (pas de saisie au clavier). */
+    /** Heure « HH:mm » : un champ comme les autres ; un appui ouvre les roues heures / minutes. */
     private fun timeButton(value: String): TextView {
-        val view = TextView(this)
-        view.text = normalizeTime(value)
-        view.textSize = 20f
+        val view = field(normalizeTime(value), "00:00", InputType.TYPE_NULL)
+        view.isFocusable = false
+        view.isCursorVisible = false
         view.gravity = Gravity.CENTER
-        view.setTextColor(Color.WHITE)
-        view.setPadding(dp(12), dp(10), dp(12), dp(10))
-        val shape = android.graphics.drawable.GradientDrawable()
-        shape.cornerRadius = dp(10).toFloat()
-        shape.setColor(0xFF0C1C3E.toInt())
-        shape.setStroke(dp(1), 0xFF3FD4FF.toInt())
-        view.background = shape
         view.setOnClickListener {
             val (h, m) = normalizeTime(view.text.toString()).split(":").map { it.toInt() }
             // Thème Holo : roues des heures et des minutes, sur toutes les versions d'Android
             android.app.TimePickerDialog(this, android.R.style.Theme_Holo_Dialog, { _, hour, minute ->
-                view.text = "%02d:%02d".format(hour, minute)
+                view.setText("%02d:%02d".format(hour, minute))
             }, h, m, true).show()
         }
         return view
