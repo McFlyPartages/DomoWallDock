@@ -552,7 +552,9 @@ class SettingsActivity : Activity() {
             Triple(R.drawable.ic_link_web, "mcflypartages.fr", "https://mcflypartages.fr"),
             Triple(R.drawable.ic_link_mastodon, "Mastodon @McFlyPartages@mastodon.social", "https://mastodon.social/@McFlyPartages"),
             Triple(R.drawable.ic_link_facebook, "Facebook McFlyPartages", "https://www.facebook.com/McFlyPartages"),
-            Triple(R.drawable.ic_link_x, "X @McFlyPartages", "https://x.com/McFlyPartages")
+            Triple(R.drawable.ic_link_x, "X @McFlyPartages", "https://x.com/McFlyPartages"),
+            Triple(R.drawable.ic_link_tipeee, "Tipeee McFlyPartages", "https://fr.tipeee.com/mcflypartages"),
+            Triple(R.drawable.ic_link_kofi, "Ko-fi McFlyPartages", "https://ko-fi.com/mcflypartages")
         )) {
             val view = ImageView(this)
             view.setImageResource(icon)
