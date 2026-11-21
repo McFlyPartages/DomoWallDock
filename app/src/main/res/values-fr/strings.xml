@@ -292,8 +292,8 @@
     <string name="entity_last_crash">Dernière erreur</string>
     <string name="no_crash">aucune</string>
     <string name="settings_motion_off">Éteindre l’écran après ce délai sans mouvement ni toucher, en minutes (0 = ne jamais l’éteindre)</string>
-    <string name="settings_mqtt_title">Gladys Assistant (MQTT)</string>
-    <string name="settings_mqtt_enable">Connecter la tablette à Gladys par MQTT</string>
+    <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
+    <string name="settings_mqtt_enable">Connecter la tablette à un broker MQTT</string>
     <string name="settings_mqtt_help">La tablette s’annonce toute seule : dans Gladys, Intégrations → MQTT → appareils découverts (Home Assistant), ajoutez « DomoWallDock … ». Vous y trouverez la batterie, la charge, le mouvement, l’écran (allumer, éteindre) et deux boutons (recharger, revenir au tableau de bord). Fonctionne aussi avec tout broker MQTT qui comprend la découverte de Home Assistant.</string>
     <string name="settings_mqtt_host">Adresse du broker MQTT (ex. 192.168.1.10)</string>
     <string name="settings_mqtt_user">Utilisateur MQTT (si le broker en demande un)</string>
@@ -314,4 +314,37 @@
     <string name="updates_manual">DomoWallDock s’installe et se met à jour à la main : installez le nouvel APK par-dessus celui-ci (même clé de signature, les réglages sont conservés).</string>
     <string name="updates_manual_status">Version %1$s (mises à jour manuelles)</string>
     <string name="about_fork">DomoWallDock %1$s est un dérivé (fork) de WallDock de psycho1807 (github.com/psycho1807/WallDock, licence GPL-3.0), adapté pour Home Assistant et Gladys Assistant.</string>
+    <!-- Plateforme : Home Assistant ou Gladys Assistant -->
+    <string name="settings_platform">Tableau de bord affiché</string>
+    <string name="settings_platform_help">Les deux plateformes peuvent être configurées ; seule celle choisie est affichée au lancement. Les fonctions qui passent par Home Assistant (Jarvis, proxy Bluetooth, caméras…) restent disponibles si son adresse est remplie.</string>
+    <string name="platform_ha">Home Assistant</string>
+    <string name="platform_gladys">Gladys Assistant</string>
+    <string name="settings_server_address">Adresse</string>
+    <string name="settings_ha_user">Nom d’utilisateur (facultatif)</string>
+    <string name="settings_gladys_user">Adresse e-mail du compte (facultatif)</string>
+    <string name="settings_password">Mot de passe (facultatif)</string>
+    <string name="settings_dashboard_default">Tableau de bord par défaut (facultatif)</string>
+    <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
+    <string name="settings_gladys_dashboard_hint">/dashboard/salon</string>
+    <string name="settings_autologin_help">Avec un compte et un mot de passe, la tablette se connecte toute seule quand la page de connexion s’affiche. Conseil : un compte dédié à la tablette, sans droits d’administration.</string>
+    <string name="settings_common">Réglages communs</string>
+    <string name="settings_photos_title">Photos (Immich ou dossier de la tablette)</string>
+    <string name="error_url_platform">%1$s : l’adresse doit commencer par http:// ou https://</string>
+    <string name="autologin_error">Connexion automatique impossible : %1$s</string>
+    <string name="autologin_failed">réponse inattendue du serveur</string>
+    <string name="autologin_refused">compte ou mot de passe refusé</string>
+    <string name="autologin_mfa">l’authentification à deux facteurs est activée sur ce compte</string>
+
+    <!-- Proxy Bluetooth ESPHome -->
+    <string name="settings_ble_title">Proxy Bluetooth (ESPHome)</string>
+    <string name="settings_ble_enable">Servir de proxy Bluetooth pour Home Assistant</string>
+    <string name="settings_ble_help">La tablette écoute les appareils Bluetooth Low Energy autour d’elle (thermomètres, capteurs BTHome, balises, montres…) et transmet leurs annonces à Home Assistant par l’intégration ESPHome, comme un proxy Bluetooth ESPHome. Écoute seule : Home Assistant ne peut pas se connecter aux appareils à travers la tablette. Les autorisations Bluetooth et position sont demandées à l’enregistrement. Gladys ne sait pas utiliser un proxy Bluetooth : l’option ne sert qu’avec Home Assistant.</string>
+    <string name="settings_allow_ble">Autoriser le Bluetooth et la position</string>
+    <string name="ble_status_off">Proxy Bluetooth arrêté</string>
+    <string name="ble_status_waiting">En attente de Home Assistant (intégration ESPHome)</string>
+    <string name="ble_status_scanning">Écoute en cours : %1$d appareils vus, transmis à Home Assistant</string>
+    <string name="ble_status_no_permission">⚠️ Autorisation Bluetooth ou position manquante</string>
+    <string name="ble_status_bt_off">⚠️ Le Bluetooth de la tablette est éteint</string>
+    <string name="ble_status_unsupported">⚠️ Cette tablette n’a pas de Bluetooth Low Energy</string>
+    <string name="ble_status_error">⚠️ Écoute refusée par Android (code %1$d)</string>
 </resources>

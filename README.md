@@ -1,14 +1,24 @@
 # DomoWallDock
 
-**Transformez une tablette Android en tableau de bord mural pour [Gladys Assistant](https://gladysassistant.com/).**
+**Transformez une tablette Android en tableau de bord mural pour [Home Assistant](https://www.home-assistant.io/) ou [Gladys Assistant](https://gladysassistant.com/).**
 
-DomoWallDock est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807, que j'ai adapté pour Gladys Assistant. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici. Licence GPL-3.0, comme l'original.
+DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.
 
 ## Ce que fait DomoWallDock
 
+**Home Assistant ou Gladys, au choix**
+- Réglages → « Tableau de bord affiché » : un bouton radio choisit la plateforme lancée. Chacune a sa colonne (côte à côte sur un écran large ou une tablette en paysage, l'une sous l'autre sinon) : adresse, compte, mot de passe et tableau de bord par défaut (facultatif, ex. `/lovelace/0?kiosk` ou `/dashboard/salon`).
+- **Connexion automatique** : avec un compte et un mot de passe, la tablette se connecte toute seule quand la page de connexion s'affiche (Home Assistant : comme « Rester connecté » ; pas avec l'authentification à deux facteurs). Conseil : un compte dédié à la tablette, sans droits d'administration.
+- Les fonctions qui passent par Home Assistant (Jarvis, proxy Bluetooth, caméras, sons) restent disponibles quand Gladys est affiché, tant que l'adresse de HA est remplie.
+
+**Proxy Bluetooth ESPHome** (Home Assistant)
+- Réglages → « Proxy Bluetooth (ESPHome) » : la tablette écoute les appareils Bluetooth Low Energy autour d'elle (thermomètres Xiaomi, capteurs BTHome, balises…) et transmet leurs annonces à Home Assistant par l'intégration ESPHome, exactement comme un module ESPHome `bluetooth_proxy`. Les appareils apparaissent dans HA comme s'ils étaient à portée de son propre Bluetooth.
+- Écoute seule : HA ne peut pas se *connecter* aux appareils à travers la tablette (appareils qui demandent une connexion GATT, appairage).
+- Autorisations Bluetooth et position demandées à l'enregistrement (sans la position, Android masque les balises). L'écoute ne tourne que lorsque HA est abonné.
+- Gladys ne sait pas utiliser un proxy Bluetooth : l'option ne sert qu'avec Home Assistant.
+
 **Avec Gladys Assistant**
-- Le tableau de bord de Gladys en plein écran : indiquez son adresse (ex. `http://192.168.1.20/dashboard`) au premier lancement.
-- **Connexion par MQTT** : réglages → « Gladys Assistant (MQTT) », avec l'adresse du broker, l'utilisateur et le mot de passe (dans Gladys : Intégrations → MQTT → Configuration). La tablette s'annonce toute seule (format de découverte MQTT de Home Assistant, compris par les versions récentes de Gladys 5) : Intégrations → MQTT → appareils découverts, ajouter « DomoWallDock … ».
+- **Connexion par MQTT** (commun aux deux plateformes) : réglages → « MQTT », avec l'adresse du broker, l'utilisateur et le mot de passe (dans Gladys : Intégrations → MQTT → Configuration). La tablette s'annonce toute seule (format de découverte MQTT de Home Assistant, compris par les versions récentes de Gladys 5) : Intégrations → MQTT → appareils découverts, ajouter « DomoWallDock … ».
 - Dans Gladys : batterie, température de la batterie, en charge, mouvement, écran (allumer / éteindre), boutons « Recharger » et « Retour au tableau de bord ».
 - **Gestion de la charge** pour une tablette toujours branchée : réglages → « Batterie ». Android n'autorise pas une appli à couper la charge ; DomoWallDock publie donc un capteur « Charge demandée » (oui sous le seuil bas, 30 % par défaut ; non au-dessus du seuil haut, 80 % par défaut) et deux scènes Gladys pilotent la prise connectée du chargeur :
   - « Charge demandée » passe à 1 → allumer la prise ;
@@ -47,7 +57,7 @@ DomoWallDock est un dérivé (*fork*) de [WallDock](https://github.com/psycho180
 ## Installation
 
 1. Installer `DomoWallDock-x.y.z.apk` sur la tablette (autoriser l'installation depuis cette source). L'appli a son propre identifiant (`fr.mcflypartages.domowalldock`) : elle peut cohabiter avec WallDock.
-2. Au premier lancement : adresse du tableau de bord, code administrateur, applis du dock, puis **Enregistrer**.
+2. Au premier lancement : plateforme (Home Assistant ou Gladys), son adresse (et si besoin compte, mot de passe, tableau de bord), code administrateur, applis du dock, puis **Enregistrer**.
 3. Dans les réglages : écran d'accueil, affichage par-dessus les autres applis, caméra (détection de mouvement), puis la partie MQTT.
 4. Désactiver l'optimisation de batterie d'Android pour DomoWallDock, sinon le système peut couper l'appli ([dontkillmyapp.com](https://dontkillmyapp.com) détaille chaque marque).
 
@@ -55,7 +65,7 @@ DomoWallDock est un dérivé (*fork*) de [WallDock](https://github.com/psycho180
 
 ## Compilation
 
-`gradle assembleGithubRelease` avec Gradle 8.14, JDK 17 et le SDK Android 36. Pour signer, donner le chemin du magasin de clés (PKCS12, alias `domowalldock`) dans `WALLDOCK_KEYSTORE` et son mot de passe dans `WALLDOCK_KEY_PASSWORD` ; la clé n'est pas dans le dépôt. Sans elles, l'APK n'est pas signé (`assembleGithubDebug` donne un APK de test).
+`gradle assembleGithubRelease` avec Gradle 8.14, JDK 17 et le SDK Android 36. Pour signer, donner le chemin du magasin de clés (PKCS12, alias `gladyswalldock`, nom d'origine de la clé) dans `WALLDOCK_KEYSTORE` et son mot de passe dans `WALLDOCK_KEY_PASSWORD` ; la clé n'est pas dans le dépôt. Sans elles, l'APK n'est pas signé (`assembleGithubDebug` donne un APK de test).
 
 Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement ses évolutions. Le client MQTT (`app/src/main/java/app/walldock/mqtt`) et le serveur ESPHome (`…/esphome`) sont en Java pur et se testent sur une JVM.
 
@@ -68,6 +78,6 @@ Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement 
 
 ## English
 
-**DomoWallDock** turns an Android tablet into a wall panel for [Gladys Assistant](https://gladysassistant.com/). It is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807 (GPL-3.0), adapted for Gladys: MQTT connection with automatic discovery (battery, charging, motion, screen switch, two buttons), charge management for always-plugged tablets (a “Charge wanted” sensor drives the charger's smart plug through two Gladys scenes), and a screen that turns on with motion and off when nobody is there. Everything WallDock does for Home Assistant is still there.
+**DomoWallDock** (formerly GladysWallDock) turns an Android tablet into a wall panel for [Home Assistant](https://www.home-assistant.io/) or [Gladys Assistant](https://gladysassistant.com/), chosen with a radio button in the settings, with automatic sign-in. It is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807 (GPL-3.0). It adds an ESPHome Bluetooth proxy (the tablet forwards nearby BLE advertisements to Home Assistant, listening only) and, for Gladys: MQTT connection with automatic discovery (battery, charging, motion, screen switch, two buttons), charge management for always-plugged tablets (a “Charge wanted” sensor drives the charger's smart plug through two Gladys scenes), and a screen that turns on with motion and off when nobody is there. Everything WallDock does for Home Assistant is still there.
 
 License: GPL-3.0.

@@ -46,7 +46,7 @@ class CameraOverlay(private val context: Context, private val onClosed: () -> Un
             <img src="$safeUrl" style="max-width:100%;max-height:100%;object-fit:contain">
             </body></html>
         """.trimIndent()
-        return open(title, seconds) { it.loadDataWithBaseURL(Prefs(context).absoluteUrl("/"), page, "text/html", "utf-8", null) }
+        return open(title, seconds) { it.loadDataWithBaseURL(Prefs(context).let { p -> p.absoluteUrl("/", p.haBase) }, page, "text/html", "utf-8", null) }
     }
 
     /**

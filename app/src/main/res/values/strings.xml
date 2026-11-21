@@ -293,8 +293,8 @@
     <string name="entity_last_crash">Last error</string>
     <string name="no_crash">none</string>
     <string name="settings_motion_off">Turn the screen off after this many minutes without motion or touch (0 = never turn it off)</string>
-    <string name="settings_mqtt_title">Gladys Assistant (MQTT)</string>
-    <string name="settings_mqtt_enable">Connect the tablet to Gladys over MQTT</string>
+    <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
+    <string name="settings_mqtt_enable">Connect the tablet to an MQTT broker</string>
     <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “DomoWallDock …”. You get battery, charging, motion, the screen (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
     <string name="settings_mqtt_host">MQTT broker address (e.g. 192.168.1.10)</string>
     <string name="settings_mqtt_user">MQTT user (if the broker asks for one)</string>
@@ -315,4 +315,37 @@
     <string name="updates_manual">DomoWallDock is installed and updated by hand: install the new APK over this one (same signing key, settings are kept).</string>
     <string name="updates_manual_status">Version %1$s (manual updates)</string>
     <string name="about_fork">DomoWallDock %1$s is a fork of WallDock by psycho1807 (github.com/psycho1807/WallDock, GPL-3.0 licence), adapted for Home Assistant and Gladys Assistant.</string>
+    <!-- Platform: Home Assistant or Gladys Assistant -->
+    <string name="settings_platform">Dashboard shown</string>
+    <string name="settings_platform_help">Both platforms can be set up; only the chosen one is shown at start. Features that go through Home Assistant (Jarvis, Bluetooth proxy, cameras…) stay available as long as its address is filled in.</string>
+    <string name="platform_ha">Home Assistant</string>
+    <string name="platform_gladys">Gladys Assistant</string>
+    <string name="settings_server_address">Address</string>
+    <string name="settings_ha_user">User name (optional)</string>
+    <string name="settings_gladys_user">Account e-mail address (optional)</string>
+    <string name="settings_password">Password (optional)</string>
+    <string name="settings_dashboard_default">Default dashboard (optional)</string>
+    <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
+    <string name="settings_gladys_dashboard_hint">/dashboard/living-room</string>
+    <string name="settings_autologin_help">With a user and a password, the tablet signs in by itself when the login page shows. Tip: use an account dedicated to the tablet, without admin rights.</string>
+    <string name="settings_common">Common settings</string>
+    <string name="settings_photos_title">Photos (Immich or a tablet folder)</string>
+    <string name="error_url_platform">%1$s: the address must start with http:// or https://</string>
+    <string name="autologin_error">Automatic sign-in failed: %1$s</string>
+    <string name="autologin_failed">unexpected answer from the server</string>
+    <string name="autologin_refused">user or password refused</string>
+    <string name="autologin_mfa">two-factor authentication is enabled on this account</string>
+
+    <!-- ESPHome Bluetooth proxy -->
+    <string name="settings_ble_title">Bluetooth proxy (ESPHome)</string>
+    <string name="settings_ble_enable">Act as a Bluetooth proxy for Home Assistant</string>
+    <string name="settings_ble_help">The tablet listens to the Bluetooth Low Energy devices around it (thermometers, BTHome sensors, beacons, watches…) and forwards their advertisements to Home Assistant through the ESPHome integration, like an ESPHome Bluetooth proxy. Listening only: Home Assistant cannot connect to the devices through the tablet. Bluetooth and location permissions are asked when you save. Gladys cannot use a Bluetooth proxy: this option only helps with Home Assistant.</string>
+    <string name="settings_allow_ble">Allow Bluetooth and location</string>
+    <string name="ble_status_off">Bluetooth proxy stopped</string>
+    <string name="ble_status_waiting">Waiting for Home Assistant (ESPHome integration)</string>
+    <string name="ble_status_scanning">Listening: %1$d devices seen, forwarded to Home Assistant</string>
+    <string name="ble_status_no_permission">⚠️ Bluetooth or location permission missing</string>
+    <string name="ble_status_bt_off">⚠️ The tablet\'s Bluetooth is off</string>
+    <string name="ble_status_unsupported">⚠️ This tablet has no Bluetooth Low Energy</string>
+    <string name="ble_status_error">⚠️ Scan refused by Android (code %1$d)</string>
 </resources>

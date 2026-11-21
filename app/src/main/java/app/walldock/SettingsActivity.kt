@@ -29,7 +29,19 @@ import java.net.Inet4Address
 class SettingsActivity : Activity() {
 
     private lateinit var prefs: Prefs
-    private lateinit var urlField: EditText
+    private lateinit var platformGroup: RadioGroup
+    private lateinit var haUrlField: EditText
+    private lateinit var haUserField: EditText
+    private lateinit var haPasswordField: EditText
+    private lateinit var haDashboardField: EditText
+    private lateinit var gladysUrlField: EditText
+    private lateinit var gladysUserField: EditText
+    private lateinit var gladysPasswordField: EditText
+    private lateinit var gladysDashboardField: EditText
+    private lateinit var haPanel: LinearLayout
+    private lateinit var gladysPanel: LinearLayout
+    private lateinit var bleCheck: CheckBox
+    private lateinit var bleStatusText: TextView
     private lateinit var pinField: EditText
     private lateinit var delayField: EditText
     private lateinit var statusText: TextView
@@ -93,10 +105,91 @@ class SettingsActivity : Activity() {
 
         column.addView(heading(tr(R.string.settings_title), 22f))
 
-        column.addView(label(tr(R.string.settings_ha_address)))
-        urlField = field(prefs.haUrl, "http://homeassistant.local:8123", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        column.addView(urlField)
+        // Plateforme lancée : Home Assistant ou Gladys Assistant
+        column.addView(heading(tr(R.string.settings_platform), 18f))
+        platformGroup = RadioGroup(this)
+        platformGroup.orientation = RadioGroup.HORIZONTAL
+        for ((value, text) in listOf(Prefs.PLATFORM_HA to tr(R.string.platform_ha), Prefs.PLATFORM_GLADYS to tr(R.string.platform_gladys))) {
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = text
+            choice.tag = value
+            choice.textSize = 16f
+            choice.setTextColor(Color.WHITE)
+            val spacing = RadioGroup.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+            spacing.marginEnd = dp(24)
+            platformGroup.addView(choice, spacing)
+            if (value == prefs.platform) platformGroup.check(choice.id)
+        }
+        platformGroup.setOnCheckedChangeListener { _, _ -> highlightPlatform() }
+        column.addView(platformGroup)
+        column.addView(label(tr(R.string.settings_platform_help)))
 
+        // Deux colonnes sur un écran large (tablette en paysage), sinon l'une sous l'autre
+        val wide = resources.configuration.screenWidthDp >= 720
+        val platforms = LinearLayout(this)
+        platforms.orientation = if (wide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+        haPanel = panel()
+        haPanel.addView(heading(tr(R.string.platform_ha), 18f))
+        haPanel.addView(label(tr(R.string.settings_server_address)))
+        haUrlField = field(prefs.haUrl, "http://homeassistant.local:8123", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        haPanel.addView(haUrlField)
+        haPanel.addView(label(tr(R.string.settings_ha_user)))
+        haUserField = field(prefs.haUser, "tablette", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+        haPanel.addView(haUserField)
+        haPanel.addView(label(tr(R.string.settings_password)))
+        haPasswordField = field(prefs.haPassword, "••••••", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        haPanel.addView(haPasswordField)
+        haPanel.addView(label(tr(R.string.settings_dashboard_default)))
+        haDashboardField = field(prefs.haDashboard, tr(R.string.settings_ha_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        haPanel.addView(haDashboardField)
+        // Intégration ESPHome (Jarvis, capteurs, proxy Bluetooth…) : état et chiffrement
+        haStatusText = label("")
+        haPanel.addView(haStatusText)
+        haPanel.addView(button(tr(R.string.encryption_reset)) {
+            AlertDialog.Builder(this)
+                .setMessage(tr(R.string.encryption_reset_confirm))
+                .setPositiveButton(tr(R.string.encryption_reset)) { _, _ ->
+                    ApiService.instance?.resetEncryption()
+                    updateHaStatus()
+                }
+                .setNegativeButton(tr(R.string.cancel), null)
+                .show()
+        })
+
+        gladysPanel = panel()
+        gladysPanel.addView(heading(tr(R.string.platform_gladys), 18f))
+        gladysPanel.addView(label(tr(R.string.settings_server_address)))
+        gladysUrlField = field(prefs.gladysUrl, "http://192.168.1.20", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        gladysPanel.addView(gladysUrlField)
+        gladysPanel.addView(label(tr(R.string.settings_gladys_user)))
+        gladysUserField = field(prefs.gladysUser, "tablette@maison.fr", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
+        gladysPanel.addView(gladysUserField)
+        gladysPanel.addView(label(tr(R.string.settings_password)))
+        gladysPasswordField = field(prefs.gladysPassword, "••••••", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        gladysPanel.addView(gladysPasswordField)
+        gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
+        gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        gladysPanel.addView(gladysDashboardField)
+
+        if (wide) {
+            val left = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            left.marginEnd = dp(8)
+            val right = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            right.marginStart = dp(8)
+            platforms.addView(haPanel, left)
+            platforms.addView(gladysPanel, right)
+        } else {
+            val spaced = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT)
+            spaced.bottomMargin = dp(12)
+            platforms.addView(haPanel, spaced)
+            platforms.addView(gladysPanel, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        }
+        column.addView(platforms)
+        column.addView(label(tr(R.string.settings_autologin_help)))
+        highlightPlatform()
+
+        column.addView(heading(tr(R.string.settings_common), 20f))
         column.addView(label(tr(R.string.settings_pin)))
         pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
         column.addView(pinField)
@@ -118,6 +211,7 @@ class SettingsActivity : Activity() {
         zoomField = field(prefs.zoom.toString(), "100", InputType.TYPE_CLASS_NUMBER)
         column.addView(zoomField)
         // Écran de veille photos
+        column.addView(heading(tr(R.string.settings_photos_title), 18f))
         column.addView(label(tr(R.string.photos_help)))
         immichUrlField = field(prefs.immichUrl, tr(R.string.photos_immich_url), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(immichUrlField)
@@ -213,24 +307,7 @@ class SettingsActivity : Activity() {
             open(Intent(Settings.ACTION_HOME_SETTINGS))
         })
 
-        column.addView(heading("Home Assistant", 18f))
-        haStatusText = TextView(this)
-        haStatusText.setTextColor(0xFFB0C4E0.toInt())
-        haStatusText.textSize = 14f
-        haStatusText.setLineSpacing(0f, 1.3f)
-        column.addView(haStatusText)
-        column.addView(button(tr(R.string.encryption_reset)) {
-            AlertDialog.Builder(this)
-                .setMessage(tr(R.string.encryption_reset_confirm))
-                .setPositiveButton(tr(R.string.encryption_reset)) { _, _ ->
-                    ApiService.instance?.resetEncryption()
-                    updateHaStatus()
-                }
-                .setNegativeButton(tr(R.string.cancel), null)
-                .show()
-        })
-
-        // Gladys Assistant (ou tout broker MQTT) : capteurs, commandes et gestion de la charge
+        // MQTT (Gladys Assistant, ou tout broker) : capteurs, commandes et gestion de la charge
         column.addView(heading(tr(R.string.settings_mqtt_title), 18f))
         mqttStatusText = label("")
         column.addView(mqttStatusText)
@@ -342,6 +419,18 @@ class SettingsActivity : Activity() {
             else -> R.string.sendspin_off
         })))
 
+        // Proxy Bluetooth ESPHome : annonces BLE des appareils proches transmises à HA
+        column.addView(heading(tr(R.string.settings_ble_title), 18f))
+        bleStatusText = label("")
+        column.addView(bleStatusText)
+        bleCheck = CheckBox(this)
+        bleCheck.text = tr(R.string.settings_ble_enable)
+        bleCheck.setTextColor(Color.WHITE)
+        bleCheck.isChecked = prefs.bleProxyEnabled
+        column.addView(bleCheck)
+        column.addView(label(tr(R.string.settings_ble_help)))
+        column.addView(button(tr(R.string.settings_allow_ble)) { requestBlePermissions() })
+
         column.addView(heading(tr(R.string.settings_updates), 18f))
         if (BuildConfig.PLAY_STORE) column.addView(label(tr(R.string.updates_play)))
         else if (!BuildConfig.SELF_UPDATE) column.addView(label(tr(R.string.updates_manual)))
@@ -425,6 +514,7 @@ class SettingsActivity : Activity() {
                 "error" -> tr(R.string.mqtt_error, service.mqttError)
                 else -> tr(R.string.mqtt_off)
             }
+            bleStatusText.text = BleProxy.statusText(this@SettingsActivity)
             mqttStatusText.postDelayed(this, 2_000)
         }
     }
@@ -438,6 +528,7 @@ class SettingsActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == MainActivity.REQUEST_CAMERA) ApiService.instance?.applyMotionSettings()
+        if (requestCode == REQUEST_BLE) ApiService.instance?.applyBleProxy()
         if (requestCode == MainActivity.REQUEST_MIC) {
             ApiService.instance?.onMicrophoneChanged()
             updateJarvisStatus()
@@ -516,7 +607,11 @@ class SettingsActivity : Activity() {
     }
 
     private fun save() {
-        val url = urlField.text.toString().trim().trimEnd('/')
+        val haUrl = haUrlField.text.toString().trim().trimEnd('/')
+        val gladysUrl = gladysUrlField.text.toString().trim().trimEnd('/')
+        val platform = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) ?: Prefs.PLATFORM_HA
+        val activeUrl = if (platform == Prefs.PLATFORM_GLADYS) gladysUrl else haUrl
+        fun validUrl(u: String) = u.startsWith("http://") || u.startsWith("https://")
         val pin = pinField.text.toString().trim()
         val delay = delayField.text.toString().trim().toIntOrNull() ?: 0
         val saverMinutes = saverField.text.toString().trim().toIntOrNull() ?: 0
@@ -529,12 +624,26 @@ class SettingsActivity : Activity() {
             chargeCheck.isChecked && (chargeLow < 5 || chargeHigh > 100 || chargeHigh - chargeLow < 10) ->
                 toast(tr(R.string.error_charge_levels))
             saverCheck.isChecked && saverMinutes < 1 -> toast(tr(R.string.error_saver_delay))
-            !(url.startsWith("http://") || url.startsWith("https://")) ->
-                toast(tr(R.string.error_url))
+            !validUrl(activeUrl) -> toast(tr(R.string.error_url_platform,
+                tr(if (platform == Prefs.PLATFORM_GLADYS) R.string.platform_gladys else R.string.platform_ha)))
+            haUrl.isNotEmpty() && !validUrl(haUrl) -> toast(tr(R.string.error_url_platform, tr(R.string.platform_ha)))
+            gladysUrl.isNotEmpty() && !validUrl(gladysUrl) -> toast(tr(R.string.error_url_platform, tr(R.string.platform_gladys)))
             pin.length < 4 -> toast(tr(R.string.error_pin))
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
-                prefs.haUrl = url
+                prefs.platform = platform
+                prefs.haUrl = haUrl
+                prefs.haUser = haUserField.text.toString().trim()
+                prefs.haPassword = haPasswordField.text.toString()
+                prefs.haDashboard = haDashboardField.text.toString().trim()
+                prefs.gladysUrl = gladysUrl
+                prefs.gladysUser = gladysUserField.text.toString().trim()
+                prefs.gladysPassword = gladysPasswordField.text.toString()
+                prefs.gladysDashboard = gladysDashboardField.text.toString().trim()
+                val bleChanged = prefs.bleProxyEnabled != bleCheck.isChecked
+                prefs.bleProxyEnabled = bleCheck.isChecked
+                if (bleCheck.isChecked && !BleProxy.hasPermissions(this)) requestBlePermissions()
+                if (bleChanged) ApiService.instance?.applyBleProxy(featuresChanged = true)
                 prefs.pin = pin
                 prefs.returnSeconds = delay
                 prefs.screensaverEnabled = saverCheck.isChecked
@@ -697,6 +806,35 @@ class SettingsActivity : Activity() {
         return row
     }
 
+    /** Cadre arrondi d'une plateforme ; celui de la plateforme choisie est souligné en bleu. */
+    private fun panel(): LinearLayout {
+        val view = LinearLayout(this)
+        view.orientation = LinearLayout.VERTICAL
+        view.setPadding(dp(16), dp(4), dp(16), dp(16))
+        return view
+    }
+
+    private fun highlightPlatform() {
+        val chosen = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) ?: Prefs.PLATFORM_HA
+        for ((view, value) in listOf(haPanel to Prefs.PLATFORM_HA, gladysPanel to Prefs.PLATFORM_GLADYS)) {
+            val selected = value == chosen
+            val shape = android.graphics.drawable.GradientDrawable()
+            shape.cornerRadius = dp(16).toFloat()
+            shape.setColor(if (selected) 0xFF0C1C3E.toInt() else 0xFF08122A.toInt())
+            shape.setStroke(dp(2), if (selected) 0xFF3FD4FF.toInt() else 0xFF1C2C4E.toInt())
+            view.background = shape
+        }
+    }
+
+    private fun requestBlePermissions() {
+        val missing = BleProxy.requiredPermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isEmpty()) {
+            ApiService.instance?.applyBleProxy()
+        } else {
+            requestPermissions(missing.toTypedArray(), REQUEST_BLE)
+        }
+    }
+
     private fun heading(s: String, size: Float): TextView {
         val view = TextView(this)
         view.text = s
@@ -810,6 +948,7 @@ class SettingsActivity : Activity() {
     }
 
     companion object {
-        private const val REQUEST_PHOTO_FOLDER = 52
+        private const val REQUEST_PHOTO_FOLDER = 54 // 51 et 52 : sauvegarde (SettingsBackup)
+        private const val REQUEST_BLE = 53
     }
 }
