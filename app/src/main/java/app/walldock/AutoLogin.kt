@@ -35,29 +35,77 @@ class AutoLogin(private val prefs: Prefs, private val onError: (String) -> Unit)
         val gladys = prefs.isGladys
         val server = Uri.parse(prefs.serverUrl)
         if (page.host == null || !page.host.equals(server.host, ignoreCase = true)) return
-        val isLogin = if (gladys) page.path == "/login" else page.path?.startsWith("/auth/authorize") == true
-        if (!isLogin) return
         val user = if (gladys) prefs.gladysUser else prefs.haUser
         val password = if (gladys) prefs.gladysPassword else prefs.haPassword
         if (user.isBlank() || password.isEmpty()) return
+        if (!gladys) {
+            if (page.path?.startsWith("/auth/authorize") == true) login(web, page)
+            return
+        }
+        if (page.path == "/login") {
+            login(web, page)
+            return
+        }
+        // Gladys passe à /login sans recharger la page, ce que la WebView ne signale pas
+        // toujours : on regarde directement si la page a une session.
+        web.evaluateJavascript("(function(){try{return localStorage.getItem('user')===null}catch(e){return false}})()") {
+            if (it == "true") login(web, page)
+        }
+    }
+
+    private fun login(web: WebView, page: Uri) {
         // Une tentative par minute au plus : identifiants refusés = pas de boucle
         val now = SystemClock.elapsedRealtime()
         if (lastAttempt != 0L && now - lastAttempt < 60_000) return
         lastAttempt = now
+        val gladys = prefs.isGladys
+        val user = if (gladys) prefs.gladysUser else prefs.haUser
+        val password = if (gladys) prefs.gladysPassword else prefs.haPassword
         val origin = "${page.scheme}://${page.encodedAuthority}"
         val target = prefs.dashboardUrl
         executor.execute {
             val script = try {
                 if (gladys) gladysScript(origin, user, password, target) else homeAssistantScript(origin, user, password, target)
             } catch (e: Exception) {
-                main.post { onError(e.message ?: e.javaClass.simpleName) }
+                main.post { onError(describe(e)) }
                 return@execute
             }
             main.post { web.evaluateJavascript(script, null) }
         }
     }
 
-    private fun homeAssistantScript(origin: String, user: String, password: String, target: String): String {
+    /**
+     * Bouton « Tester la connexion » des réglages : vérifie l'adresse, le compte et le mot de
+     * passe sans toucher à la page. [done] reçoit null si tout va bien, sinon le problème.
+     */
+    fun test(gladys: Boolean, address: String, user: String, password: String, done: (String?) -> Unit) {
+        val base = Uri.parse(address.trim())
+        if (base.scheme == null || base.encodedAuthority == null) {
+            done(tr(R.string.error_url))
+            return
+        }
+        val origin = "${base.scheme}://${base.encodedAuthority}"
+        executor.execute {
+            val result = try {
+                if (gladys) gladysSession(origin, user, password) else homeAssistantCode(origin, user, password)
+                null
+            } catch (e: Exception) {
+                describe(e)
+            }
+            main.post { done(result) }
+        }
+    }
+
+    private fun describe(e: Exception): String = when (e) {
+        is java.net.UnknownHostException -> tr(R.string.autologin_unreachable, e.message ?: "")
+        is java.net.ConnectException, is java.net.SocketTimeoutException, is java.net.NoRouteToHostException ->
+            tr(R.string.autologin_unreachable, e.message ?: "")
+        is javax.net.ssl.SSLException -> tr(R.string.autologin_tls, e.message ?: "")
+        else -> e.message ?: e.javaClass.simpleName
+    }
+
+    /** Parcours de connexion de HA jusqu'au code d'autorisation (sans créer de jeton). */
+    private fun homeAssistantCode(origin: String, user: String, password: String): String {
         val clientId = "$origin/"
         val flow = postJson(
             "$origin/auth/login_flow",
@@ -76,7 +124,12 @@ class AutoLogin(private val prefs: Prefs, private val onError: (String) -> Unit)
             // Mauvais mot de passe (errors.base = invalid_auth) ou deuxième facteur demandé
             throw IllegalStateException(tr(if (step.optString("step_id") == "mfa") R.string.autologin_mfa else R.string.autologin_refused))
         }
-        val code = step.optString("result")
+        return step.optString("result")
+    }
+
+    private fun homeAssistantScript(origin: String, user: String, password: String, target: String): String {
+        val clientId = "$origin/"
+        val code = homeAssistantCode(origin, user, password)
         val form = "grant_type=authorization_code&code=" + URLEncoder.encode(code, "UTF-8") +
             "&client_id=" + URLEncoder.encode(clientId, "UTF-8")
         val tokens = JSONObject(request("$origin/auth/token", form, "application/x-www-form-urlencoded"))
@@ -87,13 +140,19 @@ class AutoLogin(private val prefs: Prefs, private val onError: (String) -> Unit)
             "localStorage.setItem('hassTokens',JSON.stringify(t));location.replace(" + JSONObject.quote(target) + ");})();"
     }
 
-    private fun gladysScript(origin: String, user: String, password: String, target: String): String {
+    private fun gladysSession(origin: String, user: String, password: String): JSONObject {
         val session = try {
             postJson("$origin/api/v1/login", JSONObject().put("email", user.trim().lowercase()).put("password", password))
         } catch (e: HttpError) {
+            // 404 : compte inconnu, 403 : mauvais mot de passe, 429 : trop d'essais
             throw IllegalStateException(tr(if (e.code in 400..499) R.string.autologin_refused else R.string.autologin_failed))
         }
         if (session.optString("access_token").isEmpty()) throw IllegalStateException(tr(R.string.autologin_failed))
+        return session
+    }
+
+    private fun gladysScript(origin: String, user: String, password: String, target: String): String {
+        val session = gladysSession(origin, user, password)
         return "(function(){localStorage.setItem('user'," + JSONObject.quote(session.toString()) + ");" +
             "location.replace(" + JSONObject.quote(target) + ");})();"
     }

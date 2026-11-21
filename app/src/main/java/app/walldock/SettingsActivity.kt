@@ -143,6 +143,7 @@ class SettingsActivity : Activity() {
         haPanel.addView(label(tr(R.string.settings_dashboard_default)))
         haDashboardField = field(prefs.haDashboard, tr(R.string.settings_ha_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         haPanel.addView(haDashboardField)
+        haPanel.addView(testButton(false))
         // Intégration ESPHome (Jarvis, capteurs, proxy Bluetooth…) : état et chiffrement
         haStatusText = label("")
         haPanel.addView(haStatusText)
@@ -171,6 +172,7 @@ class SettingsActivity : Activity() {
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
         gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         gladysPanel.addView(gladysDashboardField)
+        gladysPanel.addView(testButton(true))
 
         if (wide) {
             val left = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
@@ -812,6 +814,27 @@ class SettingsActivity : Activity() {
         view.orientation = LinearLayout.VERTICAL
         view.setPadding(dp(16), dp(4), dp(16), dp(16))
         return view
+    }
+
+    private val loginTester by lazy { AutoLogin(prefs) {} }
+
+    /** Vérifie adresse, compte et mot de passe saisis (même s'ils ne sont pas encore enregistrés). */
+    private fun testButton(gladys: Boolean): Button = button(tr(R.string.settings_test_login)) {
+        val address = (if (gladys) gladysUrlField else haUrlField).text.toString().trim().trimEnd('/')
+        val user = (if (gladys) gladysUserField else haUserField).text.toString().trim()
+        val password = (if (gladys) gladysPasswordField else haPasswordField).text.toString()
+        if (user.isEmpty() || password.isEmpty()) {
+            toast(tr(R.string.autologin_test_missing))
+            return@button
+        }
+        toast(tr(R.string.autologin_test_running))
+        loginTester.test(gladys, address, user, password) { problem ->
+            AlertDialog.Builder(this)
+                .setTitle(tr(if (gladys) R.string.platform_gladys else R.string.platform_ha))
+                .setMessage(if (problem == null) tr(R.string.autologin_test_ok) else tr(R.string.autologin_error, problem))
+                .setPositiveButton("OK", null)
+                .show()
+        }
     }
 
     private fun highlightPlatform() {
