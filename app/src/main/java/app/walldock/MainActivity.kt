@@ -62,7 +62,9 @@ class MainActivity : Activity(), DashboardController {
     private val screensaverCheck = object : Runnable {
         override fun run() {
             checkScreensaver()
-            handler.postDelayed(this, 15_000)
+            // Délai réglé à la seconde : vérification toutes les 2 s ; une fois la veille affichée,
+            // toutes les 15 s (l'horloge se déplace à chaque vérification)
+            handler.postDelayed(this, if (screensaver.visibility == View.VISIBLE) 15_000 else 2_000)
         }
     }
 
@@ -402,7 +404,7 @@ class MainActivity : Activity(), DashboardController {
             return
         }
         val idleMs = SystemClock.elapsedRealtime() - lastTouch
-        if (idleMs >= prefs.screensaverMinutes * 60_000L) {
+        if (idleMs >= prefs.screensaverSeconds * 1_000L) {
             if (screensaver.visibility != View.VISIBLE) {
                 setDockVisible(false)
                 showSaverPage()

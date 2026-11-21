@@ -104,8 +104,9 @@ class ApiService : Service(), EsphomeServer.Handler {
         .icon("mdi:tune-vertical").category(Entity.CATEGORY_CONFIG)
     private val setScreensaver = Entity(Entity.Kind.SWITCH, "reglage_ecran_de_veille", tr(R.string.entity_set_screensaver))
         .icon("mdi:clock-outline").category(Entity.CATEGORY_CONFIG)
-    private val setScreensaverMinutes = Entity(Entity.Kind.NUMBER, "reglage_delai_veille", tr(R.string.entity_set_screensaver_minutes))
-        .unit("min").range(1f, 240f, 1f).icon("mdi:timer-outline").category(Entity.CATEGORY_CONFIG)
+    // Nouvel identifiant : l'unité passe des minutes aux secondes (HA garde l'historique séparé)
+    private val setScreensaverSeconds = Entity(Entity.Kind.NUMBER, "reglage_delai_veille_s", tr(R.string.entity_set_screensaver_minutes))
+        .unit("s").range(10f, 14_400f, 1f).icon("mdi:timer-outline").category(Entity.CATEGORY_CONFIG)
         .also { it.numberMode = Entity.NUMBER_MODE_BOX }
     private val setReturnSeconds = Entity(Entity.Kind.NUMBER, "reglage_retour_tableau", tr(R.string.entity_set_return))
         .unit("s").range(10f, 3600f, 10f).icon("mdi:keyboard-return").category(Entity.CATEGORY_CONFIG)
@@ -141,10 +142,10 @@ class ApiService : Service(), EsphomeServer.Handler {
     /** Plus personne devant la tablette depuis le délai réglé : écran éteint (la caméra le rallumera). */
     private val presenceCheck = object : Runnable {
         override fun run() {
-            main.postDelayed(this, 10_000)
+            main.postDelayed(this, 2_000)
             val prefs = Prefs(this@ApiService)
-            val minutes = prefs.motionOffMinutes
-            if (minutes <= 0 || !prefs.motionEnabled || !prefs.motionWakesScreen) return
+            val seconds = prefs.motionOffSeconds
+            if (seconds <= 0 || !prefs.motionEnabled || !prefs.motionWakesScreen) return
             if (!AppState.screenOn || !AppState.dashboardVisible) return
             val talking = jarvis?.state.let { it == Jarvis.State.LISTENING || it == Jarvis.State.THINKING || it == Jarvis.State.SPEAKING }
             if (alertOverlay.isShowing || cameraOverlay.isShowing || talking) return
@@ -154,7 +155,7 @@ class ApiService : Service(), EsphomeServer.Handler {
             if (detector?.running != true || now - detector.lastFrameAt > 5_000) return
             if (motionActive) return
             val seen = maxOf(lastPresence, AppState.lastTouch, AppState.lastInteraction)
-            if (now - seen >= minutes * 60_000L) setScreen(false)
+            if (now - seen >= seconds * 1_000L) setScreen(false)
         }
     }
 
@@ -342,7 +343,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         mediaEntity, screenCamera, jarvisState, talkToJarvis, volume, stopRinging, detectionMode, wakeScore, micLevel, audioSent,
         battery, charging, screen, brightness, currentApp, openSelect, alertShown, backToDashboard, reload,
         updateStatus, installUpdate,
-        setListen, setOnDevice, setSensitivity, setScreensaver, setScreensaverMinutes, setReturnSeconds,
+        setListen, setOnDevice, setSensitivity, setScreensaver, setScreensaverSeconds, setReturnSeconds,
         setAutoUpdate, setHandle, setUrl,
         motionSensor, motionStatus, setMotion, setMotionSensitivity, setMotionWake,
         batteryTemp, wifiSignal, idleTime, activity, setActivitySeconds, setSaverUrl, setSystemBrightness, setStartOnBoot,
@@ -868,7 +869,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         srv.setState(setOnDevice, prefs.jarvisOnDevice)
         srv.setState(setSensitivity, sensitivityByIndex.getOrElse(prefs.jarvisSensitivity) { sensitivityByIndex[0] })
         srv.setState(setScreensaver, prefs.screensaverEnabled)
-        srv.setState(setScreensaverMinutes, prefs.screensaverMinutes.toFloat())
+        srv.setState(setScreensaverSeconds, prefs.screensaverSeconds.toFloat())
         srv.setState(setReturnSeconds, prefs.returnSeconds.toFloat())
         srv.setState(setZoom, prefs.zoom.toFloat())
         srv.setState(setAutoUpdate, prefs.autoUpdate)
@@ -1076,8 +1077,8 @@ class ApiService : Service(), EsphomeServer.Handler {
                 server?.setState(brightness, AppState.brightness)
             } else if (entity === volume) {
                 setVolume(value)
-            } else if (entity === setScreensaverMinutes) {
-                Prefs(this).screensaverMinutes = value.toInt().coerceIn(1, 240)
+            } else if (entity === setScreensaverSeconds) {
+                Prefs(this).screensaverSeconds = value.toInt().coerceIn(10, 14_400)
                 reportSettings()
             } else if (entity === setActivitySeconds) {
                 Prefs(this).activitySeconds = value.toInt().coerceIn(10, 3600)
