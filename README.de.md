@@ -125,7 +125,12 @@ Die Entwicklung findet auf einem privaten Forgejo statt; dieses GitHub-Repositor
 
 ## Danksagungen
 
-- **DomoWallDock**: angepasst und gepflegt von **McFlyPartages** — Website [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
+- **DomoWallDock**: angepasst und gepflegt von **McFlyPartages**.
+
+  <a href="https://mcflypartages.fr"><img src="docs/images/social/web.svg" width="36" alt="Website mcflypartages.fr" title="Website mcflypartages.fr"></a> <a href="https://mastodon.social/@McFlyPartages"><img src="docs/images/social/mastodon.svg" width="36" alt="Mastodon @McFlyPartages@mastodon.social" title="Mastodon @McFlyPartages@mastodon.social"></a> <a href="https://www.facebook.com/McFlyPartages"><img src="docs/images/social/facebook.svg" width="36" alt="Facebook McFlyPartages" title="Facebook McFlyPartages"></a> <a href="https://x.com/McFlyPartages"><img src="docs/images/social/x.svg" width="36" alt="X @McFlyPartages" title="X @McFlyPartages"></a> <a href="https://fr.tipeee.com/mcflypartages"><img src="docs/images/social/tipeee.svg" width="36" alt="Auf Tipeee unterstützen" title="Auf Tipeee unterstützen"></a> <a href="https://ko-fi.com/mcflypartages"><img src="docs/images/social/kofi.svg" width="36" alt="Auf Ko-fi unterstützen" title="Auf Ko-fi unterstützen"></a>
+
+  Gefällt dir die App? Eine kleine Unterstützung über Tipeee oder Ko-fi freut immer.
+
 - **[WallDock](https://github.com/psycho1807/WallDock)** von psycho1807 (GPL-3.0): die gesamte Basis der App. DomoWallDock ist weder mit seinem Autor verbunden noch von ihm unterstützt; WallDock Pro ist ein eigenes Produkt.
 - Wort „Stop“: Modell [microWakeWord](https://github.com/kahrendt/microWakeWord) von Kevin Ahrendt (Apache 2.0); Merkmalsextraktion portiert aus dem Micro-Frontend von TensorFlow Lite Micro (Apache 2.0).
 - Aktivierungswort: Modelle [openWakeWord](https://github.com/dscripka/openWakeWord) (beim ersten Gebrauch heruntergeladen, CC BY-NC-SA 4.0), ausgeführt mit TensorFlow Lite.

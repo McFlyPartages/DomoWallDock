@@ -124,7 +124,12 @@ Le développement a lieu sur un Forgejo personnel ; ce dépôt GitHub en est une
 
 ## Crédits
 
-- **DomoWallDock** : adapté et maintenu par **McFlyPartages** — site [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
+- **DomoWallDock** : adapté et maintenu par **McFlyPartages**.
+
+  <a href="https://mcflypartages.fr"><img src="docs/images/social/web.svg" width="36" alt="Site web mcflypartages.fr" title="Site web mcflypartages.fr"></a> <a href="https://mastodon.social/@McFlyPartages"><img src="docs/images/social/mastodon.svg" width="36" alt="Mastodon @McFlyPartages@mastodon.social" title="Mastodon @McFlyPartages@mastodon.social"></a> <a href="https://www.facebook.com/McFlyPartages"><img src="docs/images/social/facebook.svg" width="36" alt="Facebook McFlyPartages" title="Facebook McFlyPartages"></a> <a href="https://x.com/McFlyPartages"><img src="docs/images/social/x.svg" width="36" alt="X @McFlyPartages" title="X @McFlyPartages"></a> <a href="https://fr.tipeee.com/mcflypartages"><img src="docs/images/social/tipeee.svg" width="36" alt="Soutenir sur Tipeee" title="Soutenir sur Tipeee"></a> <a href="https://ko-fi.com/mcflypartages"><img src="docs/images/social/kofi.svg" width="36" alt="Soutenir sur Ko-fi" title="Soutenir sur Ko-fi"></a>
+
+  Vous aimez l'appli ? Un petit soutien sur Tipeee ou Ko-fi fait toujours plaisir.
+
 - **[WallDock](https://github.com/psycho1807/WallDock)** de psycho1807 (GPL-3.0) : toute la base de l'appli. DomoWallDock n'est ni affilié à son auteur ni soutenu par lui ; WallDock Pro est un produit distinct.
 - Mot « Stop » : modèle [microWakeWord](https://github.com/kahrendt/microWakeWord) de Kevin Ahrendt (Apache 2.0) ; extraction des caractéristiques portée du micro frontend de TensorFlow Lite Micro (Apache 2.0).
 - Mot d'activation : modèles [openWakeWord](https://github.com/dscripka/openWakeWord) (téléchargés au premier usage, CC BY-NC-SA 4.0), exécutés avec TensorFlow Lite.

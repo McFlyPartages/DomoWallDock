@@ -124,7 +124,12 @@ Development happens on a personal Forgejo; this GitHub repository is a **mirror*
 
 ## Credits
 
-- **DomoWallDock**: adapted and maintained by **McFlyPartages** — website [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
+- **DomoWallDock**: adapted and maintained by **McFlyPartages**.
+
+  <a href="https://mcflypartages.fr"><img src="docs/images/social/web.svg" width="36" alt="Website mcflypartages.fr" title="Website mcflypartages.fr"></a> <a href="https://mastodon.social/@McFlyPartages"><img src="docs/images/social/mastodon.svg" width="36" alt="Mastodon @McFlyPartages@mastodon.social" title="Mastodon @McFlyPartages@mastodon.social"></a> <a href="https://www.facebook.com/McFlyPartages"><img src="docs/images/social/facebook.svg" width="36" alt="Facebook McFlyPartages" title="Facebook McFlyPartages"></a> <a href="https://x.com/McFlyPartages"><img src="docs/images/social/x.svg" width="36" alt="X @McFlyPartages" title="X @McFlyPartages"></a> <a href="https://fr.tipeee.com/mcflypartages"><img src="docs/images/social/tipeee.svg" width="36" alt="Support on Tipeee" title="Support on Tipeee"></a> <a href="https://ko-fi.com/mcflypartages"><img src="docs/images/social/kofi.svg" width="36" alt="Support on Ko-fi" title="Support on Ko-fi"></a>
+
+  Enjoying the app? A little support on Tipeee or Ko-fi is always appreciated.
+
 - **[WallDock](https://github.com/psycho1807/WallDock)** by psycho1807 (GPL-3.0): the whole base of the app. DomoWallDock is neither affiliated with nor endorsed by its author; WallDock Pro is a separate product.
 - "Stop" word: [microWakeWord](https://github.com/kahrendt/microWakeWord) model by Kevin Ahrendt (Apache 2.0); feature extraction ported from the TensorFlow Lite Micro micro frontend (Apache 2.0).
 - Wake word: [openWakeWord](https://github.com/dscripka/openWakeWord) models (downloaded on first use, CC BY-NC-SA 4.0), run with TensorFlow Lite.
