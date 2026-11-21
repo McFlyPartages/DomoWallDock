@@ -16,7 +16,7 @@
 DomoWallDock (früher GladysWallDock) ist ein Fork von [WallDock](https://github.com/psycho1807/WallDock) von psycho1807. WallDock ist für Home Assistant gedacht; alles, was es kann, ist hier weiterhin vorhanden, und Gladys Assistant kommt hinzu. Lizenz GPL-3.0 wie das Original.
 
 > 📘 **Bebilderte Anleitung: [DomoWallDock mit Gladys Assistant nutzen](docs/TUTO-GLADYS.de.md)** — Installation, Verbindung, MQTT, Ladesteuerung, Bildschirmschoner.
-> Die App gibt es auf Französisch, Englisch, Deutsch und Spanisch (je nach Sprache des Tablets).
+> Die App gibt es auf Französisch, Englisch, Deutsch und Spanisch: standardmäßig in der Sprache des Tablets oder nach Wahl in den Einstellungen.
 
 <a id="download"></a>
 ## Download
@@ -51,7 +51,7 @@ Die signierten APKs liegen unter [**Releases**](https://github.com/McFlyPartages
 | ESPHome-Bluetooth-Proxy | ✅ | ❌ |
 
 ¹ Nicht mit Zwei-Faktor-Authentifizierung. ² Music Assistant ist ein eigener Server: Er funktioniert mit oder ohne Home Assistant.
-Wählst du Gladys, ohne Home Assistant auszufüllen, wählt die App Jarvis und den Bluetooth-Proxy selbst ab (du kannst sie wieder anwählen).
+Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistant selbst ab (du kannst sie wieder anwählen, etwa wenn du auch Home Assistant oder einen Music-Assistant-Server nutzt).
 
 ## Was DomoWallDock kann
 
@@ -86,7 +86,7 @@ Wählst du Gladys, ohne Home Assistant auszufüllen, wählt die App Jarvis und d
 - Sicherung und Wiederherstellung der Einstellungen in einer Datei (WallDock-Sicherungen werden akzeptiert).
 
 **Mit Home Assistant** (von WallDock übernommen, weiterhin funktionsfähig)
-- Verschlüsselte native ESPHome-Integration, Sprachassistent Jarvis, Mediaplayer, synchroner Music-Assistant-Player (Sendspin), Wecker, Kalender. Diese Funktionen brauchen Home Assistant; wählst du Gladys, ohne Home Assistant auszufüllen, werden Jarvis und der Bluetooth-Proxy automatisch abgewählt.
+- Verschlüsselte native ESPHome-Integration, Sprachassistent Jarvis, Mediaplayer, synchroner Music-Assistant-Player (Sendspin), Wecker, Kalender. Diese Funktionen brauchen Home Assistant; wählst du Gladys, werden Jarvis, der Bluetooth-Proxy und Music Assistant automatisch abgewählt (du kannst sie wieder anwählen).
 
 ## MQTT-Topics
 

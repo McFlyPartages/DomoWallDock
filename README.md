@@ -16,7 +16,7 @@
 DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.
 
 > 📘 **Tutoriel illustré : [utiliser DomoWallDock avec Gladys Assistant](docs/TUTO-GLADYS.md)** — installation, connexion, MQTT, gestion de la charge, écran de veille.
-> L'appli est en français, anglais, allemand et espagnol (selon la langue de la tablette).
+> L'appli est en français, anglais, allemand et espagnol : langue de la tablette par défaut, ou au choix dans les réglages.
 
 ## Téléchargement
 
@@ -50,7 +50,7 @@ Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/Do
 | Proxy Bluetooth ESPHome | ✅ | ❌ |
 
 ¹ Pas avec l'authentification à deux facteurs. ² Music Assistant est un serveur à part : il fonctionne avec ou sans Home Assistant.
-Quand vous choisissez Gladys sans avoir renseigné Home Assistant, l'appli décoche d'elle-même Jarvis et le proxy Bluetooth (vous pouvez les recocher).
+Quand vous choisissez Gladys, l'appli décoche d'elle-même Jarvis, le proxy Bluetooth et Music Assistant (vous pouvez les recocher, par exemple si vous utilisez aussi Home Assistant ou un serveur Music Assistant).
 
 ## Ce que fait DomoWallDock
 
@@ -85,7 +85,7 @@ Quand vous choisissez Gladys sans avoir renseigné Home Assistant, l'appli déco
 - Sauvegarde et restauration des réglages dans un fichier (les sauvegardes de WallDock sont acceptées).
 
 **Avec Home Assistant** (hérité de WallDock, toujours fonctionnel)
-- Intégration native ESPHome chiffrée, assistant vocal Jarvis, lecteur multimédia, lecteur Music Assistant synchronisé (Sendspin), réveils, calendrier. Ces fonctions ont besoin de Home Assistant ; quand on choisit Gladys sans renseigner Home Assistant, Jarvis et le proxy Bluetooth sont décochés automatiquement.
+- Intégration native ESPHome chiffrée, assistant vocal Jarvis, lecteur multimédia, lecteur Music Assistant synchronisé (Sendspin), réveils, calendrier. Ces fonctions ont besoin de Home Assistant ; quand on choisit Gladys, Jarvis, le proxy Bluetooth et Music Assistant sont décochés automatiquement (on peut les recocher).
 
 ## Sujets MQTT
 

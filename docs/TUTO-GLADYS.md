@@ -53,6 +53,7 @@ Les réglages sont rangés en trois parties, accessibles à tout moment par la b
 
 ![Réglages communs](images/tuto-gladys/fr/03-communs.png)
 
+- **Langue de l'appli** : celle de la tablette, ou français, anglais, allemand, espagnol (l'appli redémarre pour l'appliquer).
 - **Code administrateur** (4 chiffres minimum) : il protège les réglages.
 - **Retour au tableau de bord** après quelques secondes sans toucher l'écran, quand une autre appli du dock est ouverte.
 - **Zoom** du tableau de bord, position de la **poignée du dock**, **adresses autorisées**, démarrage automatique de l'appli.
@@ -146,7 +147,7 @@ Au lieu de l'horloge, l'écran de veille peut afficher :
 
 ## 8. Les autres services
 
-Le proxy Bluetooth et l'assistant vocal Jarvis passent par **Home Assistant** : quand vous choisissez Gladys sans renseigner Home Assistant, l'appli les décoche d'elle-même (vous pouvez les recocher). Le lecteur **Music Assistant** fonctionne avec un serveur Music Assistant, avec ou sans Home Assistant.
+Quand vous choisissez Gladys, l'appli décoche d'elle-même le **proxy Bluetooth** et l'assistant vocal **Jarvis** (ils passent par Home Assistant), ainsi que le lecteur **Music Assistant**. Vous pouvez les recocher : par exemple si vous utilisez aussi Home Assistant, ou un serveur Music Assistant (il fonctionne avec ou sans Home Assistant).
 
 ---
 
