@@ -220,8 +220,8 @@
     <string name="entity_set_saver_url">Screensaver page</string>
     <string name="entity_set_system_brightness">System brightness</string>
     <string name="entity_set_start_on_boot">Start on boot</string>
-    <string name="settings_saver_url">Screensaver page (optional): a dashboard view or any address, instead of the clock</string>
-    <string name="settings_saver_url_hint">e.g. /lovelace/screensaver</string>
+    <string name="settings_saver_url">Screensaver page (optional): a Home Assistant or Gladys page (path on the platform shown) or a full address, instead of the photos and the clock</string>
+    <string name="settings_saver_url_hint">e.g. /lovelace/screensaver or /dashboard/screensaver</string>
     <string name="settings_system_brightness">Set the system brightness (also in other apps)</string>
     <string name="settings_system_brightness_help">Needs the “Modify system settings” permission, asked when you save. Without it, only the DomoWallDock window is dimmed.</string>
     <string name="settings_start_on_boot">Start DomoWallDock when the tablet starts (power cut, restart)</string>
@@ -279,8 +279,8 @@
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_today">Today</string>
     <string name="calendar_empty">Nothing planned</string>
-    <string name="calendar_unavailable">Calendars unavailable: the dashboard must be loaded and signed in to Home Assistant</string>
-    <string name="calendar_in_dock">“Calendar” button in the dock (Home Assistant calendars: day, week, month, agenda; also the “afficher_calendrier” action from HA)</string>
+    <string name="calendar_unavailable">Calendars unavailable: the dashboard must be loaded and signed in (Home Assistant or Gladys)</string>
+    <string name="calendar_in_dock">“Calendar” button in the dock: Home Assistant or Gladys calendars, depending on the platform shown (day, week, month, agenda; also the “afficher_calendrier” action from HA)</string>
     <string name="entity_set_sendspin">Music Assistant player</string>
     <string name="settings_sendspin_title">Music Assistant</string>
     <string name="settings_sendspin">Music Assistant player (Sendspin, synchronised with your other speakers)</string>
@@ -329,7 +329,7 @@
     <string name="settings_gladys_dashboard_hint">/dashboard/living-room</string>
     <string name="settings_autologin_help">With a user and a password, the tablet signs in by itself when the login page shows. Tip: use an account dedicated to the tablet, without admin rights.</string>
     <string name="settings_common">Common settings</string>
-    <string name="settings_photos_title">Photos (Immich or a tablet folder)</string>
+    <string name="settings_photos_title">Screensaver: photos (Immich or a folder) or a Home Assistant / Gladys page</string>
     <string name="error_url_platform">%1$s: the address must start with http:// or https://</string>
     <string name="autologin_error">Automatic sign-in failed: %1$s</string>
     <string name="autologin_failed">unexpected answer from the server</string>
@@ -365,4 +365,8 @@
     <string name="test_immich_album">album not found, or the key cannot access it</string>
     <string name="test_failed">❌ Failed: %1$s</string>
     <string name="test_timeout">no answer within 12 seconds</string>
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_section_services">Extra services</string>
+    <string name="settings_schedule_title">Screen off every night</string>
+    <string name="settings_motion_title">Motion detection (front camera)</string>
 </resources>
