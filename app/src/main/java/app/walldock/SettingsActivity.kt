@@ -28,8 +28,11 @@ import java.net.Inet4Address
 /** Réglages : adresse HA, code, délai, autorisations et choix des applis du dock. */
 class SettingsActivity : Activity() {
 
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(Language.wrap(base))
+
     private lateinit var prefs: Prefs
     private lateinit var platformGroup: RadioGroup
+    private lateinit var languageGroup: RadioGroup
     private lateinit var haForm: ServerForm
     private lateinit var haUserField: EditText
     private lateinit var haPasswordField: EditText
@@ -193,6 +196,26 @@ class SettingsActivity : Activity() {
         // ===== 2. Réglages communs =====
         val commonAnchor = section(tr(R.string.settings_common))
         column.addView(commonAnchor)
+        // Langue de l'appli : celle de la tablette par défaut
+        column.addView(label(tr(R.string.settings_language)))
+        languageGroup = RadioGroup(this)
+        languageGroup.orientation = RadioGroup.HORIZONTAL
+        val languageNames = mapOf("" to tr(R.string.language_system), "fr" to "Français", "en" to "English", "de" to "Deutsch", "es" to "Español")
+        for (tag in Language.CHOICES) {
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = languageNames[tag]
+            choice.tag = tag
+            choice.setTextColor(Color.WHITE)
+            val spacing = RadioGroup.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+            spacing.marginEnd = dp(16)
+            languageGroup.addView(choice, spacing)
+            if (tag == prefs.language) languageGroup.check(choice.id)
+        }
+        val languageScroll = android.widget.HorizontalScrollView(this)
+        languageScroll.isHorizontalScrollBarEnabled = false
+        languageScroll.addView(languageGroup)
+        column.addView(languageScroll)
         column.addView(label(tr(R.string.settings_pin)))
         pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
         column.addView(secret(pinField))
@@ -756,6 +779,8 @@ class SettingsActivity : Activity() {
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
                 prefs.platform = platform
+                val language = (languageGroup.findViewById<RadioButton>(languageGroup.checkedRadioButtonId)?.tag as? String) ?: ""
+                val languageChanged = language != prefs.language
                 haForm.store()
                 prefs.haUser = haUserField.text.toString().trim()
                 prefs.haPassword = haPasswordField.text.toString()
@@ -832,6 +857,13 @@ class SettingsActivity : Activity() {
                 ApiService.instance?.onDockChanged()
                 ApiService.instance?.reportSettings()
                 toast(tr(R.string.settings_saved))
+                if (languageChanged) {
+                    // Nouvelle langue : on relance l'appli pour que tout (écrans, entités HA, MQTT) la prenne
+                    prefs.language = language
+                    toast(tr(R.string.language_restart))
+                    window.decorView.postDelayed({ SettingsBackup.restartApp(this) }, 1_200)
+                    return
+                }
                 if (close) finish()
             }
         }
@@ -1034,18 +1066,18 @@ class SettingsActivity : Activity() {
     /** Cases décochées au passage à Gladys, pour les remettre si l'on revient à Home Assistant. */
     private var haOnlySnapshot: List<Boolean>? = null
 
-    /** Fonctions qui passent par Home Assistant : Jarvis (écoute, écran éteint) et proxy Bluetooth. */
-    private fun haOnlyChecks() = listOf(jarvisCheck, listenOffCheck, bleCheck)
+    /** Fonctions décochées en passant à Gladys : Jarvis (écoute, écran éteint), proxy Bluetooth, Music Assistant. */
+    private fun haOnlyChecks() = listOf(jarvisCheck, listenOffCheck, bleCheck, sendspinCheck)
 
     /**
-     * Passage à Gladys sans Home Assistant configuré : les fonctions propres à HA sont
-     * décochées (on peut les recocher). Retour à HA : elles reprennent leur état d'avant.
+     * Passage à Gladys : les fonctions liées à Home Assistant sont décochées (on peut les
+     * recocher, par exemple si HA est aussi utilisé). Retour à HA : elles reprennent leur état d'avant.
      */
     private fun onPlatformChanged() {
         highlightPlatform()
         val gladys = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) == Prefs.PLATFORM_GLADYS
         val boxes = haOnlyChecks()
-        if (gladys && haForm.isEmpty()) {
+        if (gladys) {
             if (boxes.none { it.isChecked }) return
             haOnlySnapshot = boxes.map { it.isChecked }
             boxes.forEach { it.isChecked = false }

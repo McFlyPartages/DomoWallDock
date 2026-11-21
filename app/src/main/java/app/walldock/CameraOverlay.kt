@@ -64,6 +64,7 @@ class CameraOverlay(private val context: Context, private val onClosed: () -> Un
         frame.setBackgroundColor(Color.BLACK)
 
         val view = WebView(context)
+        Language.reapply(context)
         view.setBackgroundColor(Color.BLACK)
         view.settings.javaScriptEnabled = true
         view.settings.domStorageEnabled = true
