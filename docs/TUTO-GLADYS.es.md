@@ -53,6 +53,7 @@ Los ajustes se dividen en tres partes, accesibles en todo momento desde la barra
 
 ![Ajustes comunes](images/tuto-gladys/es/03-communs.png)
 
+- **Idioma de la app**: el de la tableta, o francés, inglés, alemán, español (la app se reinicia para aplicarlo).
 - **Código de administrador** (mínimo 4 cifras): protege los ajustes.
 - **Volver al panel** tras unos segundos sin tocar la pantalla, cuando hay otra app del dock abierta.
 - **Zoom** del panel, posición del **asa del dock**, **direcciones permitidas**, inicio automático de la app.
@@ -146,7 +147,7 @@ En lugar del reloj, el salvapantallas puede mostrar:
 
 ## 8. Los demás servicios
 
-El proxy Bluetooth y el asistente de voz Jarvis pasan por **Home Assistant**: cuando eliges Gladys sin rellenar Home Assistant, la app los desmarca sola (puedes volver a marcarlos). El reproductor de **Music Assistant** funciona con un servidor Music Assistant, con o sin Home Assistant.
+Cuando eliges Gladys, la app desmarca sola el **proxy Bluetooth** y el asistente de voz **Jarvis** (pasan por Home Assistant), así como el reproductor de **Music Assistant**. Puedes volver a marcarlos: por ejemplo si también usas Home Assistant, o un servidor Music Assistant (funciona con o sin Home Assistant).
 
 ---
 

@@ -384,5 +384,8 @@
     <string name="server_error_port">invalid port (1 to 65535)</string>
     <string name="server_error_external">the external address must start with https://</string>
     <string name="about_credits">DomoWallDock %1$s — fork of WallDock (psycho1807, GPL-3.0 licence), adapted and maintained by McFlyPartages</string>
-    <string name="gladys_ha_features_off">Gladys chosen: Jarvis and the Bluetooth proxy (Home Assistant features) are unticked. Tick them again if you also use Home Assistant.</string>
+    <string name="gladys_ha_features_off">Gladys chosen: Jarvis, the Bluetooth proxy and Music Assistant (linked to Home Assistant) are unticked. Tick them again if you also use them.</string>
+    <string name="settings_language">App language</string>
+    <string name="language_system">Tablet language</string>
+    <string name="language_restart">Language changed: the app restarts…</string>
 </resources>

@@ -16,7 +16,7 @@
 DomoWallDock (antes GladysWallDock) es un fork de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock está pensado para Home Assistant; todo lo que sabe hacer sigue aquí, y se añade Gladys Assistant. Licencia GPL-3.0, como el original.
 
 > 📘 **Guía ilustrada: [usar DomoWallDock con Gladys Assistant](docs/TUTO-GLADYS.es.md)** — instalación, conexión, MQTT, gestión de la carga, salvapantallas.
-> La app está en francés, inglés, alemán y español (según el idioma de la tableta).
+> La app está en francés, inglés, alemán y español: el idioma de la tableta por defecto, o el que elijas en los ajustes.
 
 ## Descarga
 
@@ -50,7 +50,7 @@ Los APK firmados están en [**Releases**](https://github.com/McFlyPartages/DomoW
 | Proxy Bluetooth de ESPHome | ✅ | ❌ |
 
 ¹ No con la autenticación en dos pasos. ² Music Assistant es un servidor aparte: funciona con o sin Home Assistant.
-Cuando eliges Gladys sin rellenar Home Assistant, la app desmarca sola Jarvis y el proxy Bluetooth (puedes volver a marcarlos).
+Cuando eliges Gladys, la app desmarca sola Jarvis, el proxy Bluetooth y Music Assistant (puedes volver a marcarlos, por ejemplo si también usas Home Assistant o un servidor Music Assistant).
 
 ## Qué hace DomoWallDock
 
@@ -85,7 +85,7 @@ Cuando eliges Gladys sin rellenar Home Assistant, la app desmarca sola Jarvis y 
 - Copia de seguridad y restauración de los ajustes en un archivo (se aceptan las copias de WallDock).
 
 **Con Home Assistant** (heredado de WallDock, sigue funcionando)
-- Integración nativa ESPHome cifrada, asistente de voz Jarvis, reproductor multimedia, reproductor de Music Assistant sincronizado (Sendspin), alarmas, calendario. Estas funciones necesitan Home Assistant; al elegir Gladys sin rellenar Home Assistant, Jarvis y el proxy Bluetooth se desmarcan automáticamente.
+- Integración nativa ESPHome cifrada, asistente de voz Jarvis, reproductor multimedia, reproductor de Music Assistant sincronizado (Sendspin), alarmas, calendario. Estas funciones necesitan Home Assistant; al elegir Gladys, Jarvis, el proxy Bluetooth y Music Assistant se desmarcan automáticamente (puedes volver a marcarlos).
 
 ## Temas MQTT
 

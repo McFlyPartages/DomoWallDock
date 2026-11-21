@@ -53,6 +53,7 @@ Die Einstellungen sind in drei Teile gegliedert, jederzeit über die obere Leist
 
 ![Allgemeine Einstellungen](images/tuto-gladys/de/03-communs.png)
 
+- **Sprache der App**: die des Tablets oder Französisch, Englisch, Deutsch, Spanisch (die App startet neu, um sie zu übernehmen).
 - **Admin-Code** (mindestens 4 Ziffern): Er schützt die Einstellungen.
 - **Zurück zum Dashboard** nach einigen Sekunden ohne Berührung, wenn eine andere Dock-App geöffnet ist.
 - **Zoom** des Dashboards, Position des **Dock-Griffs**, **erlaubte Adressen**, automatischer Start der App.
@@ -146,7 +147,7 @@ Statt der Uhr kann der Bildschirmschoner Folgendes zeigen:
 
 ## 8. Weitere Dienste
 
-Der Bluetooth-Proxy und der Sprachassistent Jarvis laufen über **Home Assistant**: Wählst du Gladys, ohne Home Assistant auszufüllen, wählt die App sie selbst ab (du kannst sie wieder anwählen). Der **Music-Assistant**-Player funktioniert mit einem Music-Assistant-Server, mit oder ohne Home Assistant.
+Wählst du Gladys, wählt die App den **Bluetooth-Proxy** und den Sprachassistenten **Jarvis** (sie laufen über Home Assistant) sowie den **Music-Assistant**-Player selbst ab. Du kannst sie wieder anwählen: etwa wenn du auch Home Assistant nutzt oder einen Music-Assistant-Server (er funktioniert mit oder ohne Home Assistant).
 
 ---
 

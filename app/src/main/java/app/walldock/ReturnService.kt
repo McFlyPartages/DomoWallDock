@@ -34,6 +34,8 @@ import android.widget.TextView
  */
 class ReturnService : Service() {
 
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(Language.wrap(base))
+
     private val handler = Handler(Looper.getMainLooper())
     private var timeoutMs = 0L
     private var startedAt = 0L

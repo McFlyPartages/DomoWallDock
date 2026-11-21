@@ -16,7 +16,7 @@
 DomoWallDock (formerly GladysWallDock) is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807. WallDock is built for Home Assistant; everything it does is still here, and Gladys Assistant is added. GPL-3.0 licence, like the original.
 
 > 📘 **Illustrated guide: [using DomoWallDock with Gladys Assistant](docs/TUTO-GLADYS.en.md)** — installation, connection, MQTT, charge management, screensaver.
-> The app is available in French, English, German and Spanish (following the tablet's language).
+> The app is available in French, English, German and Spanish: the tablet's language by default, or your choice in the settings.
 
 ## Download
 
@@ -50,7 +50,7 @@ Signed APKs are on the [**Releases**](https://github.com/McFlyPartages/DomoWallD
 | ESPHome Bluetooth proxy | ✅ | ❌ |
 
 ¹ Not with two-factor authentication. ² Music Assistant is a separate server: it works with or without Home Assistant.
-When you choose Gladys without filling in Home Assistant, the app unticks Jarvis and the Bluetooth proxy by itself (you can tick them again).
+When you choose Gladys, the app unticks Jarvis, the Bluetooth proxy and Music Assistant by itself (you can tick them again, for instance if you also use Home Assistant or a Music Assistant server).
 
 ## What DomoWallDock does
 
@@ -85,7 +85,7 @@ When you choose Gladys without filling in Home Assistant, the app unticks Jarvis
 - Settings backup and restore to a file (WallDock backups are accepted).
 
 **With Home Assistant** (inherited from WallDock, still working)
-- Encrypted native ESPHome integration, Jarvis voice assistant, media player, synchronised Music Assistant player (Sendspin), alarms, calendar. These features need Home Assistant; when you choose Gladys without filling in Home Assistant, Jarvis and the Bluetooth proxy are unticked automatically.
+- Encrypted native ESPHome integration, Jarvis voice assistant, media player, synchronised Music Assistant player (Sendspin), alarms, calendar. These features need Home Assistant; when you choose Gladys, Jarvis, the Bluetooth proxy and Music Assistant are unticked automatically (you can tick them again).
 
 ## MQTT topics
 

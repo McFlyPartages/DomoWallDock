@@ -7,6 +7,11 @@ class Prefs(context: Context) {
 
     private val sp = context.getSharedPreferences("walldock", Context.MODE_PRIVATE)
 
+    /** Langue de l'appli ("" = celle de la tablette ; voir [Language]). */
+    var language: String
+        get() = sp.getString(Language.KEY, "") ?: ""
+        set(value) = sp.edit().putString(Language.KEY, value).commit().let { }
+
     /** Plateforme affichée au lancement : [PLATFORM_HA] ou [PLATFORM_GLADYS]. */
     var platform: String
         get() = sp.getString("platform", PLATFORM_HA) ?: PLATFORM_HA

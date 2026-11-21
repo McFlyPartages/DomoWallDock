@@ -53,6 +53,7 @@ The settings are split into three parts, always reachable from the top bar. **Sa
 
 ![Common settings](images/tuto-gladys/en/03-communs.png)
 
+- **App language**: the tablet's, or French, English, German, Spanish (the app restarts to apply it).
 - **Admin code** (at least 4 digits): it protects the settings.
 - **Back to the dashboard** after a few seconds without touching the screen, when another dock app is open.
 - Dashboard **zoom**, position of the **dock handle**, **allowed addresses**, automatic start of the app.
@@ -146,7 +147,7 @@ Instead of the clock, the screensaver can show:
 
 ## 8. Other services
 
-The Bluetooth proxy and the Jarvis voice assistant go through **Home Assistant**: when you choose Gladys without filling in Home Assistant, the app unticks them by itself (you can tick them again). The **Music Assistant** player works with a Music Assistant server, with or without Home Assistant.
+When you choose Gladys, the app unticks the **Bluetooth proxy** and the **Jarvis** voice assistant (they go through Home Assistant), as well as the **Music Assistant** player. You can tick them again: for instance if you also use Home Assistant, or a Music Assistant server (it works with or without Home Assistant).
 
 ---
 
