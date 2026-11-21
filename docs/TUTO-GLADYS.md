@@ -25,7 +25,7 @@ Plus tard, pour revenir aux réglages : touchez la petite poignée **▲** (en b
 
 ![Le dock ouvert sur l'écran principal](images/tuto-gladys/fr/00-dock.png)
 
-Les réglages sont rangés en trois parties, accessibles à tout moment par la barre du haut. **Enregistrer** (en haut à droite) enregistre sans quitter ; le bouton tout en bas enregistre et ferme les réglages.
+Tout en haut : la **langue de l'appli** (celle de la tablette, ou français, anglais, allemand, espagnol ; l'appli redémarre pour l'appliquer). Les réglages sont ensuite rangés en trois parties, accessibles à tout moment par la barre du haut. **Enregistrer** (en haut à droite) enregistre sans quitter ; le bouton tout en bas enregistre et ferme les réglages.
 
 ![Barre du haut des réglages](images/tuto-gladys/fr/01-barre.png)
 
@@ -53,7 +53,6 @@ Les réglages sont rangés en trois parties, accessibles à tout moment par la b
 
 ![Réglages communs](images/tuto-gladys/fr/03-communs.png)
 
-- **Langue de l'appli** : celle de la tablette, ou français, anglais, allemand, espagnol (l'appli redémarre pour l'appliquer).
 - **Code administrateur** (4 chiffres minimum) : il protège les réglages.
 - **Retour au tableau de bord** après quelques secondes sans toucher l'écran, quand une autre appli du dock est ouverte.
 - **Zoom** du tableau de bord, position de la **poignée du dock**, **adresses autorisées**, démarrage automatique de l'appli.

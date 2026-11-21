@@ -25,7 +25,7 @@ Más tarde, para volver a los ajustes: toca la pequeña asa **▲** (abajo a la 
 
 ![El dock abierto en la pantalla principal](images/tuto-gladys/es/00-dock.png)
 
-Los ajustes se dividen en tres partes, accesibles en todo momento desde la barra superior. **Guardar** (arriba a la derecha) guarda sin salir; el botón del final guarda y cierra los ajustes.
+Arriba del todo: el **idioma de la app** (el de la tableta, o francés, inglés, alemán, español; la app se reinicia para aplicarlo). Después, los ajustes se dividen en tres partes, accesibles en todo momento desde la barra superior. **Guardar** (arriba a la derecha) guarda sin salir; el botón del final guarda y cierra los ajustes.
 
 ![Barra superior de los ajustes](images/tuto-gladys/es/01-barre.png)
 
@@ -53,7 +53,6 @@ Los ajustes se dividen en tres partes, accesibles en todo momento desde la barra
 
 ![Ajustes comunes](images/tuto-gladys/es/03-communs.png)
 
-- **Idioma de la app**: el de la tableta, o francés, inglés, alemán, español (la app se reinicia para aplicarlo).
 - **Código de administrador** (mínimo 4 cifras): protege los ajustes.
 - **Volver al panel** tras unos segundos sin tocar la pantalla, cuando hay otra app del dock abierta.
 - **Zoom** del panel, posición del **asa del dock**, **direcciones permitidas**, inicio automático de la app.

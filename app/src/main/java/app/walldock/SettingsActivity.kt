@@ -106,6 +106,27 @@ class SettingsActivity : Activity() {
         column.orientation = LinearLayout.VERTICAL
         column.setPadding(dp(24), dp(8), dp(24), dp(24))
 
+        // Langue de l'appli, tout en haut : celle de la tablette par défaut
+        column.addView(heading(tr(R.string.settings_language), 18f))
+        languageGroup = RadioGroup(this)
+        languageGroup.orientation = RadioGroup.HORIZONTAL
+        val languageNames = mapOf("" to tr(R.string.language_system), "fr" to "Français", "en" to "English", "de" to "Deutsch", "es" to "Español")
+        for (tag in Language.CHOICES) {
+            val choice = RadioButton(this)
+            choice.id = View.generateViewId()
+            choice.text = languageNames[tag]
+            choice.tag = tag
+            choice.setTextColor(Color.WHITE)
+            val spacing = RadioGroup.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+            spacing.marginEnd = dp(16)
+            languageGroup.addView(choice, spacing)
+            if (tag == prefs.language) languageGroup.check(choice.id)
+        }
+        val languageScroll = android.widget.HorizontalScrollView(this)
+        languageScroll.isHorizontalScrollBarEnabled = false
+        languageScroll.addView(languageGroup)
+        column.addView(languageScroll)
+
         // ===== 1. Connexion =====
         val connectionAnchor = section(tr(R.string.settings_section_connection))
         column.addView(connectionAnchor)
@@ -196,26 +217,6 @@ class SettingsActivity : Activity() {
         // ===== 2. Réglages communs =====
         val commonAnchor = section(tr(R.string.settings_common))
         column.addView(commonAnchor)
-        // Langue de l'appli : celle de la tablette par défaut
-        column.addView(label(tr(R.string.settings_language)))
-        languageGroup = RadioGroup(this)
-        languageGroup.orientation = RadioGroup.HORIZONTAL
-        val languageNames = mapOf("" to tr(R.string.language_system), "fr" to "Français", "en" to "English", "de" to "Deutsch", "es" to "Español")
-        for (tag in Language.CHOICES) {
-            val choice = RadioButton(this)
-            choice.id = View.generateViewId()
-            choice.text = languageNames[tag]
-            choice.tag = tag
-            choice.setTextColor(Color.WHITE)
-            val spacing = RadioGroup.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-            spacing.marginEnd = dp(16)
-            languageGroup.addView(choice, spacing)
-            if (tag == prefs.language) languageGroup.check(choice.id)
-        }
-        val languageScroll = android.widget.HorizontalScrollView(this)
-        languageScroll.isHorizontalScrollBarEnabled = false
-        languageScroll.addView(languageGroup)
-        column.addView(languageScroll)
         column.addView(label(tr(R.string.settings_pin)))
         pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
         column.addView(secret(pinField))

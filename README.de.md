@@ -79,7 +79,7 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 
 **Kiosk** (von WallDock übernommen)
 - Vollbild, ausgeblendete Systemleisten, Bildschirm immer an, Einstellungen per Code geschützt.
-- Dock erlaubter Apps, automatische Rückkehr zum Dashboard nach Inaktivität.
+- Dock erlaubter Apps (die Jarvis-Taste erscheint nur, wenn Jarvis aktiviert ist), automatische Rückkehr zum Dashboard nach Inaktivität.
 - Kann der Startbildschirm des Tablets werden; startet beim Hochfahren neu (Stromausfall).
 - Dashboard-Zoom (50 bis 200 %), Bildschirmschoner (Uhr, beliebige Seite, Immich-Diashow oder Fotoordner).
 - Zeitplan: Bildschirm jede Nacht aus. Liste erlaubter Adressen. Notfallbildschirm, wenn der Server nicht antwortet.

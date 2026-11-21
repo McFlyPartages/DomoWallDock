@@ -78,7 +78,7 @@ Cuando eliges Gladys, la app desmarca sola Jarvis, el proxy Bluetooth y Music As
 
 **Quiosco** (heredado de WallDock)
 - Pantalla completa, barras del sistema ocultas, pantalla siempre encendida, ajustes protegidos por un código.
-- Dock de apps permitidas, vuelta automática al panel tras la inactividad.
+- Dock de apps permitidas (el botón de Jarvis solo aparece si Jarvis está activado), vuelta automática al panel tras la inactividad.
 - Puede ser la pantalla de inicio de la tableta; se vuelve a iniciar al arrancar (corte de luz).
 - Zoom del panel (de 50 a 200 %), salvapantallas (reloj, página a elegir, presentación de Immich o carpeta de fotos).
 - Horario: pantalla apagada cada noche. Lista de direcciones permitidas. Pantalla de emergencia cuando el servidor no responde.
