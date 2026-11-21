@@ -81,15 +81,33 @@ object Pin {
             return
         }
         val input = EditText(activity)
+        input.isSingleLine = true
         input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        input.imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
         input.hint = tr(R.string.pin_title)
-        AlertDialog.Builder(activity)
+        val check = {
+            if (input.text.toString() == prefs.pin) onSuccess() else activity.toast(tr(R.string.pin_wrong))
+        }
+        val dialog = AlertDialog.Builder(activity)
             .setTitle(tr(R.string.pin_title))
             .setView(input)
-            .setPositiveButton("OK") { _, _ ->
-                if (input.text.toString() == prefs.pin) onSuccess() else activity.toast(tr(R.string.pin_wrong))
-            }
+            .setPositiveButton("OK") { _, _ -> check() }
             .setNegativeButton(tr(R.string.cancel), null)
-            .show()
+            .create()
+        // La touche « OK » / Entrée du pavé numérique valide aussi le code
+        input.setOnEditorActionListener { _, actionId, event ->
+            val enter = event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER && event.action == android.view.KeyEvent.ACTION_DOWN
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE || enter) {
+                dialog.dismiss()
+                check()
+                true
+            } else {
+                false
+            }
+        }
+        // Pavé numérique ouvert d'emblée
+        dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        dialog.show()
+        input.requestFocus()
     }
 }

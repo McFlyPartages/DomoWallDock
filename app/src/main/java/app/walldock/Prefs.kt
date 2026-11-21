@@ -16,10 +16,12 @@ class Prefs(context: Context) {
         get() = platform == PLATFORM_GLADYS
 
     // ---- Home Assistant ----
-    /** Adresse de Home Assistant, ex. http://192.168.1.10:8123 */
-    var haUrl: String
-        get() = sp.getString(KEY_URL, "") ?: ""
-        set(value) = sp.edit().putString(KEY_URL, value).apply()
+    /** Accès à Home Assistant : local, externe ou les deux. */
+    val ha = Server("ha", 8123, KEY_URL)
+
+    /** Adresse de Home Assistant utilisée maintenant (locale ou externe selon l'accès choisi). */
+    val haUrl: String
+        get() = ha.url
     /** Compte HA pour la connexion automatique (vide = connexion à la main dans la page). */
     var haUser: String
         get() = sp.getString("ha_user", "") ?: ""
@@ -33,10 +35,12 @@ class Prefs(context: Context) {
         set(value) = sp.edit().putString("ha_dashboard", value).apply()
 
     // ---- Gladys Assistant ----
-    /** Adresse de Gladys, ex. http://192.168.1.20 */
-    var gladysUrl: String
-        get() = sp.getString("gladys_url", "") ?: ""
-        set(value) = sp.edit().putString("gladys_url", value).apply()
+    /** Accès à Gladys Assistant : local, externe ou les deux. */
+    val gladys = Server("gladys", 80, "gladys_url")
+
+    /** Adresse de Gladys utilisée maintenant (locale ou externe selon l'accès choisi). */
+    val gladysUrl: String
+        get() = gladys.url
     /** Adresse e-mail du compte Gladys (connexion automatique). */
     var gladysUser: String
         get() = sp.getString("gladys_user", "") ?: ""
@@ -243,7 +247,7 @@ class Prefs(context: Context) {
         if (url.startsWith("about:") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("javascript:")) return true
         val uri = android.net.Uri.parse(url)
         val host = uri.host?.lowercase() ?: return false
-        val servers = listOf(haUrl, gladysUrl, dashboardUrl).mapNotNull { android.net.Uri.parse(it).host?.lowercase() }
+        val servers = (ha.hosts + gladys.hosts + listOfNotNull(android.net.Uri.parse(dashboardUrl).host)).map { it.lowercase() }
         if (host in servers) return true
         return rules.any { rule ->
             val r = rule.lowercase()
@@ -330,10 +334,76 @@ class Prefs(context: Context) {
         return origin + "/" + trimmed.trimStart('/')
     }
 
+    /**
+     * Accès à un serveur (HA ou Gladys) : adresse locale (http/https, IP, port) et/ou adresse
+     * externe (https). En mode « les deux », [Endpoints] dit laquelle répond.
+     */
+    inner class Server(val key: String, val defaultPort: Int, private val legacyKey: String) {
+        var access: String
+            get() = migrated().getString("${key}_access", ACCESS_LOCAL) ?: ACCESS_LOCAL
+            set(value) = sp.edit().putString("${key}_access", value).apply()
+        var scheme: String
+            get() = migrated().getString("${key}_scheme", "http") ?: "http"
+            set(value) = sp.edit().putString("${key}_scheme", value).apply()
+        /** Adresse IPv4 locale, ex. 192.168.80.2 (vide = pas d'adresse locale). */
+        var ip: String
+            get() = migrated().getString("${key}_ip", "") ?: ""
+            set(value) = sp.edit().putString("${key}_ip", value).apply()
+        var port: Int
+            get() = migrated().getInt("${key}_port", defaultPort)
+            set(value) = sp.edit().putInt("${key}_port", value.coerceIn(1, 65535)).apply()
+        /** Adresse externe, toujours en https (ex. https://ha.exemple.fr). */
+        var external: String
+            get() = migrated().getString("${key}_external", "") ?: ""
+            set(value) = sp.edit().putString("${key}_external", value).apply()
+
+        val localUrl: String
+            get() {
+                if (ip.isBlank()) return ""
+                val implicit = (scheme == "http" && port == 80) || (scheme == "https" && port == 443)
+                return "$scheme://$ip" + if (implicit) "" else ":$port"
+            }
+
+        /** Adresse à utiliser maintenant. */
+        val url: String
+            get() = when (access) {
+                ACCESS_EXTERNAL -> external
+                ACCESS_BOTH -> if (Endpoints.isExternal(key)) external.ifBlank { localUrl } else localUrl.ifBlank { external }
+                else -> localUrl
+            }
+
+        /** Noms d'hôte des deux adresses (liste blanche, connexion automatique). */
+        val hosts: List<String>
+            get() = listOf(localUrl, external).filter { it.isNotBlank() }.mapNotNull { android.net.Uri.parse(it).host }
+
+        /** Reprise de l'ancienne adresse unique (ex. http://192.168.80.2:8123) au premier usage. */
+        private fun migrated(): android.content.SharedPreferences {
+            if (sp.contains("${key}_access")) return sp
+            val old = sp.getString(legacyKey, "") ?: ""
+            val uri = android.net.Uri.parse(old)
+            val host = uri.host ?: ""
+            val edit = sp.edit()
+            if (Regex("^\\d{1,3}(\\.\\d{1,3}){3}$").matches(host)) {
+                val scheme = uri.scheme ?: "http"
+                edit.putString("${key}_access", ACCESS_LOCAL).putString("${key}_scheme", scheme).putString("${key}_ip", host)
+                    .putInt("${key}_port", if (uri.port > 0) uri.port else if (scheme == "https") 443 else defaultPort)
+            } else if (old.startsWith("https://")) {
+                edit.putString("${key}_access", ACCESS_EXTERNAL).putString("${key}_external", old)
+            } else {
+                edit.putString("${key}_access", ACCESS_LOCAL)
+            }
+            edit.commit()
+            return sp
+        }
+    }
+
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank() && pin.isNotBlank()
 
     companion object {
+        const val ACCESS_LOCAL = "local"
+        const val ACCESS_EXTERNAL = "external"
+        const val ACCESS_BOTH = "both"
         const val PLATFORM_HA = "ha"
         const val PLATFORM_GLADYS = "gladys"
 
@@ -443,4 +513,40 @@ interface DashboardController {
     fun userPresent() {}
     /** Demander l'autorisation de la caméra (détection de mouvement activée depuis HA). */
     fun requestCameraPermission() {}
+}
+
+/**
+ * Accès « les deux » : on essaie l'adresse locale, et on passe sur l'adresse externe
+ * quand elle ne répond pas (tablette hors de la maison). Réseau : à appeler hors du fil d'affichage.
+ */
+object Endpoints {
+    private val external = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+
+    fun isExternal(key: String): Boolean = external[key] == true
+
+    /** Teste les adresses locales des serveurs en mode « les deux » ; vrai si un choix a changé. */
+    fun probe(prefs: Prefs): Boolean {
+        var changed = false
+        for (server in listOf(prefs.ha, prefs.gladys)) {
+            if (server.access != Prefs.ACCESS_BOTH || server.external.isBlank() || server.localUrl.isBlank()) continue
+            val useExternal = !reachable(server.localUrl)
+            val previous = external.put(server.key, useExternal) ?: false
+            if (previous != useExternal) changed = true
+        }
+        return changed
+    }
+
+    private fun reachable(address: String): Boolean = try {
+        val connection = java.net.URL(address).openConnection() as java.net.HttpURLConnection
+        connection.connectTimeout = 2_000
+        connection.readTimeout = 2_000
+        connection.instanceFollowRedirects = false
+        try {
+            connection.responseCode in 200..499
+        } finally {
+            connection.disconnect()
+        }
+    } catch (e: Exception) {
+        false
+    }
 }
