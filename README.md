@@ -1,13 +1,31 @@
 # DomoWallDock
 
+[![Licence GPL-3.0](https://img.shields.io/badge/licence-GPL--3.0-64748b)](LICENSE)
+[![Android 7+](https://img.shields.io/badge/Android-7%2B-3ddc84)](#téléchargement)
+[![Dernière version](https://img.shields.io/github/v/release/McFlyPartages/DomoWallDock?include_prereleases&label=version)](https://github.com/McFlyPartages/DomoWallDock/releases)
+
 **Transformez une tablette Android en tableau de bord mural pour [Home Assistant](https://www.home-assistant.io/) ou [Gladys Assistant](https://gladysassistant.com/).**
 
 DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock](https://github.com/psycho1807/WallDock), de psycho1807. WallDock est pensé pour Home Assistant ; tout ce qu'il sait faire reste présent ici, et Gladys Assistant s'y ajoute. Licence GPL-3.0, comme l'original.
+
+## Téléchargement
+
+Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/DomoWallDock/releases) (prenez la plus récente ; ce sont des pré-versions).
+
+| Votre tablette | Fichier à télécharger | Branche |
+|---|---|---|
+| **Android 8 ou plus récent** (cas général) | `DomoWallDock-x.y.z.apk` | `main` |
+| **Android 7.x** (tablettes anciennes) | `DomoWallDock-x.y.z-android7.apk` | `android7` |
+
+- La version `android7` est une branche **figée** : elle ne reçoit que les corrections, reportées à la main. Sur Android 8+, utilisez toujours la version standard.
+- Les deux versions sont signées avec la **même clé** : on peut installer une nouvelle version par-dessus l'ancienne, les réglages sont conservés.
+- Pour les installer : autoriser « sources inconnues » pour le navigateur ou le gestionnaire de fichiers utilisé, ouvrir le fichier, puis suivre [Installation](#installation).
 
 ## Ce que fait DomoWallDock
 
 **Home Assistant ou Gladys, au choix**
 - Réglages → « Tableau de bord affiché » : un bouton radio choisit la plateforme lancée. Chacune a sa colonne (côte à côte sur un écran large ou une tablette en paysage, l'une sous l'autre sinon) : adresse, compte, mot de passe et tableau de bord par défaut (facultatif, ex. `/lovelace/0?kiosk` ou `/dashboard/salon`).
+- **Accès Local / Externe / Les deux** pour chaque plateforme : adresse locale (HTTP ou HTTPS, IP et port) et adresse externe (HTTPS). Avec « Les deux », l'appli prend l'adresse locale si elle répond, sinon l'externe : la tablette fonctionne aussi hors de chez vous, par exemple derrière un reverse proxy. Un contrôle de santé vérifie chaque adresse.
 - **Connexion automatique** : avec un compte et un mot de passe, la tablette se connecte toute seule quand la page de connexion s'affiche (Home Assistant : comme « Rester connecté » ; pas avec l'authentification à deux facteurs). Conseil : un compte dédié à la tablette, sans droits d'administration.
 - Les fonctions qui passent par Home Assistant (Jarvis, proxy Bluetooth, caméras, sons) restent disponibles quand Gladys est affiché, tant que l'adresse de HA est remplie.
 
@@ -56,7 +74,7 @@ DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock
 
 ## Installation
 
-1. Installer `DomoWallDock-x.y.z.apk` sur la tablette (autoriser l'installation depuis cette source). L'appli a son propre identifiant (`fr.mcflypartages.domowalldock`) : elle peut cohabiter avec WallDock.
+1. Télécharger l'APK adapté à votre tablette (voir [Téléchargement](#téléchargement)) et l'installer (autoriser l'installation depuis cette source). L'appli a son propre identifiant (`fr.mcflypartages.domowalldock`) : elle peut cohabiter avec WallDock.
 2. Au premier lancement : plateforme (Home Assistant ou Gladys), son adresse (et si besoin compte, mot de passe, tableau de bord), code administrateur, applis du dock, puis **Enregistrer**.
 3. Dans les réglages : écran d'accueil, affichage par-dessus les autres applis, caméra (détection de mouvement), puis la partie MQTT.
 4. Désactiver l'optimisation de batterie d'Android pour DomoWallDock, sinon le système peut couper l'appli ([dontkillmyapp.com](https://dontkillmyapp.com) détaille chaque marque).
@@ -69,6 +87,10 @@ DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock
 
 Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement ses évolutions. Le client MQTT (`app/src/main/java/app/walldock/mqtt`) et le serveur ESPHome (`…/esphome`) sont en Java pur et se testent sur une JVM.
 
+## Code source et dépôts
+
+Le développement a lieu sur un Forgejo personnel ; ce dépôt GitHub en est une **copie miroir** (branches `main` et `android7`, et les tags). Les APK des Releases sont publiés des deux côtés. Les évolutions passent par des *pull requests* sur la forge d'origine, puis arrivent ici.
+
 ## Crédits
 
 - **DomoWallDock** : adapté et maintenu par **McFly** — site [mcflypartages.fr](https://mcflypartages.fr), Mastodon [@McFlyPartages@mastodon.social](https://mastodon.social/@McFlyPartages), [Facebook](https://www.facebook.com/McFlyPartages), [X](https://x.com/McFlyPartages).
@@ -80,5 +102,7 @@ Le code garde le paquet `app.walldock` de l'original, pour reprendre facilement 
 ## English
 
 **DomoWallDock** (formerly GladysWallDock) turns an Android tablet into a wall panel for [Home Assistant](https://www.home-assistant.io/) or [Gladys Assistant](https://gladysassistant.com/), chosen with a radio button in the settings, with automatic sign-in. It is a fork of [WallDock](https://github.com/psycho1807/WallDock) by psycho1807 (GPL-3.0). It adds an ESPHome Bluetooth proxy (the tablet forwards nearby BLE advertisements to Home Assistant, listening only) and, for Gladys: MQTT connection with automatic discovery (battery, charging, motion, screen switch, two buttons), charge management for always-plugged tablets (a “Charge wanted” sensor drives the charger's smart plug through two Gladys scenes), and a screen that turns on with motion and off when nobody is there. Everything WallDock does for Home Assistant is still there.
+
+**Download:** signed APKs are on the [Releases](https://github.com/McFlyPartages/DomoWallDock/releases) page — `DomoWallDock-x.y.z.apk` for Android 8+, `DomoWallDock-x.y.z-android7.apk` for Android 7.x (frozen branch, fixes only). Both use the same signing key, so updates install over the previous version. The README above is in French; the app itself ships French and English strings.
 
 License: GPL-3.0.
