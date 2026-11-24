@@ -394,4 +394,6 @@
     <string name="settings_quit">Quitter</string>
     <string name="settings_services_ha_help">Jarvis et le proxy Bluetooth passent par Home Assistant (intégration ESPHome) ; Music Assistant fonctionne avec ou sans lui. Ils sont décochés quand Gladys est choisie ; recochez-les si vous les utilisez.</string>
     <string name="settings_tab_dock">Applis Dock</string>
+    <string name="settings_keep_screen_on">Garder l\'écran allumé</string>
+    <string name="settings_keep_screen_on_help">Décoché : la tablette se met en veille après le délai d\'Android (Paramètres > Affichage > Veille), comme avec les autres applis.</string>
 </resources>
