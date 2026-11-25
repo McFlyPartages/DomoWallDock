@@ -317,7 +317,7 @@
     <string name="about_fork">DomoWallDock %1$s is a fork of WallDock by psycho1807 (github.com/psycho1807/WallDock, GPL-3.0 licence), adapted for Home Assistant and Gladys Assistant.</string>
     <!-- Platform: Home Assistant or Gladys Assistant -->
     <string name="settings_platform">Dashboard shown</string>
-    <string name="settings_platform_help">Both platforms can be set up; only the chosen one is shown at start. Features that go through Home Assistant (Jarvis, Bluetooth proxy, cameras…) stay available as long as its address is filled in.</string>
+    <string name="settings_platform_help">Both platforms can be set up; only the chosen one is shown at start. Features that go through Home Assistant (Jarvis, Bluetooth proxy…) stay available as long as its address is filled in.</string>
     <string name="platform_ha">Home Assistant</string>
     <string name="platform_gladys">Gladys Assistant</string>
     <string name="settings_server_address">Address</string>
