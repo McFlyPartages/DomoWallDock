@@ -363,11 +363,9 @@
     <string name="test_immich_album">album introuvable, ou la clé n’y a pas accès</string>
     <string name="test_failed">❌ Échec : %1$s</string>
     <string name="test_timeout">pas de réponse en 12 secondes</string>
-    <string name="settings_section_connection">Connexion</string>
+    <string name="settings_section_connection">Connexions</string>
     <string name="settings_schedule_title">Écran éteint chaque nuit</string>
     <string name="settings_motion_title">Détection de mouvement (caméra frontale)</string>
-    <string name="dock_show">Afficher les applis (%1$d installées, %2$d dans le dock)</string>
-    <string name="dock_hide">Masquer la liste des applis</string>
     <string name="server_access">Accès</string>
     <string name="server_access_local">Local</string>
     <string name="server_access_external">Externe</string>
@@ -391,8 +389,9 @@
     <string name="error_gladys_lock">Saisissez le chemin du tableau de bord par défaut pour y verrouiller l’affichage</string>
     <string name="fullscreen_empty">Saisissez d’abord le chemin du tableau de bord</string>
     <string name="settings_tab_general">Généraux</string>
-    <string name="settings_tab_services">Services communs</string>
-    <string name="settings_tab_services_ha">Services Home Assistant</string>
+    <string name="settings_tab_services">Services</string>
+    <string name="settings_tab_services_ha">Services HA</string>
     <string name="settings_quit">Quitter</string>
     <string name="settings_services_ha_help">Ces services passent par Home Assistant (intégration ESPHome, Music Assistant). Ils sont décochés quand Gladys est choisie ; recochez-les si Home Assistant tourne aussi.</string>
+    <string name="settings_tab_dock">Applis Dock</string>
 </resources>

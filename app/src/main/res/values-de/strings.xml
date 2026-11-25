@@ -360,11 +360,9 @@
     <string name="test_immich_album">Album nicht gefunden, oder der Schlüssel hat keinen Zugriff</string>
     <string name="test_failed">❌ Fehlgeschlagen: %1$s</string>
     <string name="test_timeout">keine Antwort innerhalb von 12 Sekunden</string>
-    <string name="settings_section_connection">Verbindung</string>
+    <string name="settings_section_connection">Verbindungen</string>
     <string name="settings_schedule_title">Bildschirm jede Nacht aus</string>
     <string name="settings_motion_title">Bewegungserkennung (Frontkamera)</string>
-    <string name="dock_show">Apps anzeigen (%1$d installiert, %2$d im Dock)</string>
-    <string name="dock_hide">App-Liste ausblenden</string>
     <string name="server_access">Zugriff</string>
     <string name="server_access_local">Lokal</string>
     <string name="server_access_external">Extern</string>
@@ -388,8 +386,9 @@
     <string name="error_gladys_lock">Geben Sie den Pfad des Standard-Dashboards ein, um die Anzeige darauf zu sperren</string>
     <string name="fullscreen_empty">Geben Sie zuerst den Dashboard-Pfad ein</string>
     <string name="settings_tab_general">Allgemein</string>
-    <string name="settings_tab_services">Gemeinsame Dienste</string>
-    <string name="settings_tab_services_ha">Home-Assistant-Dienste</string>
+    <string name="settings_tab_services">Dienste</string>
+    <string name="settings_tab_services_ha">HA-Dienste</string>
     <string name="settings_quit">Beenden</string>
     <string name="settings_services_ha_help">Diese Dienste laufen über Home Assistant (ESPHome-Integration, Music Assistant). Bei Auswahl von Gladys werden sie abgewählt; wählen Sie sie wieder aus, wenn Home Assistant ebenfalls läuft.</string>
+    <string name="settings_tab_dock">Dock-Apps</string>
 </resources>
