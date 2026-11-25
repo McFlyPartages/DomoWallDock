@@ -19,6 +19,16 @@ DomoWallDock (früher GladysWallDock) ist ein Fork von [WallDock](https://github
 > Die App gibt es auf Französisch, Englisch, Deutsch und Spanisch: standardmäßig in der Sprache des Tablets oder nach Wahl in den Einstellungen.
 
 <a id="download"></a>
+## Vorschau
+
+<p align="center">
+  <img src="docs/images/readme/de/reglages-connexions.png" width="49%" alt="Einstellungen, Tab Verbindungen">
+  <img src="docs/images/readme/de/reglages-services.png" width="49%" alt="Einstellungen, Tab Dienste">
+</p>
+<p align="center">
+  <img src="docs/images/tuto-gladys/de/00-dock.png" width="98%" alt="Das geöffnete Dock auf dem Dashboard">
+</p>
+
 ## Download
 
 Die signierten APKs liegen unter [**Releases**](https://github.com/McFlyPartages/DomoWallDock/releases) (nimm die neueste; es sind Vorabversionen).

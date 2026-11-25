@@ -18,6 +18,16 @@ DomoWallDock (anciennement GladysWallDock) est un dérivé (*fork*) de [WallDock
 > 📘 **Tutoriel illustré : [utiliser DomoWallDock avec Gladys Assistant](docs/TUTO-GLADYS.md)** — installation, connexion, MQTT, gestion de la charge, écran de veille.
 > L'appli est en français, anglais, allemand et espagnol : langue de la tablette par défaut, ou au choix dans les réglages.
 
+## Aperçu
+
+<p align="center">
+  <img src="docs/images/readme/fr/reglages-connexions.png" width="49%" alt="Réglages, onglet Connexions">
+  <img src="docs/images/readme/fr/reglages-services.png" width="49%" alt="Réglages, onglet Services">
+</p>
+<p align="center">
+  <img src="docs/images/tuto-gladys/fr/00-dock.png" width="98%" alt="Le dock ouvert sur le tableau de bord">
+</p>
+
 ## Téléchargement
 
 Les APK signés sont dans les [**Releases**](https://github.com/McFlyPartages/DomoWallDock/releases) (prenez la plus récente ; ce sont des pré-versions).
