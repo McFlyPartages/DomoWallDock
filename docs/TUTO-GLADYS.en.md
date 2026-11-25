@@ -108,6 +108,7 @@ You get in Gladys:
 | Battery (%), battery temperature | sensors |
 | Charging, Charge wanted, Motion | yes / no sensors |
 | Screen | switch (on / off) |
+| Shared camera | switch (on / off, see § 8) |
 | Reload the dashboard, Back to the dashboard | buttons |
 
 ![The tablet in Gladys, with its 8 features (Gladys in French)](images/tuto-gladys/gladys-mqtt.png)
@@ -144,13 +145,32 @@ Instead of the clock, the screensaver can show:
 
 ---
 
-## 8. Other services
+## 8. The tablet camera in Gladys
+
+The front camera can be used as a security camera: live feed in Gladys, and a photo sent when the tablet sees motion while the alarm is armed. **Off by default.**
+
+![Shared camera](images/tuto-gladys/en/12-camera.png)
+
+1. In the **Services → Shared camera** tab, tick **Share the front camera on the network**, then **Save** (Android asks for camera permission).
+2. Tap **Copy feed address**: the full address, token included, is copied (`http://<tablet IP>:8081/stream.mjpeg?token=…`). Keep it secret.
+3. In Gladys: **Integrations → Cameras** → add a camera and paste the address in **“Camera RTSP/HTTP Flux”**. The tablet's image shows up in Gladys.
+4. To get a photo on motion, create a scene:
+   - trigger **“Device state change”**: the tablet's **Motion** becomes **1**;
+   - action **“If the alarm is in mode”**: armed;
+   - action **“Send a camera image”**: the tablet camera.
+5. Optional, to share the camera only while you are away: two scenes **“The alarm is armed”** / **“The alarm is disarmed”** that turn **Shared camera** on and off (action **“Set device value”**).
+
+Good to know: your firewall must let Gladys reach the tablet on **port 8081**; no infrared, so nothing useful in the dark; if the image is tilted, change **Image rotation**.
+
+---
+
+## 9. Other services
 
 When you choose Gladys, the app unticks the **Bluetooth proxy** and the **Jarvis** voice assistant (they go through Home Assistant), as well as the **Music Assistant** player (**HA services** tab). You can tick them again: for instance if you also use Home Assistant, or a Music Assistant server (it works with or without Home Assistant).
 
 ---
 
-## 9. Every day
+## 10. Every day
 
 - The **▲** handle opens the dock: your apps, the calendar, **Reload** the page, **Settings**.
 - If Gladys stops answering, a fallback screen shows the time; the dashboard comes back by itself.

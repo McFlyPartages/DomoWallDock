@@ -132,6 +132,10 @@ class ApiService : Service(), EsphomeServer.Handler {
         .icon("mdi:tune-vertical").category(Entity.CATEGORY_CONFIG)
     private val setMotionWake = Entity(Entity.Kind.SWITCH, "reglage_mouvement_allume_ecran", tr(R.string.entity_set_motion_wake))
         .icon("mdi:monitor-eye").category(Entity.CATEGORY_CONFIG)
+    // Pas de catégorie « Configuration » : on le pilote dans les automatisations (alarme armée…)
+    private val cameraShare = Entity(Entity.Kind.SWITCH, "partage_camera", tr(R.string.entity_camera_share))
+        .icon("mdi:cctv")
+    private var cameraServer: CameraServer? = null
     private val motionSensitivityLabels get() = listOf(
         tr(R.string.motion_sens_low), tr(R.string.motion_sens_medium), tr(R.string.motion_sens_high)
     )
@@ -313,7 +317,9 @@ class ApiService : Service(), EsphomeServer.Handler {
     private fun updateListenLock() {
         val prefs = Prefs(this)
         // Écran éteint : la caméra doit continuer à tourner pour le rallumer quand quelqu'un passe
-        val watching = !AppState.screenOn && prefs.motionEnabled && prefs.motionWakesScreen && motionDetector?.running == true
+        // Caméra partagée : elle doit pouvoir servir une photo même écran éteint
+        val watching = !AppState.screenOn && motionDetector?.running == true &&
+            ((prefs.motionEnabled && prefs.motionWakesScreen) || prefs.cameraShareEnabled)
         val wanted = (jarvis?.isRecording == true && prefs.listenScreenOff) || watching
         val lock = listenLock ?: getSystemService(PowerManager::class.java)
             ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "walldock:listen")?.also {
@@ -347,7 +353,7 @@ class ApiService : Service(), EsphomeServer.Handler {
         updateStatus, installUpdate,
         setListen, setOnDevice, setSensitivity, setScreensaver, setScreensaverSeconds, setReturnSeconds,
         setAutoUpdate, setHandle, setUrl,
-        motionSensor, motionStatus, setMotion, setMotionSensitivity, setMotionWake,
+        motionSensor, motionStatus, setMotion, setMotionSensitivity, setMotionWake, cameraShare,
         batteryTemp, wifiSignal, idleTime, activity, setActivitySeconds, setSaverUrl, setSystemBrightness, setStartOnBoot,
         setSchedule, setSleepTime, setWakeTime, setAllowedUrls, setListenScreenOff, nextAlarm, setZoom, setSendspin
     )
@@ -674,9 +680,11 @@ class ApiService : Service(), EsphomeServer.Handler {
                 AppState.controller?.reloadDashboard()
             }
             override fun showDashboard() = this@ApiService.showDashboard(home = true)
+            override fun setCameraShare(on: Boolean) = this@ApiService.setCameraShare(on)
         })
         bridge.set(MqttBridge.SCREEN, AppState.screenOn)
         bridge.set(MqttBridge.MOTION, false)
+        bridge.set(MqttBridge.CAMERA_SHARE, Prefs(this).cameraShareEnabled)
         mqtt = bridge
         applyMqtt()
 
@@ -705,6 +713,8 @@ class ApiService : Service(), EsphomeServer.Handler {
         bleProxy = null
         jarvis?.release()
         jarvis = null
+        cameraServer?.stop()
+        cameraServer = null
         motionDetector?.stop()
         motionDetector = null
         mediaPlayer?.release()
@@ -809,6 +819,7 @@ class ApiService : Service(), EsphomeServer.Handler {
                     applyMotionSettings()
                 }
                 entity === setMotionWake -> prefs.motionWakesScreen = state
+                entity === cameraShare -> setCameraShare(state)
                 entity === setAutoUpdate -> prefs.autoUpdate = state
                 entity === setStartOnBoot -> prefs.startOnBoot = state
                 entity === setListenScreenOff -> {
@@ -889,18 +900,24 @@ class ApiService : Service(), EsphomeServer.Handler {
         srv.setState(setActivitySeconds, prefs.activitySeconds.toFloat())
         srv.setState(setMotion, prefs.motionEnabled)
         srv.setState(setMotionWake, prefs.motionWakesScreen)
+        srv.setState(cameraShare, prefs.cameraShareEnabled)
         srv.setState(setMotionSensitivity, motionSensitivityLabels.getOrElse(prefs.motionSensitivity) { motionSensitivityLabels[1] })
         srv.setState(motionStatus, motionStatusText())
     }
 
-    /** Démarre ou arrête la détection de mouvement selon les réglages (et la permission caméra). */
+    /**
+     * Démarre ou arrête la caméra selon les réglages (et la permission) : elle tourne pour la
+     * détection de mouvement, pour la caméra partagée, ou pour les deux à la fois.
+     */
     fun applyMotionSettings() {
         val prefs = Prefs(this)
         val detector = motionDetector ?: return
         detector.sensitivity = prefs.motionSensitivity
+        detector.rotationOverride = prefs.cameraRotation
+        detector.highRes = prefs.cameraShareEnabled
         // Le délai d'extinction repart de maintenant
         lastPresence = android.os.SystemClock.elapsedRealtime()
-        if (prefs.motionEnabled) {
+        if (prefs.motionEnabled || prefs.cameraShareEnabled) {
             if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 AppState.controller?.requestCameraPermission()
             }
@@ -910,8 +927,36 @@ class ApiService : Service(), EsphomeServer.Handler {
             detector.stop()
             startInForeground()
         }
+        if (!prefs.motionEnabled && motionActive) onMotion(false)
+        applyCameraServer(prefs)
+        updateListenLock()
         server?.setState(motionStatus, motionStatusText())
     }
+
+    private fun applyCameraServer(prefs: Prefs) {
+        if (prefs.cameraShareEnabled) {
+            val http = cameraServer ?: CameraServer(
+                CameraServer.DEFAULT_PORT,
+                token = { Prefs(this).cameraToken },
+                camera = { motionDetector }
+            ).also { cameraServer = it }
+            Thread({ http.start() }, "walldock-camera-start").start()
+        } else {
+            cameraServer?.stop()
+        }
+    }
+
+    /** Caméra partagée allumée ou coupée (réglages, Home Assistant, Gladys par MQTT). */
+    fun setCameraShare(on: Boolean) {
+        val prefs = Prefs(this)
+        prefs.cameraShareEnabled = on
+        applyMotionSettings()
+        server?.setState(cameraShare, on)
+        mqtt?.set(MqttBridge.CAMERA_SHARE, on)
+    }
+
+    /** État de la caméra partagée pour l'écran des réglages (null si tout va bien). */
+    val cameraShareError: String? get() = cameraServer?.lastError
 
     private fun motionStatusText(): String {
         val detector = motionDetector
@@ -926,6 +971,8 @@ class ApiService : Service(), EsphomeServer.Handler {
     }
 
     private fun onMotion(present: Boolean) {
+        // Caméra ouverte seulement pour le partage : pas de capteur de mouvement
+        if (present && !Prefs(this).motionEnabled) return
         motionActive = present
         lastPresence = android.os.SystemClock.elapsedRealtime()
         mqtt?.set(MqttBridge.MOTION, present)
@@ -1426,8 +1473,8 @@ class ApiService : Service(), EsphomeServer.Handler {
             if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             }
-            // Caméra (détection de mouvement) seulement si elle est activée et autorisée
-            if (Prefs(this).motionEnabled &&
+            // Caméra (détection de mouvement, caméra partagée) seulement si elle est activée et autorisée
+            if ((Prefs(this).motionEnabled || Prefs(this).cameraShareEnabled) &&
                 checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED
             ) {
                 types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA

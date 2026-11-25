@@ -108,6 +108,7 @@ Obtienes en Gladys:
 | Batería (%), temperatura de la batería | sensores |
 | Cargando, Carga solicitada, Movimiento | sensores sí / no |
 | Pantalla | interruptor (encender / apagar) |
+| Cámara compartida | interruptor (encender / apagar, ver § 8) |
 | Recargar el panel, Volver al panel | botones |
 
 ![La tableta en Gladys, con sus 8 funciones (Gladys en francés)](images/tuto-gladys/gladys-mqtt.png)
@@ -144,13 +145,32 @@ En lugar del reloj, el salvapantallas puede mostrar:
 
 ---
 
-## 8. Los demás servicios
+## 8. La cámara de la tableta en Gladys
+
+La cámara frontal puede servir de cámara de vigilancia: imagen en directo en Gladys, y una foto cuando la tableta detecta movimiento con la alarma armada. **Desactivada por defecto.**
+
+![Cámara compartida](images/tuto-gladys/es/12-camera.png)
+
+1. En la pestaña **Servicios → Cámara compartida**, marque **Compartir la cámara frontal en la red** y luego **Guardar** (Android pide permiso para usar la cámara).
+2. Toque **Copiar dirección del directo**: se copia la dirección completa, token incluido (`http://<IP de la tableta>:8081/stream.mjpeg?token=…`). Manténgala en secreto.
+3. En Gladys: **Integraciones → Cámaras** → añada una cámara y pegue la dirección en **«Flujo RTSP/HTTP de la cámara»**. La imagen de la tableta aparece en Gladys.
+4. Para recibir una foto al detectar movimiento, cree una escena:
+   - disparador **«Cambio de estado del dispositivo»**: **Movimiento** de la tableta pasa a **1**;
+   - acción **«Si la alarma está en modo»**: armada;
+   - acción **«Enviar una imagen de cámara»**: la cámara de la tableta.
+5. Opcional, para compartir la cámara solo cuando no hay nadie: dos escenas **«La alarma está armada»** / **«La alarma está desarmada»** que encienden y apagan **Cámara compartida** (acción **«Establecer valor del dispositivo»**).
+
+Conviene saber: el cortafuegos debe dejar que Gladys llegue a la tableta por el **puerto 8081**; sin infrarrojos, así que nada útil a oscuras; si la imagen sale torcida, cambie **Rotación de la imagen**.
+
+---
+
+## 9. Los demás servicios
 
 Cuando eliges Gladys, la app desmarca sola el **proxy Bluetooth** y el asistente de voz **Jarvis** (pasan por Home Assistant), así como el reproductor de **Music Assistant** (pestaña **Servicios HA**). Puedes volver a marcarlos: por ejemplo si también usas Home Assistant, o un servidor Music Assistant (funciona con o sin Home Assistant).
 
 ---
 
-## 9. En el día a día
+## 10. En el día a día
 
 - El asa **▲** abre el dock: tus apps, el calendario, **Recargar** la página, **Ajustes**.
 - Si Gladys deja de responder, una pantalla de emergencia muestra la hora; el panel vuelve solo.

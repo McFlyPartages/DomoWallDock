@@ -54,6 +54,7 @@ Die signierten APKs liegen unter [**Releases**](https://github.com/McFlyPartages
 | Vollbild-Kalender (Tag, Woche, Monat, Agenda) | ✅ | ✅ |
 | Wecker auf dem Tablet | ✅ (auch aus HA steuerbar) | ✅ (in der App eingestellt) |
 | Tablet-Sensoren: Akku, Laden, Bewegung, Bildschirm | ✅ (ESPHome oder MQTT) | ✅ (MQTT) |
+| Geteilte Tablet-Kamera: Livebild und Foto (standardmäßig aus) | ✅ (MJPEG-Kamera) | ✅ (Integration Kameras) |
 | Ladesteuerung mit smarter Steckdose | ✅ (MQTT + Automatisierung) | ✅ (MQTT + Szenen) |
 | Synchroner Music-Assistant-Player (Sendspin) | ✅ | ✅ ² |
 | Volle Steuerung aus der Plattform (Helligkeit, App oder Seite öffnen, Hinweise, Kameras im Vollbild, Töne, Sprachausgabe…) | ✅ (ESPHome) | ➖ Bildschirm, neu laden, zurück zum Dashboard |
@@ -85,7 +86,7 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
   - „Laden gewünscht“ wechselt auf 0 → Steckdose ausschalten.
 
   Verschwindet das Tablet aus dem Netzwerk (Absturz, WLAN weg), setzt der Broker „Laden gewünscht“ von selbst auf ja (MQTT Last Will), damit sich der Akku nicht entleert.
-- **Bildschirm über die Frontkamera gesteuert**: Der Bildschirm geht an, wenn jemand vorbeigeht, und nach einer Wartezeit ohne Bewegung oder Berührung aus (Einstellungen → Bewegungserkennung → Wartezeit in Sekunden). Die Bilder werden auf dem Tablet ausgewertet und nie gesendet oder gespeichert.
+- **Bildschirm über die Frontkamera gesteuert**: Der Bildschirm geht an, wenn jemand vorbeigeht, und nach einer Wartezeit ohne Bewegung oder Berührung aus (Einstellungen → Bewegungserkennung → Wartezeit in Sekunden). Die Bilder werden auf dem Tablet ausgewertet und nie gespeichert; gesendet werden sie nur, wenn die **geteilte Kamera** eingeschaltet ist (siehe unten).
 
 **Kiosk** (von WallDock übernommen)
 - Vollbild, ausgeblendete Systemleisten, Bildschirm immer an, Einstellungen per Code geschützt.
@@ -98,6 +99,49 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 
 **Mit Home Assistant** (von WallDock übernommen, weiterhin funktionsfähig)
 - Verschlüsselte native ESPHome-Integration, Sprachassistent Jarvis, Mediaplayer, synchroner Music-Assistant-Player (Sendspin), Wecker, Kalender. Diese Funktionen brauchen Home Assistant; wählst du Gladys, werden Jarvis, der Bluetooth-Proxy und Music Assistant automatisch abgewählt (du kannst sie wieder anwählen).
+
+## Geteilte Kamera (Home Assistant und Gladys)
+
+Einstellungen → Tab **Dienste** → „Geteilte Kamera“: Die Frontkamera des Tablets wird zur Überwachungskamera für Home Assistant und Gladys. **Standardmäßig aus.**
+
+- **Livebild**: `http://<Tablet-IP>:8081/stream.mjpeg?token=<Token>` (MJPEG, etwa 6 Bilder pro Sekunde, ohne Ton).
+- **Foto**: `http://<Tablet-IP>:8081/snapshot.jpg?token=<Token>`.
+- Die Knöpfe **Livebild-Adresse kopieren** / **Foto-Adresse kopieren** kopieren die vollständige Adresse samt Token. Ohne richtiges Token antwortet das Tablet mit „401“. **Neues Token** macht die alten Adressen ungültig.
+- Bilder werden nur kodiert, solange sie abgefragt werden, und nie auf dem Tablet gespeichert. Die Kamera dient auch der Bewegungserkennung: beides funktioniert zusammen, mit ein- oder ausgeschaltetem Bildschirm.
+- Der Schalter **„Geteilte Kamera“** lässt sich aus Home Assistant (ESPHome oder MQTT) und Gladys (MQTT) steuern: zum Beispiel die Kamera nur bei scharfer Alarmanlage teilen.
+- **Bilddrehung**: automatisch nach Bildschirmausrichtung oder fest (0°, 90°, 180°, 270°), falls das Bild schief ist.
+- Grenzen: kein Infrarot (im Dunkeln nichts Brauchbares); je nach Tablet kann Android die Kamera abschalten, wenn der Bildschirm ganz in den Ruhezustand geht. Die Firewall muss Home Assistant und Gladys den Zugriff auf das Tablet über **Port 8081** erlauben.
+
+**In Home Assistant**: Einstellungen → Geräte & Dienste → Integration hinzufügen → **MJPEG IP Camera**, mit der Livebild-Adresse („MJPEG URL“) und der Foto-Adresse („Still Image URL“). Beispiel-Automatisierungen (Entitätsnamen anpassen):
+
+```yaml
+- alias: "Tablet: Foto bei Bewegung, Alarm scharf"
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.domowalldock_xxxxxx_mouvement
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: alarm_control_panel.maison
+      state: armed_away
+  actions:
+    - action: notify.mobile_app_mon_telephone
+      data:
+        message: "Bewegung vor dem Tablet"
+        data:
+          image: /api/camera_proxy/camera.tablette_salon
+
+- alias: "Tablet: geteilte Kamera nur bei scharfem Alarm"
+  triggers:
+    - trigger: state
+      entity_id: alarm_control_panel.maison
+  actions:
+    - action: "switch.turn_{{ 'off' if trigger.to_state.state == 'disarmed' else 'on' }}"
+      target:
+        entity_id: switch.domowalldock_xxxxxx_camera_partagee
+```
+
+**In Gladys**: Integrationen → **Kameras** → Kamera hinzufügen, mit der Livebild-Adresse unter „RTSP/HTTP-Feed der Kamera“. Beispielszene: Auslöser „Änderung von Gerätestatus“ auf **Bewegung** des Tablets (= 1), Aktion „Wenn der Alarm im Modus ist“ scharf, dann „Kameraaufnahme senden“. Zwei weitere Szenen („Der Alarm ist scharf geschaltet“ / „Der Alarm ist deaktiviert“) schalten **Geteilte Kamera** mit „Gerätewert setzen“ ein und aus. Siehe das [Gladys-Tutorial](docs/TUTO-GLADYS.de.md#8-die-tablet-kamera-in-gladys).
 
 ## MQTT-Topics
 
@@ -112,6 +156,8 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 | `domowalldock/<gerät>/motion` | Zustand | `ON` / `OFF` |
 | `domowalldock/<gerät>/screen` | Zustand | `ON` / `OFF` |
 | `domowalldock/<gerät>/screen/set` | Befehl | `ON` / `OFF` |
+| `domowalldock/<gerät>/camera_share` | Zustand | `ON` / `OFF` (geteilte Kamera) |
+| `domowalldock/<gerät>/camera_share/set` | Befehl | `ON` / `OFF` |
 | `domowalldock/<gerät>/reload/set` | Befehl | beliebiger Wert |
 | `domowalldock/<gerät>/dashboard/set` | Befehl | beliebiger Wert |
 

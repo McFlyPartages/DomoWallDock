@@ -108,6 +108,7 @@ Du erhältst in Gladys:
 | Akku (%), Akkutemperatur | Sensoren |
 | Lädt, Laden gewünscht, Bewegung | Ja-/Nein-Sensoren |
 | Bildschirm | Schalter (an / aus) |
+| Geteilte Kamera | Schalter (an / aus, siehe § 8) |
 | Dashboard neu laden, Zurück zum Dashboard | Tasten |
 
 ![Das Tablet in Gladys mit seinen 8 Funktionen (Gladys auf Französisch)](images/tuto-gladys/gladys-mqtt.png)
@@ -144,13 +145,32 @@ Statt der Uhr kann der Bildschirmschoner Folgendes zeigen:
 
 ---
 
-## 8. Weitere Dienste
+## 8. Die Tablet-Kamera in Gladys
+
+Die Frontkamera kann als Überwachungskamera dienen: Livebild in Gladys und ein Foto, wenn das Tablet bei scharfer Alarmanlage eine Bewegung sieht. **Standardmäßig aus.**
+
+![Geteilte Kamera](images/tuto-gladys/de/12-camera.png)
+
+1. Im Tab **Dienste → Geteilte Kamera** **Frontkamera im Netzwerk teilen** ankreuzen, dann **Speichern** (Android fragt nach der Kamera-Berechtigung).
+2. **Livebild-Adresse kopieren** antippen: Die vollständige Adresse samt Token wird kopiert (`http://<Tablet-IP>:8081/stream.mjpeg?token=…`). Geheim halten.
+3. In Gladys: **Integrationen → Kameras** → Kamera hinzufügen und die Adresse unter **„RTSP/HTTP-Feed der Kamera“** einfügen. Das Bild des Tablets erscheint in Gladys.
+4. Für ein Foto bei Bewegung eine Szene anlegen:
+   - Auslöser **„Änderung von Gerätestatus“**: **Bewegung** des Tablets wird **1**;
+   - Aktion **„Wenn der Alarm im Modus ist“**: scharf;
+   - Aktion **„Kameraaufnahme senden“**: die Tablet-Kamera.
+5. Optional, um die Kamera nur bei Abwesenheit zu teilen: zwei Szenen **„Der Alarm ist scharf geschaltet“** / **„Der Alarm ist deaktiviert“**, die **Geteilte Kamera** ein- und ausschalten (Aktion **„Gerätewert setzen“**).
+
+Gut zu wissen: Die Firewall muss Gladys den Zugriff auf das Tablet über **Port 8081** erlauben; kein Infrarot, im Dunkeln also nichts Brauchbares; ist das Bild schief, **Bilddrehung** ändern.
+
+---
+
+## 9. Weitere Dienste
 
 Wählst du Gladys, wählt die App den **Bluetooth-Proxy** und den Sprachassistenten **Jarvis** (sie laufen über Home Assistant) sowie den **Music-Assistant**-Player selbst ab (Tab **HA-Dienste**). Du kannst sie wieder anwählen: etwa wenn du auch Home Assistant nutzt oder einen Music-Assistant-Server (er funktioniert mit oder ohne Home Assistant).
 
 ---
 
-## 9. Im Alltag
+## 10. Im Alltag
 
 - Der Griff **▲** öffnet das Dock: deine Apps, der Kalender, die Seite **Neu laden**, **Einstellungen**.
 - Antwortet Gladys nicht mehr, zeigt ein Notfallbildschirm die Uhrzeit; das Dashboard kommt von selbst zurück.

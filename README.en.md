@@ -53,6 +53,7 @@ Signed APKs are on the [**Releases**](https://github.com/McFlyPartages/DomoWallD
 | Full-screen calendar (day, week, month, agenda) | ✅ | ✅ |
 | Alarms on the tablet | ✅ (also driven from HA) | ✅ (set in the app) |
 | Tablet sensors: battery, charging, motion, screen | ✅ (ESPHome or MQTT) | ✅ (MQTT) |
+| Shared tablet camera: live feed and photo (off by default) | ✅ (MJPEG camera) | ✅ (Cameras integration) |
 | Charge management with a smart plug | ✅ (MQTT + automation) | ✅ (MQTT + scenes) |
 | Synchronised Music Assistant player (Sendspin) | ✅ | ✅ ² |
 | Full control from the platform (brightness, open an app or page, alerts, full-screen cameras, sounds, text-to-speech…) | ✅ (ESPHome) | ➖ screen, reload, back to dashboard |
@@ -84,7 +85,7 @@ When you choose Gladys, the app unticks Jarvis, the Bluetooth proxy and Music As
   - "Charge wanted" goes to 0 → turn the plug off.
 
   If the tablet drops off the network (crash, Wi-Fi down), the broker sets "Charge wanted" back to yes by itself (MQTT last will), so the battery does not run flat.
-- **Screen driven by the front camera**: the screen turns on when someone passes and off after a delay without motion or touch (settings → motion detection → delay in seconds). Images are analysed on the tablet and are never sent or recorded.
+- **Screen driven by the front camera**: the screen turns on when someone passes and off after a delay without motion or touch (settings → motion detection → delay in seconds). Images are analysed on the tablet and never recorded; they are only sent if the **shared camera** is on (see below).
 
 **Kiosk** (inherited from WallDock)
 - Full screen, system bars hidden, screen always on, settings protected by a code.
@@ -97,6 +98,49 @@ When you choose Gladys, the app unticks Jarvis, the Bluetooth proxy and Music As
 
 **With Home Assistant** (inherited from WallDock, still working)
 - Encrypted native ESPHome integration, Jarvis voice assistant, media player, synchronised Music Assistant player (Sendspin), alarms, calendar. These features need Home Assistant; when you choose Gladys, Jarvis, the Bluetooth proxy and Music Assistant are unticked automatically (you can tick them again).
+
+## Shared camera (Home Assistant and Gladys)
+
+Settings → **Services** tab → “Shared camera”: the tablet's front camera becomes a security camera for Home Assistant and Gladys. **Off by default.**
+
+- **Live feed**: `http://<tablet IP>:8081/stream.mjpeg?token=<token>` (MJPEG, about 6 images per second, no sound).
+- **Photo**: `http://<tablet IP>:8081/snapshot.jpg?token=<token>`.
+- The **Copy feed address** / **Copy photo address** buttons copy the full address, token included. Without the right token the tablet answers “401”. **New token** invalidates the old addresses.
+- Images are only encoded while someone asks for them and are never recorded on the tablet. The camera is also used for motion detection: both work together, with the screen on or off.
+- The **“Shared camera”** switch can be driven from Home Assistant (ESPHome or MQTT) and Gladys (MQTT): for example, share the camera only while the alarm is armed.
+- **Image rotation**: automatic from the screen orientation, or forced (0°, 90°, 180°, 270°) if the image is tilted.
+- Limits: no infrared (nothing useful in the dark); depending on the tablet, Android may stop the camera when the screen fully goes to sleep. Your firewall must let Home Assistant and Gladys reach the tablet on **port 8081**.
+
+**In Home Assistant**: Settings → Devices & services → Add integration → **MJPEG IP Camera**, with the feed address (“MJPEG URL”) and the photo address (“Still Image URL”). Example automations (adapt the entity names):
+
+```yaml
+- alias: "Tablet: photo on motion, alarm armed"
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.domowalldock_xxxxxx_mouvement
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: alarm_control_panel.maison
+      state: armed_away
+  actions:
+    - action: notify.mobile_app_mon_telephone
+      data:
+        message: "Motion in front of the tablet"
+        data:
+          image: /api/camera_proxy/camera.tablette_salon
+
+- alias: "Tablet: shared camera only when the alarm is armed"
+  triggers:
+    - trigger: state
+      entity_id: alarm_control_panel.maison
+  actions:
+    - action: "switch.turn_{{ 'off' if trigger.to_state.state == 'disarmed' else 'on' }}"
+      target:
+        entity_id: switch.domowalldock_xxxxxx_camera_partagee
+```
+
+**In Gladys**: Integrations → **Cameras** → add a camera, with the feed address in “Camera RTSP/HTTP Flux”. Example scene: trigger “Device state change” on the tablet's **Motion** (= 1), action “If the alarm is in mode” armed, then “Send a camera image”. Two more scenes (“The alarm is armed” / “The alarm is disarmed”) turn **Shared camera** on and off with “Set device value”. See the [Gladys tutorial](docs/TUTO-GLADYS.en.md#8-the-tablet-camera-in-gladys).
 
 ## MQTT topics
 
@@ -111,6 +155,8 @@ When you choose Gladys, the app unticks Jarvis, the Bluetooth proxy and Music As
 | `domowalldock/<device>/motion` | state | `ON` / `OFF` |
 | `domowalldock/<device>/screen` | state | `ON` / `OFF` |
 | `domowalldock/<device>/screen/set` | command | `ON` / `OFF` |
+| `domowalldock/<device>/camera_share` | state | `ON` / `OFF` (shared camera) |
+| `domowalldock/<device>/camera_share/set` | command | `ON` / `OFF` |
 | `domowalldock/<device>/reload/set` | command | any value |
 | `domowalldock/<device>/dashboard/set` | command | any value |
 

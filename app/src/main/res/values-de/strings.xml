@@ -208,7 +208,7 @@
     <string name="motion_camera_error">Kamerafehler %1$d, neuer Versuch in 1 Min.</string>
     <string name="motion_camera_error_text">Kamerafehler (%1$s), neuer Versuch in 1 Min.</string>
     <string name="settings_motion">Bewegungserkennung mit der Frontkamera</string>
-    <string name="settings_motion_help">Schaltet den Bildschirm ein, wenn jemand vorbeigeht, und liefert Home Assistant und Gladys einen „Bewegung“-Sensor. Die Bilder bleiben auf dem Tablet und werden nie gespeichert. Die Empfindlichkeit wird in Home Assistant eingestellt.</string>
+    <string name="settings_motion_help">Schaltet den Bildschirm ein, wenn jemand vorbeigeht, und liefert Home Assistant und Gladys einen „Bewegung“-Sensor. Die Bilder werden nie gespeichert und verlassen das Tablet nur, wenn „Geteilte Kamera“ eingeschaltet ist. Die Empfindlichkeit wird in Home Assistant eingestellt.</string>
     <string name="sensitivity_low">Niedrig (lauter Raum, Fernseher in der Nähe: weniger Fehlauslösungen)</string>
     <string name="sens_short_low">Niedrig</string>
     <string name="entity_battery_temp">Akkutemperatur</string>
@@ -294,7 +294,7 @@
     <string name="settings_motion_off">Bildschirm nach so vielen Sekunden ohne Bewegung oder Berührung ausschalten (0 = nie ausschalten)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Tablet mit einem MQTT-Broker verbinden</string>
-    <string name="settings_mqtt_help">Das Tablet meldet sich selbst an: in Gladys unter Integrationen → MQTT → erkannte Geräte (Home Assistant) „DomoWallDock …“ hinzufügen. Du erhältst Akku, Laden, Bewegung, den Bildschirm (an, aus) und zwei Tasten (neu laden, zurück zum Dashboard). Funktioniert auch mit jedem MQTT-Broker, der die Home-Assistant-Erkennung versteht.</string>
+    <string name="settings_mqtt_help">Das Tablet meldet sich selbst an: in Gladys unter Integrationen → MQTT → erkannte Geräte (Home Assistant) „DomoWallDock …“ hinzufügen. Du erhältst Akku, Laden, Bewegung, den Bildschirm und die geteilte Kamera (an, aus) und zwei Tasten (neu laden, zurück zum Dashboard). Funktioniert auch mit jedem MQTT-Broker, der die Home-Assistant-Erkennung versteht.</string>
     <string name="settings_mqtt_host">Adresse des MQTT-Brokers (z. B. 192.168.1.10)</string>
     <string name="settings_mqtt_user">MQTT-Benutzer (falls der Broker einen verlangt)</string>
     <string name="settings_mqtt_password">MQTT-Passwort</string>
@@ -391,4 +391,17 @@
     <string name="settings_quit">Beenden</string>
     <string name="settings_services_ha_help">Jarvis und der Bluetooth-Proxy laufen über Home Assistant (ESPHome-Integration); Music Assistant funktioniert mit oder ohne. Bei Auswahl von Gladys werden sie abgewählt; wählen Sie sie wieder aus, wenn Sie sie nutzen.</string>
     <string name="settings_tab_dock">Dock-Apps</string>
+    <string name="entity_camera_share">Geteilte Kamera</string>
+    <string name="settings_camera_title">Geteilte Kamera (Home Assistant und Gladys)</string>
+    <string name="settings_camera_share">Frontkamera im Netzwerk teilen</string>
+    <string name="settings_camera_help">Standardmäßig aus. Eingeschaltet können Home Assistant und Gladys das Livebild anzeigen (MJPEG, etwa 6 Bilder pro Sekunde) und ein Foto aufnehmen, zum Beispiel bei Bewegung, wenn niemand zu Hause ist. Bilder werden nur kodiert, solange sie abgefragt werden, und nie auf dem Tablet gespeichert. Jede Adresse enthält das Token unten: geheim halten. Der Schalter „Geteilte Kamera“ lässt sich auch aus Home Assistant und Gladys (MQTT) schalten, zum Beispiel nur bei scharfer Alarmanlage. Kein Infrarot: im Dunkeln nichts Brauchbares. Die Firewall muss Home Assistant und Gladys den Zugriff auf dieses Tablet über Port 8081 erlauben.</string>
+    <string name="settings_camera_token">Token (in den Adressen erforderlich)</string>
+    <string name="settings_camera_new_token">Neues Token (alte Adressen funktionieren nicht mehr)</string>
+    <string name="settings_camera_token_changed">Neues Token gespeichert: Adressen in Home Assistant und Gladys anpassen</string>
+    <string name="settings_camera_rotation">Bilddrehung: %1$s</string>
+    <string name="settings_camera_rotation_auto">automatisch</string>
+    <string name="settings_camera_urls">Livebild: %1$s\nFoto: %2$s\n(… = das Token: die vollständige Adresse mit den Knöpfen unten kopieren)</string>
+    <string name="settings_camera_copy_stream">Livebild-Adresse kopieren</string>
+    <string name="settings_camera_copy_snapshot">Foto-Adresse kopieren</string>
+    <string name="settings_camera_copied">Adresse kopiert</string>
 </resources>

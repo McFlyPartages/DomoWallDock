@@ -208,7 +208,7 @@
     <string name="motion_camera_error">Error de cámara %1$d, reintento en 1 min</string>
     <string name="motion_camera_error_text">Error de cámara (%1$s), reintento en 1 min</string>
     <string name="settings_motion">Detección de movimiento con la cámara frontal</string>
-    <string name="settings_motion_help">Enciende la pantalla cuando alguien pasa y da un sensor «Movimiento» a Home Assistant y a Gladys. Las imágenes se quedan en la tableta y nunca se graban. La sensibilidad se ajusta desde Home Assistant.</string>
+    <string name="settings_motion_help">Enciende la pantalla cuando alguien pasa y da un sensor «Movimiento» a Home Assistant y a Gladys. Las imágenes nunca se graban y solo salen de la tableta si «Cámara compartida» está activada. La sensibilidad se ajusta desde Home Assistant.</string>
     <string name="sensitivity_low">Baja (habitación ruidosa, tele cerca: menos activaciones falsas)</string>
     <string name="sens_short_low">Baja</string>
     <string name="entity_battery_temp">Temperatura de la batería</string>
@@ -294,7 +294,7 @@
     <string name="settings_motion_off">Apagar la pantalla tras estos segundos sin movimiento ni toque (0 = no apagarla nunca)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Conectar la tableta a un broker MQTT</string>
-    <string name="settings_mqtt_help">La tableta se anuncia sola: en Gladys, Integraciones → MQTT → dispositivos descubiertos (Home Assistant), añade «DomoWallDock …». Obtendrás la batería, la carga, el movimiento, la pantalla (encender, apagar) y dos botones (recargar, volver al panel). También funciona con cualquier broker MQTT que entienda el descubrimiento de Home Assistant.</string>
+    <string name="settings_mqtt_help">La tableta se anuncia sola: en Gladys, Integraciones → MQTT → dispositivos descubiertos (Home Assistant), añade «DomoWallDock …». Obtendrás la batería, la carga, el movimiento, la pantalla y la cámara compartida (encender, apagar) y dos botones (recargar, volver al panel). También funciona con cualquier broker MQTT que entienda el descubrimiento de Home Assistant.</string>
     <string name="settings_mqtt_host">Dirección del broker MQTT (p. ej. 192.168.1.10)</string>
     <string name="settings_mqtt_user">Usuario MQTT (si el broker lo pide)</string>
     <string name="settings_mqtt_password">Contraseña MQTT</string>
@@ -391,4 +391,17 @@
     <string name="settings_quit">Salir</string>
     <string name="settings_services_ha_help">Jarvis y el proxy Bluetooth pasan por Home Assistant (integración ESPHome); Music Assistant funciona con o sin él. Se desmarcan al elegir Gladys; vuelva a marcarlos si los usa.</string>
     <string name="settings_tab_dock">Apps del dock</string>
+    <string name="entity_camera_share">Cámara compartida</string>
+    <string name="settings_camera_title">Cámara compartida (Home Assistant y Gladys)</string>
+    <string name="settings_camera_share">Compartir la cámara frontal en la red</string>
+    <string name="settings_camera_help">Desactivada por defecto. Activada, Home Assistant y Gladys pueden mostrar la imagen en directo (MJPEG, unas 6 imágenes por segundo) y tomar una foto, por ejemplo al detectar movimiento cuando no hay nadie en casa. Las imágenes solo se codifican mientras se piden y nunca se graban en la tableta. Cada dirección contiene el token de abajo: manténgalo en secreto. El interruptor «Cámara compartida» también se enciende y apaga desde Home Assistant y Gladys (MQTT), por ejemplo solo con la alarma activada. Sin infrarrojos: nada útil a oscuras. El cortafuegos debe dejar que Home Assistant y Gladys lleguen a esta tableta por el puerto 8081.</string>
+    <string name="settings_camera_token">Token (exigido en las direcciones)</string>
+    <string name="settings_camera_new_token">Nuevo token (las direcciones antiguas dejarán de funcionar)</string>
+    <string name="settings_camera_token_changed">Nuevo token guardado: actualice las direcciones en Home Assistant y Gladys</string>
+    <string name="settings_camera_rotation">Rotación de la imagen: %1$s</string>
+    <string name="settings_camera_rotation_auto">automática</string>
+    <string name="settings_camera_urls">Imagen en directo: %1$s\nFoto: %2$s\n(… = el token: copie la dirección completa con los botones de abajo)</string>
+    <string name="settings_camera_copy_stream">Copiar dirección del directo</string>
+    <string name="settings_camera_copy_snapshot">Copiar dirección de la foto</string>
+    <string name="settings_camera_copied">Dirección copiada</string>
 </resources>
