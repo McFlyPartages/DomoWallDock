@@ -25,13 +25,13 @@ Later, to get back to the settings: tap the small **▲** handle (bottom right b
 
 ![The dock open on the main screen](images/tuto-gladys/en/00-dock.png)
 
-At the very top: the **app language** (the tablet's, or French, English, German, Spanish; the app restarts to apply it). The settings are then split into three parts, always reachable from the top bar. **Save** (top right) saves without leaving; the button at the very bottom saves and closes the settings.
+The settings are split into five tabs: **Connections**, **General**, **Services**, **HA services** and **Dock apps**. The top bar also holds the **app language** (🌐: the tablet's, or French, English, German, Spanish; the app restarts to apply it when you save), **Save** (saves without leaving) and **Quit** (closes the settings without saving).
 
 ![Top bar of the settings](images/tuto-gladys/en/01-barre.png)
 
 ---
 
-## 2. Connect to Gladys ("Connection" part)
+## 2. Connect to Gladys ("Connections" tab)
 
 ![Connecting to Gladys](images/tuto-gladys/en/02-connexion.png)
 
@@ -42,14 +42,14 @@ At the very top: the **app language** (the tablet's, or French, English, German,
    - **Both**: the app uses the local address when it answers, otherwise the external one (a tablet that leaves the house).
 3. **Local address**: HTTP (or HTTPS if your Gladys uses it), the Gladys **IP** and the **port** (80 by default).
 4. **E-mail address and password** of a Gladys account: the tablet signs in by itself when the login page shows. Tip: create a Gladys account dedicated to the tablet, without admin rights.
-5. **Default dashboard** (optional): the page to show, for instance `/dashboard/living-room`. Tick **Lock** so the tablet only shows that page, and tap **Full screen** to add `?fullscreen=force` (Gladys with no menu and no exit button).
+5. **Default dashboard** (optional): the page to show, for instance `/dashboard/living-room`. Tick **Lock** so the tablet only shows that page, and tick **Full screen** to add `?fullscreen=force` (Gladys with no menu and no exit button).
 6. Tap **Test the sign-in**: one ✅ per configured address. Otherwise, the message says what is wrong (server not reachable, account refused…).
 
 > **Network**: if the tablet is on another Wi-Fi network or VLAN than Gladys ("IoT" network, guests…), your firewall must let it reach Gladys (port 80, or your Gladys port) and, for step 5, the MQTT broker (port 1883).
 
 ---
 
-## 3. Common settings
+## 3. General settings ("General" tab)
 
 ![Common settings](images/tuto-gladys/en/03-communs.png)
 
@@ -73,13 +73,13 @@ At the very top: the **app language** (the tablet's, or French, English, German,
 
 ![Permissions](images/tuto-gladys/en/07-autorisations.png)
 
-In the same part: settings **backup / restore** to a file, and the list of **dock apps** (folded; tap "Show the apps", then tick the ones to keep at hand).
+In the same tab: settings **backup / restore** to a file. The apps to keep at hand are ticked in the **Dock apps** tab.
 
 Also turn off Android **battery optimisation** for DomoWallDock, otherwise the system may kill the app ([dontkillmyapp.com](https://dontkillmyapp.com) covers each brand).
 
 ---
 
-## 4. The Gladys calendar
+## 4. The Gladys calendar ("Services" tab)
 
 ![Calendar](images/tuto-gladys/en/08-calendrier.png)
 
@@ -95,7 +95,7 @@ The tablet announces itself to Gladys over MQTT and shows up there as a device.
 
 ![MQTT settings](images/tuto-gladys/en/10-mqtt.png)
 
-1. In **Extra services → MQTT**, tick **Connect the tablet to an MQTT broker**.
+1. In the **Services → MQTT** tab, tick **Connect the tablet to an MQTT broker**.
 2. Fill in the **broker address**, the **port** (1883), the **user** and the **password**.
 3. Tap **Test the MQTT connection**: ✅ expected.
 4. **Save**.
@@ -123,7 +123,7 @@ A battery kept at 100 % all the time wears out and can swell. Android forbids an
 ![Charge management](images/tuto-gladys/en/09-batterie.png)
 
 1. Plug the tablet charger into a smart plug already handled by Gladys.
-2. In **Extra services → Battery**, tick **Manage charging** (MQTT must be on). Set the thresholds: recharge below 30 %, stop at 80 % by default.
+2. In the **Services → Battery** tab, tick **Manage charging** (MQTT must be on). Set the thresholds: recharge below 30 %, stop at 80 % by default.
 3. In Gladys, create two scenes triggered by the state change of **"Charge wanted"**:
    - goes to **1** → turn the charger plug **on**;
    - goes to **0** → turn the plug **off**.
@@ -146,7 +146,7 @@ Instead of the clock, the screensaver can show:
 
 ## 8. Other services
 
-When you choose Gladys, the app unticks the **Bluetooth proxy** and the **Jarvis** voice assistant (they go through Home Assistant), as well as the **Music Assistant** player. You can tick them again: for instance if you also use Home Assistant, or a Music Assistant server (it works with or without Home Assistant).
+When you choose Gladys, the app unticks the **Bluetooth proxy** and the **Jarvis** voice assistant (they go through Home Assistant), as well as the **Music Assistant** player (**HA services** tab). You can tick them again: for instance if you also use Home Assistant, or a Music Assistant server (it works with or without Home Assistant).
 
 ---
 
@@ -155,4 +155,4 @@ When you choose Gladys, the app unticks the **Bluetooth proxy** and the **Jarvis
 - The **▲** handle opens the dock: your apps, the calendar, **Reload** the page, **Settings**.
 - If Gladys stops answering, a fallback screen shows the time; the dashboard comes back by itself.
 - **Update**: install the new APK over the old one, the settings are kept.
-- Before a big change: **Save settings…** in the common settings.
+- Before a big change: **Save settings…** in the General tab.

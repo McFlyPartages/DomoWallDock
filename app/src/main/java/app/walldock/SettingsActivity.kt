@@ -176,16 +176,18 @@ class SettingsActivity : Activity() {
         gladysPanel.addView(secret(gladysPasswordField))
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
         gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        // Cases « Verrouiller » et « Plein écran » à côté du chemin
+        gladysPanel.addView(gladysDashboardField)
+        // Cases « Verrouiller » et « Plein écran » juste sous le chemin
         val gladysDashboardRow = LinearLayout(this)
         gladysDashboardRow.orientation = LinearLayout.HORIZONTAL
         gladysDashboardRow.gravity = Gravity.CENTER_VERTICAL
-        gladysDashboardRow.addView(gladysDashboardField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         gladysLockCheck = CheckBox(this)
         gladysLockCheck.text = tr(R.string.settings_gladys_lock)
         gladysLockCheck.setTextColor(Color.WHITE)
         gladysLockCheck.isChecked = prefs.gladysDashboardLocked
-        gladysDashboardRow.addView(gladysLockCheck)
+        val lockSpacing = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+        lockSpacing.marginEnd = dp(24)
+        gladysDashboardRow.addView(gladysLockCheck, lockSpacing)
         gladysFullscreenCheck = fullscreenCheck(gladysDashboardField)
         gladysDashboardRow.addView(gladysFullscreenCheck)
         gladysPanel.addView(gladysDashboardRow)
