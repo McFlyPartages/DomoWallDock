@@ -175,7 +175,8 @@ class SettingsActivity : Activity() {
         gladysPasswordField = field(prefs.gladysPassword, "••••••", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
         gladysPanel.addView(secret(gladysPasswordField))
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
-        gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        // Champ vide : prérempli avec « /dashboard/ », il ne reste qu'à ajouter le nom (effaçable)
+        gladysDashboardField = field(prefs.gladysDashboard.ifBlank { GLADYS_DASHBOARD_PREFIX }, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         gladysPanel.addView(gladysDashboardField)
         // Cases « Verrouiller » et « Plein écran » juste sous le chemin
         val gladysDashboardRow = LinearLayout(this)
@@ -823,7 +824,7 @@ class SettingsActivity : Activity() {
             saverCheck.isChecked && saverSeconds < 10 -> toast(tr(R.string.error_saver_delay))
             haProblem != null -> toast(tr(R.string.platform_ha) + " : " + haProblem)
             gladysProblem != null -> toast(tr(R.string.platform_gladys) + " : " + gladysProblem)
-            gladysLockCheck.isChecked && gladysDashboardField.text.isBlank() -> toast(tr(R.string.error_gladys_lock))
+            gladysLockCheck.isChecked && gladysDashboardPath().isEmpty() -> toast(tr(R.string.error_gladys_lock))
             pin.length < 4 -> toast(tr(R.string.error_pin))
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
@@ -837,7 +838,7 @@ class SettingsActivity : Activity() {
                 gladysForm.store()
                 prefs.gladysUser = gladysUserField.text.toString().trim()
                 prefs.gladysPassword = gladysPasswordField.text.toString()
-                prefs.gladysDashboard = gladysDashboardField.text.toString().trim()
+                prefs.gladysDashboard = gladysDashboardPath()
                 prefs.gladysDashboardLocked = gladysLockCheck.isChecked
                 val bleChanged = prefs.bleProxyEnabled != bleCheck.isChecked
                 prefs.bleProxyEnabled = bleCheck.isChecked
@@ -1113,6 +1114,12 @@ class SettingsActivity : Activity() {
         return check
     }
 
+    /** Chemin du tableau de bord Gladys ; « /dashboard/ » seul (préremplissage non complété) compte pour vide. */
+    private fun gladysDashboardPath(): String {
+        val path = gladysDashboardField.text.toString().trim()
+        return if (path.trimEnd('/') == GLADYS_DASHBOARD_PREFIX.trimEnd('/')) "" else path
+    }
+
     /** Champ secret avec un œil pour afficher ou masquer ce qui est saisi. */
     private fun secret(field: EditText): View {
         val row = LinearLayout(this)
@@ -1344,6 +1351,8 @@ class SettingsActivity : Activity() {
         private const val REQUEST_BLE = 53
         /** Repère des titres de section (captures du tutoriel). */
         const val HEADING_TAG = "settings_heading"
+        /** Début du chemin d'un tableau de bord Gladys, prérempli dans le champ. */
+        const val GLADYS_DASHBOARD_PREFIX = "/dashboard/"
         const val TAB_CONNECTION = 0
         const val TAB_GENERAL = 1
         const val TAB_SERVICES = 2
