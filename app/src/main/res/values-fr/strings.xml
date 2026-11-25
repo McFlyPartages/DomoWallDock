@@ -327,7 +327,6 @@
     <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
     <string name="settings_gladys_dashboard_hint">/dashboard/salon</string>
     <string name="settings_autologin_help">Avec un compte et un mot de passe, la tablette se connecte toute seule quand la page de connexion s’affiche. Conseil : un compte dédié à la tablette, sans droits d’administration.</string>
-    <string name="settings_common">Réglages communs</string>
     <string name="settings_photos_title">Écran de veille : photos (Immich ou dossier) ou page Home Assistant / Gladys</string>
     <string name="error_url_platform">%1$s : l’adresse doit commencer par http:// ou https://</string>
     <string name="autologin_error">Connexion automatique impossible : %1$s</string>
@@ -365,12 +364,10 @@
     <string name="test_failed">❌ Échec : %1$s</string>
     <string name="test_timeout">pas de réponse en 12 secondes</string>
     <string name="settings_section_connection">Connexion</string>
-    <string name="settings_section_services">Services annexes</string>
     <string name="settings_schedule_title">Écran éteint chaque nuit</string>
     <string name="settings_motion_title">Détection de mouvement (caméra frontale)</string>
     <string name="dock_show">Afficher les applis (%1$d installées, %2$d dans le dock)</string>
     <string name="dock_hide">Masquer la liste des applis</string>
-    <string name="settings_save_quit">Enregistrer et quitter les réglages</string>
     <string name="server_access">Accès</string>
     <string name="server_access_local">Local</string>
     <string name="server_access_external">Externe</string>
@@ -393,5 +390,9 @@
     <string name="page_locked">Verrouillé : seul le tableau de bord s’affiche sur cette tablette</string>
     <string name="error_gladys_lock">Saisissez le chemin du tableau de bord par défaut pour y verrouiller l’affichage</string>
     <string name="fullscreen_empty">Saisissez d’abord le chemin du tableau de bord</string>
-    <string name="fullscreen_already">Le plein écran est déjà dans l’adresse</string>
+    <string name="settings_tab_general">Généraux</string>
+    <string name="settings_tab_services">Services communs</string>
+    <string name="settings_tab_services_ha">Services Home Assistant</string>
+    <string name="settings_quit">Quitter</string>
+    <string name="settings_services_ha_help">Ces services passent par Home Assistant (intégration ESPHome, Music Assistant). Ils sont décochés quand Gladys est choisie ; recochez-les si Home Assistant tourne aussi.</string>
 </resources>

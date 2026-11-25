@@ -326,7 +326,6 @@
     <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
     <string name="settings_gladys_dashboard_hint">/dashboard/wohnzimmer</string>
     <string name="settings_autologin_help">Mit Benutzer und Passwort meldet sich das Tablet selbst an, wenn die Anmeldeseite erscheint. Tipp: ein eigenes Konto für das Tablet, ohne Administratorrechte.</string>
-    <string name="settings_common">Allgemeine Einstellungen</string>
     <string name="settings_photos_title">Bildschirmschoner: Fotos (Immich oder ein Ordner) oder eine Home-Assistant- / Gladys-Seite</string>
     <string name="error_url_platform">%1$s: Die Adresse muss mit http:// oder https:// beginnen</string>
     <string name="autologin_error">Automatische Anmeldung fehlgeschlagen: %1$s</string>
@@ -362,12 +361,10 @@
     <string name="test_failed">❌ Fehlgeschlagen: %1$s</string>
     <string name="test_timeout">keine Antwort innerhalb von 12 Sekunden</string>
     <string name="settings_section_connection">Verbindung</string>
-    <string name="settings_section_services">Zusatzdienste</string>
     <string name="settings_schedule_title">Bildschirm jede Nacht aus</string>
     <string name="settings_motion_title">Bewegungserkennung (Frontkamera)</string>
     <string name="dock_show">Apps anzeigen (%1$d installiert, %2$d im Dock)</string>
     <string name="dock_hide">App-Liste ausblenden</string>
-    <string name="settings_save_quit">Speichern und Einstellungen verlassen</string>
     <string name="server_access">Zugriff</string>
     <string name="server_access_local">Lokal</string>
     <string name="server_access_external">Extern</string>
@@ -390,5 +387,9 @@
     <string name="page_locked">Gesperrt: Auf diesem Tablet wird nur das Dashboard angezeigt</string>
     <string name="error_gladys_lock">Geben Sie den Pfad des Standard-Dashboards ein, um die Anzeige darauf zu sperren</string>
     <string name="fullscreen_empty">Geben Sie zuerst den Dashboard-Pfad ein</string>
-    <string name="fullscreen_already">Vollbild ist bereits in der Adresse</string>
+    <string name="settings_tab_general">Allgemein</string>
+    <string name="settings_tab_services">Gemeinsame Dienste</string>
+    <string name="settings_tab_services_ha">Home-Assistant-Dienste</string>
+    <string name="settings_quit">Beenden</string>
+    <string name="settings_services_ha_help">Diese Dienste laufen über Home Assistant (ESPHome-Integration, Music Assistant). Bei Auswahl von Gladys werden sie abgewählt; wählen Sie sie wieder aus, wenn Home Assistant ebenfalls läuft.</string>
 </resources>

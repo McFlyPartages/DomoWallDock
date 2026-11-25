@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
-/** Verrouillage sur le tableau de bord Gladys et bouton « Plein écran ». */
+/** Verrouillage sur le tableau de bord Gladys et case « Plein écran ». */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class LockedPageTest {
@@ -58,5 +58,17 @@ class LockedPageTest {
         assertEquals("/dashboard/salon?a=1&fullscreen=force", withFullscreen("/dashboard/salon?a=1"))
         assertEquals("/dashboard/salon?fullscreen=force", withFullscreen("/dashboard/salon?"))
         assertEquals("/dashboard/salon?fullscreen=force#bas", withFullscreen("/dashboard/salon#bas"))
+    }
+
+    @Test fun pleinEcranDecoche() {
+        assertEquals("/dashboard/salon", withoutFullscreen("/dashboard/salon?fullscreen=force"))
+        assertEquals("/dashboard/salon?a=1", withoutFullscreen("/dashboard/salon?a=1&fullscreen=force"))
+        assertEquals("/dashboard/salon?a=1&b=2", withoutFullscreen("/dashboard/salon?a=1&fullscreen=force&b=2"))
+        assertEquals("/dashboard/salon#bas", withoutFullscreen("/dashboard/salon?fullscreen=force#bas"))
+        assertEquals("/dashboard/salon", withoutFullscreen("/dashboard/salon"))
+        assertTrue(hasFullscreen("/dashboard/salon?a=1&fullscreen=force"))
+        assertTrue(hasFullscreen("/dashboard/salon?fullscreen"))
+        assertFalse(hasFullscreen("/dashboard/salon?a=1"))
+        assertFalse(hasFullscreen("/dashboard/fullscreen"))
     }
 }
