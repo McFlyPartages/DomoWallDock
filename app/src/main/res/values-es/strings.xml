@@ -389,6 +389,6 @@
     <string name="settings_tab_services">Servicios</string>
     <string name="settings_tab_services_ha">Servicios HA</string>
     <string name="settings_quit">Salir</string>
-    <string name="settings_services_ha_help">Estos servicios pasan por Home Assistant (integración ESPHome, Music Assistant). Se desmarcan al elegir Gladys; vuelva a marcarlos si Home Assistant también funciona.</string>
+    <string name="settings_services_ha_help">Jarvis y el proxy Bluetooth pasan por Home Assistant (integración ESPHome); Music Assistant funciona con o sin él. Se desmarcan al elegir Gladys; vuelva a marcarlos si los usa.</string>
     <string name="settings_tab_dock">Apps del dock</string>
 </resources>
