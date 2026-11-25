@@ -107,7 +107,7 @@ class SettingsActivity : Activity() {
         videoSelection.addAll(prefs.videoApps)
 
         chosenLanguage = prefs.language
-        // Une page par onglet : Connexion, Généraux, Services communs, Services Home Assistant
+        // Une page par onglet : Connexions, Généraux, Services, Services HA, Applis Dock
         val pages = List(TAB_NAMES.size) { page() }
 
         // ===== 1. Connexion =====
@@ -347,24 +347,12 @@ class SettingsActivity : Activity() {
             column.addView(button(tr(R.string.settings_check_now)) { Updater.check(this, install = true) })
         }
 
-        column.addView(heading(tr(R.string.settings_dock_apps), 18f))
-        column.addView(label(tr(R.string.settings_dock_help)))
-        // Liste repliée par défaut : elle peut être longue
-        val appList = LinearLayout(this)
-        appList.orientation = LinearLayout.VERTICAL
-        appList.visibility = View.GONE
-        val apps = Apps.listLaunchable(this)
-        for (app in apps) appList.addView(appRow(app))
-        lateinit var toggle: Button
-        toggle = button(tr(R.string.dock_show, apps.size, dockSelection.size)) {
-            val show = appList.visibility != View.VISIBLE
-            appList.visibility = if (show) View.VISIBLE else View.GONE
-            toggle.text = if (show) tr(R.string.dock_hide) else tr(R.string.dock_show, apps.size, dockSelection.size)
-        }
-        column.addView(toggle)
-        column.addView(appList)
+        // Onglet « Applis Dock » : la liste complète, dépliée
+        val dockPage = pages[TAB_DOCK]
+        dockPage.addView(label(tr(R.string.settings_dock_help)))
+        for (app in Apps.listLaunchable(this)) dockPage.addView(appRow(app))
 
-        // ===== 3. Services annexes communs (Home Assistant et Gladys) =====
+        // ===== 3. Services (Home Assistant et Gladys) =====
         column = pages[TAB_SERVICES]
         // Réveils
         column.addView(heading(tr(R.string.alarm_section), 18f))
@@ -475,7 +463,7 @@ class SettingsActivity : Activity() {
         saverUrlField = field(prefs.screensaverUrl, tr(R.string.settings_saver_url_hint), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(saverUrlField)
 
-        // ===== 4. Services annexes propres à Home Assistant =====
+        // ===== 4. Services HA (propres à Home Assistant) =====
         column = pages[TAB_SERVICES_HA]
         column.addView(label(tr(R.string.settings_services_ha_help)))
         column.addView(heading(tr(R.string.settings_sendspin_title), 18f))
@@ -1358,9 +1346,10 @@ class SettingsActivity : Activity() {
         const val TAB_GENERAL = 1
         const val TAB_SERVICES = 2
         const val TAB_SERVICES_HA = 3
+        const val TAB_DOCK = 4
         val TAB_NAMES = listOf(
             R.string.settings_section_connection, R.string.settings_tab_general,
-            R.string.settings_tab_services, R.string.settings_tab_services_ha
+            R.string.settings_tab_services, R.string.settings_tab_services_ha, R.string.settings_tab_dock
         )
     }
 }

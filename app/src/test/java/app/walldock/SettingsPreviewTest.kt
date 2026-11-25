@@ -58,6 +58,23 @@ class SettingsPreviewTest {
         prefs.gladysUser = "tablette@exemple.fr"
         prefs.gladysPassword = "secret"
 
+        // Quelques applis d'exemple pour l'onglet « Applis Dock » (Robolectric n'en a aucune)
+        val shadowPm = org.robolectric.Shadows.shadowOf(RuntimeEnvironment.getApplication().packageManager)
+        for ((pkg, label) in listOf("org.videolan.vlc" to "VLC", "com.spotify.music" to "Spotify",
+                "org.mozilla.firefox" to "Firefox", "com.android.deskclock" to "Horloge")) {
+            val info = android.content.pm.ResolveInfo()
+            info.activityInfo = android.content.pm.ActivityInfo().also {
+                it.packageName = pkg
+                it.name = "$pkg.Main"
+                it.nonLocalizedLabel = label
+                it.applicationInfo = android.content.pm.ApplicationInfo().also { a -> a.packageName = pkg }
+            }
+            info.nonLocalizedLabel = label
+            shadowPm.addResolveInfoForIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER), info)
+        }
+        prefs.dockApps = listOf("org.videolan.vlc", "com.spotify.music")
+        prefs.videoApps = setOf("org.videolan.vlc")
+
         val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         ShadowLooper.idleMainLooper()
         val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup

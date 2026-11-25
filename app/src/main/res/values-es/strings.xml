@@ -360,11 +360,9 @@
     <string name="test_immich_album">álbum no encontrado, o la clave no tiene acceso</string>
     <string name="test_failed">❌ Error: %1$s</string>
     <string name="test_timeout">sin respuesta en 12 segundos</string>
-    <string name="settings_section_connection">Conexión</string>
+    <string name="settings_section_connection">Conexiones</string>
     <string name="settings_schedule_title">Pantalla apagada cada noche</string>
     <string name="settings_motion_title">Detección de movimiento (cámara frontal)</string>
-    <string name="dock_show">Mostrar las apps (%1$d instaladas, %2$d en el dock)</string>
-    <string name="dock_hide">Ocultar la lista de apps</string>
     <string name="server_access">Acceso</string>
     <string name="server_access_local">Local</string>
     <string name="server_access_external">Externo</string>
@@ -388,8 +386,9 @@
     <string name="error_gladys_lock">Introduzca la ruta del panel predeterminado para bloquear la pantalla en él</string>
     <string name="fullscreen_empty">Introduzca primero la ruta del panel</string>
     <string name="settings_tab_general">Generales</string>
-    <string name="settings_tab_services">Servicios comunes</string>
-    <string name="settings_tab_services_ha">Servicios Home Assistant</string>
+    <string name="settings_tab_services">Servicios</string>
+    <string name="settings_tab_services_ha">Servicios HA</string>
     <string name="settings_quit">Salir</string>
     <string name="settings_services_ha_help">Estos servicios pasan por Home Assistant (integración ESPHome, Music Assistant). Se desmarcan al elegir Gladys; vuelva a marcarlos si Home Assistant también funciona.</string>
+    <string name="settings_tab_dock">Apps del dock</string>
 </resources>
