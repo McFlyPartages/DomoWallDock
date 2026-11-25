@@ -63,41 +63,51 @@ class TutoScreenshotsTest {
         ShadowLooper.idleMainLooper()
         val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
         val bar = root.getChildAt(0)
-        val column = (root.getChildAt(1) as ScrollView).getChildAt(0) as ViewGroup
+        val pages = root.getChildAt(1) as ViewGroup
         val width = root.width
-        column.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
-        column.layout(0, 0, width, column.measuredHeight)
-        val full = Bitmap.createBitmap(width, column.measuredHeight, Bitmap.Config.ARGB_8888)
-        Canvas(full).also { it.drawColor(0xFF050C1E.toInt()); column.draw(it) }
 
         val dir = File(System.getProperty("preview.dir") ?: "build/preview", "tuto/$lang").also { it.mkdirs() }
         fun save(name: String, bitmap: Bitmap) =
             File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
 
-        // Barre du haut
+        // Barre du haut (onglet Connexion en cours)
         val top = Bitmap.createBitmap(width, bar.height, Bitmap.Config.ARGB_8888)
         Canvas(top).also { bar.draw(it) }
         save("01-barre", top)
 
-        // Titres de section (repérés par leur tag) : chaque capture va d'un titre au suivant
-        val headings = (0 until column.childCount).map { column.getChildAt(it) }.filter { it.tag == SettingsActivity.HEADING_TAG }
-        fun crop(name: String, from: String, untilNext: Int = 1) {
-            val i = headings.indexOfFirst { (it as TextView).text.toString() == from }
-            check(i >= 0) { "titre introuvable : $from" }
-            val start = headings[i].top
-            val end = headings.getOrNull(i + untilNext)?.top ?: column.measuredHeight
+        /** Dessine l'onglet [tab] en entier ; ses titres de section (repérés par leur tag) servent à découper. */
+        fun render(tab: Int): Pair<Bitmap, List<View>> {
+            activity.selectTab(tab)
+            ShadowLooper.idleMainLooper()
+            val column = (pages.getChildAt(tab) as ScrollView).getChildAt(0) as ViewGroup
+            column.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+            column.layout(0, 0, width, column.measuredHeight)
+            val full = Bitmap.createBitmap(width, column.measuredHeight, Bitmap.Config.ARGB_8888)
+            Canvas(full).also { it.drawColor(0xFF050C1E.toInt()); column.draw(it) }
+            val headings = (0 until column.childCount).map { column.getChildAt(it) }.filter { it.tag == SettingsActivity.HEADING_TAG }
+            return full to headings
+        }
+        /** D'un titre (null : haut de l'onglet) au titre suivant (null : bas de l'onglet). */
+        fun crop(name: String, shot: Pair<Bitmap, List<View>>, from: String?, whole: Boolean = false) {
+            val (full, headings) = shot
+            val i = if (from == null) -1 else headings.indexOfFirst { (it as TextView).text.toString() == from }
+            check(from == null || i >= 0) { "titre introuvable : $from" }
+            val start = if (i < 0) 0 else headings[i].top
+            val end = if (whole) full.height else headings.getOrNull(i + 1)?.top ?: full.height
             save(name, Bitmap.createBitmap(full, 0, start, width, end - start))
         }
-        crop("02-connexion", tr(R.string.settings_section_connection), untilNext = 2)
-        crop("03-communs", tr(R.string.settings_common), untilNext = 1)
-        crop("04-veille", tr(R.string.settings_screensaver))
-        crop("05-nuit", tr(R.string.settings_schedule_title))
-        crop("06-mouvement", tr(R.string.settings_motion_title))
-        crop("07-autorisations", tr(R.string.settings_permissions))
-        crop("08-calendrier", tr(R.string.calendar_title))
-        crop("09-batterie", tr(R.string.settings_charge_title))
-        crop("10-mqtt", tr(R.string.settings_mqtt_title))
-        crop("11-photos", tr(R.string.settings_photos_title))
+        crop("02-connexion", render(SettingsActivity.TAB_CONNECTION), null, whole = true)
+        val general = render(SettingsActivity.TAB_GENERAL)
+        crop("03-communs", general, null)
+        crop("04-veille", general, tr(R.string.settings_screensaver))
+        crop("05-nuit", general, tr(R.string.settings_schedule_title))
+        crop("06-mouvement", general, tr(R.string.settings_motion_title))
+        crop("07-autorisations", general, tr(R.string.settings_permissions))
+        val services = render(SettingsActivity.TAB_SERVICES)
+        crop("08-calendrier", services, tr(R.string.calendar_title))
+        crop("09-batterie", services, tr(R.string.settings_charge_title))
+        crop("10-mqtt", services, tr(R.string.settings_mqtt_title))
+        crop("11-photos", services, tr(R.string.settings_photos_title))
     }
 
     /** Écran principal, dock ouvert (la page Gladys elle-même n'est pas dessinée : pas de navigateur ici). */

@@ -32,7 +32,9 @@ class SettingsActivity : Activity() {
 
     private lateinit var prefs: Prefs
     private lateinit var platformGroup: RadioGroup
-    private lateinit var languageGroup: RadioGroup
+    /** Langue choisie dans la barre du haut (appliquée à l'enregistrement). */
+    private var chosenLanguage = ""
+    private lateinit var languageButton: TextView
     private lateinit var haForm: ServerForm
     private lateinit var haUserField: EditText
     private lateinit var haPasswordField: EditText
@@ -42,6 +44,7 @@ class SettingsActivity : Activity() {
     private lateinit var gladysPasswordField: EditText
     private lateinit var gladysDashboardField: EditText
     private lateinit var gladysLockCheck: CheckBox
+    private lateinit var gladysFullscreenCheck: CheckBox
     private lateinit var haPanel: LinearLayout
     private lateinit var gladysPanel: LinearLayout
     private lateinit var bleCheck: CheckBox
@@ -98,39 +101,17 @@ class SettingsActivity : Activity() {
         // Android 13+ (obligatoire à partir d'Android 16) : retour géré par un rappel
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
-                if (!prefs.isConfigured) toast(tr(R.string.settings_save_first)) else finish()
+                quit()
             }
         }
         videoSelection.addAll(prefs.videoApps)
 
-        val column = LinearLayout(this)
-        column.orientation = LinearLayout.VERTICAL
-        column.setPadding(dp(24), dp(8), dp(24), dp(24))
-
-        // Langue de l'appli, tout en haut : celle de la tablette par défaut
-        column.addView(heading(tr(R.string.settings_language), 18f))
-        languageGroup = RadioGroup(this)
-        languageGroup.orientation = RadioGroup.HORIZONTAL
-        val languageNames = mapOf("" to tr(R.string.language_system), "fr" to "Français", "en" to "English", "de" to "Deutsch", "es" to "Español")
-        for (tag in Language.CHOICES) {
-            val choice = RadioButton(this)
-            choice.id = View.generateViewId()
-            choice.text = languageNames[tag]
-            choice.tag = tag
-            choice.setTextColor(Color.WHITE)
-            val spacing = RadioGroup.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-            spacing.marginEnd = dp(16)
-            languageGroup.addView(choice, spacing)
-            if (tag == prefs.language) languageGroup.check(choice.id)
-        }
-        val languageScroll = android.widget.HorizontalScrollView(this)
-        languageScroll.isHorizontalScrollBarEnabled = false
-        languageScroll.addView(languageGroup)
-        column.addView(languageScroll)
+        chosenLanguage = prefs.language
+        // Une page par onglet : Connexion, Généraux, Services communs, Services Home Assistant
+        val pages = List(TAB_NAMES.size) { page() }
 
         // ===== 1. Connexion =====
-        val connectionAnchor = section(tr(R.string.settings_section_connection))
-        column.addView(connectionAnchor)
+        var column = pages[TAB_CONNECTION]
         // Plateforme lancée : Home Assistant ou Gladys Assistant
         column.addView(heading(tr(R.string.settings_platform), 18f))
         platformGroup = RadioGroup(this)
@@ -195,7 +176,7 @@ class SettingsActivity : Activity() {
         gladysPanel.addView(secret(gladysPasswordField))
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
         gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        // Case « Verrouiller » à côté du chemin, bouton « Plein écran » dessous
+        // Cases « Verrouiller » et « Plein écran » à côté du chemin
         val gladysDashboardRow = LinearLayout(this)
         gladysDashboardRow.orientation = LinearLayout.HORIZONTAL
         gladysDashboardRow.gravity = Gravity.CENTER_VERTICAL
@@ -205,8 +186,9 @@ class SettingsActivity : Activity() {
         gladysLockCheck.setTextColor(Color.WHITE)
         gladysLockCheck.isChecked = prefs.gladysDashboardLocked
         gladysDashboardRow.addView(gladysLockCheck)
+        gladysFullscreenCheck = fullscreenCheck(gladysDashboardField)
+        gladysDashboardRow.addView(gladysFullscreenCheck)
         gladysPanel.addView(gladysDashboardRow)
-        gladysPanel.addView(button(tr(R.string.settings_gladys_fullscreen)) { addFullscreen(gladysDashboardField) })
         gladysPanel.addView(label(tr(R.string.settings_gladys_lock_help)))
         gladysPanel.addView(testButton(true))
 
@@ -227,9 +209,8 @@ class SettingsActivity : Activity() {
         column.addView(label(tr(R.string.settings_autologin_help)))
         highlightPlatform()
 
-        // ===== 2. Réglages communs =====
-        val commonAnchor = section(tr(R.string.settings_common))
-        column.addView(commonAnchor)
+        // ===== 2. Réglages généraux =====
+        column = pages[TAB_GENERAL]
         column.addView(label(tr(R.string.settings_pin)))
         pinField = field(prefs.pin, "1234", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD)
         column.addView(secret(pinField))
@@ -383,9 +364,8 @@ class SettingsActivity : Activity() {
         column.addView(toggle)
         column.addView(appList)
 
-        // ===== 3. Services annexes =====
-        val servicesAnchor = section(tr(R.string.settings_section_services))
-        column.addView(servicesAnchor)
+        // ===== 3. Services annexes communs (Home Assistant et Gladys) =====
+        column = pages[TAB_SERVICES]
         // Réveils
         column.addView(heading(tr(R.string.alarm_section), 18f))
         column.addView(label(tr(R.string.alarm_help)))
@@ -495,6 +475,9 @@ class SettingsActivity : Activity() {
         saverUrlField = field(prefs.screensaverUrl, tr(R.string.settings_saver_url_hint), InputType.TYPE_TEXT_VARIATION_URI)
         column.addView(saverUrlField)
 
+        // ===== 4. Services annexes propres à Home Assistant =====
+        column = pages[TAB_SERVICES_HA]
+        column.addView(label(tr(R.string.settings_services_ha_help)))
         column.addView(heading(tr(R.string.settings_sendspin_title), 18f))
         sendspinCheck = CheckBox(this)
         sendspinCheck.text = tr(R.string.settings_sendspin)
@@ -577,14 +560,119 @@ class SettingsActivity : Activity() {
         column.addView(listenOffCheck)
         column.addView(button(tr(R.string.settings_test_jarvis)) { ApiService.instance?.jarvis?.talk() })
 
-        column.addView(button(tr(R.string.settings_save_quit)) { save(close = true) })
-        // Crédits : une ligne et les liens en icônes
+        // Crédits en bas des réglages généraux ; les liens y sont aussi sur un écran étroit
+        val wideBar = resources.configuration.screenWidthDp >= 600
+        column = pages[TAB_GENERAL]
         val credits = label(tr(R.string.about_credits, BuildConfig.VERSION_NAME))
         credits.gravity = Gravity.CENTER
+        credits.setPadding(0, dp(28), 0, dp(4))
         column.addView(credits, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        if (!wideBar) {
+            val links = linkIcons(dp(43))
+            links.gravity = Gravity.CENTER
+            column.addView(links, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        }
+
+        val content = android.widget.FrameLayout(this)
+        val scrolls = pages.map { page ->
+            val scroll = ScrollView(this)
+            scroll.addView(page)
+            content.addView(scroll, android.widget.FrameLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT))
+            scroll
+        }
+
+        // Barre fixe, 1re ligne : titre, liens, langue, Enregistrer, Quitter
+        val bar = LinearLayout(this)
+        bar.orientation = LinearLayout.VERTICAL
+        bar.setPadding(dp(16), dp(8), dp(16), dp(8))
+        bar.setBackgroundColor(0xFF0A1634.toInt())
+        bar.elevation = dp(4).toFloat()
+        val actions = LinearLayout(this)
+        actions.orientation = LinearLayout.HORIZONTAL
+        actions.gravity = Gravity.CENTER_VERTICAL
+        val title = TextView(this)
+        // Écran étroit : pas de titre, la place va aux liens et aux boutons
+        title.text = if (resources.configuration.screenWidthDp >= 1000) tr(R.string.settings_title) else ""
+        title.textSize = 18f
+        title.setTextColor(0xFF3FD4FF.toInt())
+        title.isSingleLine = true
+        title.ellipsize = android.text.TextUtils.TruncateAt.END
+        title.setPadding(dp(8), 0, dp(16), 0)
+        actions.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        if (wideBar) actions.addView(linkIcons(dp(34)))
+        languageButton = tab(languageLabel()) { chooseLanguage() }
+        actions.addView(languageButton)
+        val saveButton = tab(tr(R.string.settings_save)) { save(close = false) }
+        styleTab(saveButton, true)
+        actions.addView(saveButton)
+        val quitButton = tab(tr(R.string.settings_quit)) { quit() }
+        (quitButton.layoutParams as LinearLayout.LayoutParams).marginEnd = 0
+        actions.addView(quitButton)
+        bar.addView(actions)
+
+        // 2e ligne : les onglets
+        val tabRow = LinearLayout(this)
+        tabRow.orientation = LinearLayout.HORIZONTAL
+        tabRow.setPadding(0, dp(8), 0, 0)
+        tabs = TAB_NAMES.mapIndexed { i, text -> tab(tr(text)) { selectTab(i) }.also { tabRow.addView(it) } }
+        tabPages = scrolls
+        val tabScroll = android.widget.HorizontalScrollView(this)
+        tabScroll.isHorizontalScrollBarEnabled = false
+        tabScroll.addView(tabRow)
+        bar.addView(tabScroll)
+        selectTab(TAB_CONNECTION)
+
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.setBackgroundColor(0xFF050C1E.toInt())
+        root.addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
+        root.addView(content, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        setContentView(root)
+    }
+
+    private var tabs: List<TextView> = emptyList()
+    private var tabPages: List<View> = emptyList()
+
+    /** Affiche la page de l'onglet [index] (public pour les aperçus Robolectric). */
+    fun selectTab(index: Int) {
+        tabPages.forEachIndexed { i, page -> page.visibility = if (i == index) View.VISIBLE else View.GONE }
+        tabs.forEachIndexed { i, t -> styleTab(t, i == index) }
+    }
+
+    private fun languageName(tag: String) = when (tag) {
+        "fr" -> "Français"
+        "en" -> "English"
+        "de" -> "Deutsch"
+        "es" -> "Español"
+        else -> tr(R.string.language_system)
+    }
+
+    private fun languageLabel() = "🌐 " + languageName(chosenLanguage) + " ▾"
+
+    /** Choix de la langue de l'appli : appliqué (avec relance de l'appli) à l'enregistrement. */
+    private fun chooseLanguage() {
+        val choices = Language.CHOICES.toList()
+        AlertDialog.Builder(this)
+            .setTitle(tr(R.string.settings_language))
+            .setSingleChoiceItems(choices.map { languageName(it) }.toTypedArray(), choices.indexOf(chosenLanguage)) { dialog, which ->
+                chosenLanguage = choices[which]
+                languageButton.text = languageLabel()
+                dialog.dismiss()
+            }
+            .setNegativeButton(tr(R.string.cancel), null)
+            .show()
+    }
+
+    /** Quitter sans enregistrer (comme la touche retour). */
+    private fun quit() {
+        if (!prefs.isConfigured) toast(tr(R.string.settings_save_first)) else finish()
+    }
+
+    /** Liens McFly (site, réseaux, soutien) en petites icônes rondes. */
+    private fun linkIcons(size: Int): LinearLayout {
         val links = LinearLayout(this)
         links.orientation = LinearLayout.HORIZONTAL
-        links.gravity = Gravity.CENTER
+        links.gravity = Gravity.CENTER_VERTICAL
         for ((icon, name, url) in listOf(
             Triple(R.drawable.ic_link_web, "mcflypartages.fr", "https://mcflypartages.fr"),
             Triple(R.drawable.ic_link_mastodon, "Mastodon @McFlyPartages@mastodon.social", "https://mastodon.social/@McFlyPartages"),
@@ -596,64 +684,20 @@ class SettingsActivity : Activity() {
             val view = ImageView(this)
             view.setImageResource(icon)
             view.contentDescription = name
-            view.setPadding(dp(8), dp(8), dp(8), dp(8))
+            val inner = size / 5
+            view.setPadding(inner, inner, inner, inner)
             val round = android.graphics.drawable.GradientDrawable()
             round.shape = android.graphics.drawable.GradientDrawable.OVAL
             round.setColor(0xFF0C1C3E.toInt())
             view.background = round
             view.setOnClickListener { open(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
-            val params = LinearLayout.LayoutParams(dp(43), dp(43))
-            params.setMargins(dp(8), dp(6), dp(8), dp(16))
+            val params = LinearLayout.LayoutParams(size, size)
+            params.setMargins(dp(4), dp(4), dp(4), dp(4))
             links.addView(view, params)
         }
-        column.addView(links, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
-
-        val scroll = ScrollView(this)
-        scroll.addView(column)
-
-        // Barre fixe : accès rapide aux trois parties et bouton Enregistrer
-        val bar = LinearLayout(this)
-        bar.orientation = LinearLayout.HORIZONTAL
-        bar.gravity = Gravity.CENTER_VERTICAL
-        bar.setPadding(dp(16), dp(8), dp(16), dp(8))
-        bar.setBackgroundColor(0xFF0A1634.toInt())
-        bar.elevation = dp(4).toFloat()
-        if (resources.configuration.screenWidthDp >= 720) {
-            val title = TextView(this)
-            title.text = tr(R.string.settings_title)
-            title.textSize = 18f
-            title.setTextColor(0xFF3FD4FF.toInt())
-            title.setPadding(dp(8), 0, dp(24), 0)
-            bar.addView(title)
-        }
-        val tabRow = LinearLayout(this)
-        tabRow.orientation = LinearLayout.HORIZONTAL
-        val anchors = listOf(connectionAnchor, commonAnchor, servicesAnchor)
-        val tabs = listOf(R.string.settings_section_connection, R.string.settings_common, R.string.settings_section_services)
-            .mapIndexed { i, text ->
-                tab(tr(text)) { scroll.smoothScrollTo(0, (anchors[i].top - dp(4)).coerceAtLeast(0)) }.also { tabRow.addView(it) }
-            }
-        val tabScroll = android.widget.HorizontalScrollView(this)
-        tabScroll.isHorizontalScrollBarEnabled = false
-        tabScroll.addView(tabRow)
-        bar.addView(tabScroll, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        val saveTop = button(tr(R.string.settings_save)) { save(close = false) }
-        bar.addView(saveTop)
-        // L'onglet de la partie affichée est mis en avant pendant le défilement
-        fun highlightTab() {
-            val y = scroll.scrollY + dp(16)
-            val current = anchors.indexOfLast { it.top <= y }.coerceAtLeast(0)
-            tabs.forEachIndexed { i, t -> styleTab(t, i == current) }
-        }
-        scroll.setOnScrollChangeListener { _, _, _, _, _ -> highlightTab() }
-        scroll.post { highlightTab() }
-
-        val root = LinearLayout(this)
-        root.orientation = LinearLayout.VERTICAL
-        root.setBackgroundColor(0xFF050C1E.toInt())
-        root.addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, WRAP_CONTENT))
-        root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
-        setContentView(root)
+        val spacing = View(this)
+        links.addView(spacing, LinearLayout.LayoutParams(dp(12), 1))
+        return links
     }
 
     override fun onResume() {
@@ -768,7 +812,7 @@ class SettingsActivity : Activity() {
         }
     }
 
-    /** [close] : bouton du bas, on quitte les réglages ; bouton du haut, on reste. */
+    /** [close] : on quitte les réglages après l'enregistrement ; sinon on reste. */
     private fun save(close: Boolean) {
         val platform = (platformGroup.findViewById<RadioButton>(platformGroup.checkedRadioButtonId)?.tag as? String) ?: Prefs.PLATFORM_HA
         val gladysActive = platform == Prefs.PLATFORM_GLADYS
@@ -794,7 +838,7 @@ class SettingsActivity : Activity() {
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
                 prefs.platform = platform
-                val language = (languageGroup.findViewById<RadioButton>(languageGroup.checkedRadioButtonId)?.tag as? String) ?: ""
+                val language = chosenLanguage
                 val languageChanged = language != prefs.language
                 haForm.store()
                 prefs.haUser = haUserField.text.toString().trim()
@@ -1043,17 +1087,40 @@ class SettingsActivity : Activity() {
         AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton("OK", null).show()
     }
 
-    /** Bouton « Plein écran » : ajoute le paramètre plein écran de Gladys au chemin saisi. */
-    private fun addFullscreen(field: EditText) {
-        val current = field.text.toString().trim()
-        when {
-            current.isEmpty() -> toast(tr(R.string.fullscreen_empty))
-            current.contains("fullscreen=") -> toast(tr(R.string.fullscreen_already))
-            else -> {
-                field.setText(withFullscreen(current))
+    /**
+     * Case « Plein écran » liée au chemin saisi : cochée, elle ajoute le paramètre plein écran
+     * de Gladys ; décochée, elle le retire. Elle suit aussi ce qui est tapé dans le champ.
+     */
+    private fun fullscreenCheck(field: EditText): CheckBox {
+        val check = CheckBox(this)
+        check.text = tr(R.string.settings_gladys_fullscreen)
+        check.setTextColor(Color.WHITE)
+        check.isChecked = hasFullscreen(field.text.toString())
+        var syncing = false
+        check.setOnCheckedChangeListener { _, on ->
+            if (syncing) return@setOnCheckedChangeListener
+            val current = field.text.toString().trim()
+            syncing = true
+            if (on && current.isEmpty()) {
+                toast(tr(R.string.fullscreen_empty))
+                check.isChecked = false
+            } else if (on != hasFullscreen(current)) {
+                field.setText(if (on) withFullscreen(current) else withoutFullscreen(current))
                 field.setSelection(field.text.length)
             }
+            syncing = false
         }
+        field.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (syncing) return
+                syncing = true
+                check.isChecked = hasFullscreen(s?.toString() ?: "")
+                syncing = false
+            }
+        })
+        return check
     }
 
     /** Champ secret avec un œil pour afficher ou masquer ce qui est saisi. */
@@ -1138,17 +1205,11 @@ class SettingsActivity : Activity() {
         }
     }
 
-    /** Titre d'une grande partie (cible des onglets de la barre du haut). */
-    private fun section(s: String): TextView {
-        val view = TextView(this)
-        view.text = s
-        view.textSize = 24f
-        view.tag = HEADING_TAG
-        view.setTextColor(Color.WHITE)
-        view.setPadding(0, dp(28), 0, dp(4))
-        val line = android.graphics.drawable.GradientDrawable()
-        line.setColor(0x00000000)
-        view.background = line
+    /** Contenu d'un onglet. */
+    private fun page(): LinearLayout {
+        val view = LinearLayout(this)
+        view.orientation = LinearLayout.VERTICAL
+        view.setPadding(dp(24), dp(8), dp(24), dp(24))
         return view
     }
 
@@ -1293,6 +1354,14 @@ class SettingsActivity : Activity() {
         private const val REQUEST_BLE = 53
         /** Repère des titres de section (captures du tutoriel). */
         const val HEADING_TAG = "settings_heading"
+        const val TAB_CONNECTION = 0
+        const val TAB_GENERAL = 1
+        const val TAB_SERVICES = 2
+        const val TAB_SERVICES_HA = 3
+        val TAB_NAMES = listOf(
+            R.string.settings_section_connection, R.string.settings_tab_general,
+            R.string.settings_tab_services, R.string.settings_tab_services_ha
+        )
     }
 }
 
@@ -1311,4 +1380,20 @@ fun withFullscreen(address: String): String {
         else -> "&"
     }
     return base + separator + "fullscreen=force" + fragment
+}
+
+/** Le chemin contient-il déjà un paramètre « fullscreen » ? */
+fun hasFullscreen(address: String): Boolean =
+    Regex("[?&]fullscreen(=|&|#|$)").containsMatchIn(address)
+
+/** Retire le paramètre « fullscreen » de [address] (les autres paramètres et l'ancre restent). */
+fun withoutFullscreen(address: String): String {
+    val anchor = address.indexOf('#')
+    val base = if (anchor >= 0) address.substring(0, anchor) else address
+    val fragment = if (anchor >= 0) address.substring(anchor) else ""
+    val question = base.indexOf('?')
+    if (question < 0) return address
+    val params = base.substring(question + 1).split('&')
+        .filter { it.isNotEmpty() && it != "fullscreen" && !it.startsWith("fullscreen=") }
+    return base.substring(0, question) + (if (params.isEmpty()) "" else "?" + params.joinToString("&")) + fragment
 }

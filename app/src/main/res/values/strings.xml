@@ -328,7 +328,6 @@
     <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
     <string name="settings_gladys_dashboard_hint">/dashboard/living-room</string>
     <string name="settings_autologin_help">With a user and a password, the tablet signs in by itself when the login page shows. Tip: use an account dedicated to the tablet, without admin rights.</string>
-    <string name="settings_common">Common settings</string>
     <string name="settings_photos_title">Screensaver: photos (Immich or a folder) or a Home Assistant / Gladys page</string>
     <string name="error_url_platform">%1$s: the address must start with http:// or https://</string>
     <string name="autologin_error">Automatic sign-in failed: %1$s</string>
@@ -366,12 +365,10 @@
     <string name="test_failed">❌ Failed: %1$s</string>
     <string name="test_timeout">no answer within 12 seconds</string>
     <string name="settings_section_connection">Connection</string>
-    <string name="settings_section_services">Extra services</string>
     <string name="settings_schedule_title">Screen off every night</string>
     <string name="settings_motion_title">Motion detection (front camera)</string>
     <string name="dock_show">Show the apps (%1$d installed, %2$d in the dock)</string>
     <string name="dock_hide">Hide the app list</string>
-    <string name="settings_save_quit">Save and leave the settings</string>
     <string name="server_access">Access</string>
     <string name="server_access_local">Local</string>
     <string name="server_access_external">External</string>
@@ -394,5 +391,9 @@
     <string name="page_locked">Locked: only the dashboard is shown on this tablet</string>
     <string name="error_gladys_lock">Enter the default dashboard path to lock the display on it</string>
     <string name="fullscreen_empty">Enter the dashboard path first</string>
-    <string name="fullscreen_already">Full screen is already in the address</string>
+    <string name="settings_tab_general">General</string>
+    <string name="settings_tab_services">Shared services</string>
+    <string name="settings_tab_services_ha">Home Assistant services</string>
+    <string name="settings_quit">Quit</string>
+    <string name="settings_services_ha_help">These services go through Home Assistant (ESPHome integration, Music Assistant). They are unticked when Gladys is chosen; tick them again if Home Assistant also runs.</string>
 </resources>
