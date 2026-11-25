@@ -51,7 +51,7 @@ The settings are split into five tabs: **Connections**, **General**, **Services*
 
 ## 3. General settings ("General" tab)
 
-![Common settings](images/tuto-gladys/en/03-communs.png)
+![General settings](images/tuto-gladys/en/03-communs.png)
 
 - **Admin code** (at least 4 digits): it protects the settings.
 - **Back to the dashboard** after a few seconds without touching the screen, when another dock app is open.

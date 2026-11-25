@@ -51,7 +51,7 @@ Los ajustes se dividen en cinco pestañas: **Conexiones**, **Generales**, **Serv
 
 ## 3. Ajustes generales (pestaña «Generales»)
 
-![Ajustes comunes](images/tuto-gladys/es/03-communs.png)
+![Ajustes generales](images/tuto-gladys/es/03-communs.png)
 
 - **Código de administrador** (mínimo 4 cifras): protege los ajustes.
 - **Volver al panel** tras unos segundos sin tocar la pantalla, cuando hay otra app del dock abierta.
