@@ -42,7 +42,7 @@ Arriba del todo: el **idioma de la app** (el de la tableta, o francés, inglés,
    - **Ambos**: la app usa la dirección local cuando responde y, si no, la externa (una tableta que sale de casa).
 3. **Dirección local**: HTTP (o HTTPS si tu Gladys lo usa), la **IP** de Gladys y el **puerto** (80 por defecto).
 4. **Correo electrónico y contraseña** de una cuenta de Gladys: la tableta inicia sesión sola cuando aparece la página de inicio de sesión. Consejo: crea en Gladys una cuenta dedicada a la tableta, sin derechos de administración.
-5. **Panel predeterminado** (opcional): la página que mostrar, por ejemplo `/dashboard/salon`.
+5. **Panel predeterminado** (opcional): la página que mostrar, por ejemplo `/dashboard/salon`. Marque **Bloquear** para que la tableta solo muestre esa página y toque **Pantalla completa** para añadir `?fullscreen=force` (Gladys sin menú ni botón de salida).
 6. Toca **Probar el inicio de sesión**: un ✅ por cada dirección configurada. Si no, el mensaje dice qué falla (servidor inaccesible, cuenta rechazada…).
 
 > **Red**: si la tableta está en otra red Wi-Fi u otra VLAN que Gladys (red de objetos conectados, invitados…), tu cortafuegos debe dejarla llegar a Gladys (puerto 80, o el de tu Gladys) y, para el paso 5, al broker MQTT (puerto 1883).

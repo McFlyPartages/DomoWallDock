@@ -384,4 +384,11 @@
     <string name="settings_language">Idioma de la app</string>
     <string name="language_system">Idioma de la tableta</string>
     <string name="language_restart">Idioma cambiado: la app se reinicia…</string>
+    <string name="settings_gladys_lock">Bloquear</string>
+    <string name="settings_gladys_fullscreen">Pantalla completa</string>
+    <string name="settings_gladys_lock_help">Bloquear: la tableta solo muestra esta página (las demás páginas de Gladys y los enlaces vuelven a ella). Pantalla completa añade ?fullscreen=force: Gladys oculta su menú y su botón de salida.</string>
+    <string name="page_locked">Bloqueado: en esta tableta solo se muestra el panel</string>
+    <string name="error_gladys_lock">Introduzca la ruta del panel predeterminado para bloquear la pantalla en él</string>
+    <string name="fullscreen_empty">Introduzca primero la ruta del panel</string>
+    <string name="fullscreen_already">La pantalla completa ya está en la dirección</string>
 </resources>

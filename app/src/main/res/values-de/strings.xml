@@ -384,4 +384,11 @@
     <string name="settings_language">Sprache der App</string>
     <string name="language_system">Sprache des Tablets</string>
     <string name="language_restart">Sprache geändert: Die App startet neu…</string>
+    <string name="settings_gladys_lock">Sperren</string>
+    <string name="settings_gladys_fullscreen">Vollbild</string>
+    <string name="settings_gladys_lock_help">Sperren: Das Tablet zeigt nur diese Seite (andere Gladys-Seiten und Links führen dorthin zurück). Vollbild fügt ?fullscreen=force hinzu: Gladys blendet Menü und Beenden-Schaltfläche aus.</string>
+    <string name="page_locked">Gesperrt: Auf diesem Tablet wird nur das Dashboard angezeigt</string>
+    <string name="error_gladys_lock">Geben Sie den Pfad des Standard-Dashboards ein, um die Anzeige darauf zu sperren</string>
+    <string name="fullscreen_empty">Geben Sie zuerst den Dashboard-Pfad ein</string>
+    <string name="fullscreen_already">Vollbild ist bereits in der Adresse</string>
 </resources>
