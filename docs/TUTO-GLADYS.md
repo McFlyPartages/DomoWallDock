@@ -42,7 +42,7 @@ Tout en haut : la **langue de l'appli** (celle de la tablette, ou français, ang
    - **Les deux** : l'appli prend l'adresse locale quand elle répond, sinon l'externe (tablette qui sort de la maison).
 3. **Adresse locale** : HTTP (ou HTTPS si votre Gladys l'utilise), l'**IP** de Gladys et le **port** (80 par défaut).
 4. **Adresse e-mail et mot de passe** d'un compte Gladys : la tablette se connecte toute seule quand la page de connexion s'affiche. Conseil : créez dans Gladys un compte dédié à la tablette, sans droits d'administration.
-5. **Tableau de bord par défaut** (facultatif) : la page à afficher, par exemple `/dashboard/salon`.
+5. **Tableau de bord par défaut** (facultatif) : la page à afficher, par exemple `/dashboard/salon`. Cochez **Verrouiller** pour que la tablette n'affiche que cette page, et touchez **Plein écran** pour ajouter `?fullscreen=force` (Gladys sans menu ni bouton de sortie).
 6. Touchez **Tester la connexion** : un ✅ par adresse configurée. Sinon, le message dit ce qui bloque (serveur injoignable, compte refusé…).
 
 > **Réseau** : si la tablette est sur un autre réseau Wi-Fi ou un autre VLAN que Gladys (réseau « objets connectés », invités…), votre pare-feu doit la laisser joindre Gladys (port 80, ou celui de votre Gladys) et, pour l'étape 5, le broker MQTT (port 1883).

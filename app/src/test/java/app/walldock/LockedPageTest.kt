@@ -1,0 +1,62 @@
+package app.walldock
+
+import android.content.Context
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+
+/** Verrouillage sur le tableau de bord Gladys et bouton « Plein écran ». */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class LockedPageTest {
+
+    private lateinit var prefs: Prefs
+
+    @Before fun setUp() {
+        val app = RuntimeEnvironment.getApplication()
+        app.getSharedPreferences("walldock", Context.MODE_PRIVATE).edit().clear().commit()
+        prefs = Prefs(app)
+        prefs.platform = Prefs.PLATFORM_GLADYS
+        prefs.gladys.access = Prefs.ACCESS_LOCAL
+        prefs.gladys.ip = "192.168.80.11"
+        prefs.gladys.port = 80
+        prefs.gladysDashboard = "/dashboard/salon?fullscreen=force"
+        prefs.gladysDashboardLocked = true
+    }
+
+    @Test fun pageVerrouilleePermise() {
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/salon"))
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/salon/?fullscreen=force"))
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/login"))
+    }
+
+    @Test fun autresPagesBloquees() {
+        assertTrue(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine"))
+        assertTrue(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/salon/edit"))
+        assertTrue(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/integrations"))
+        assertTrue(prefs.isOutsideLockedPage("https://exemple.fr/"))
+    }
+
+    @Test fun sansCaseRienNestBloque() {
+        prefs.gladysDashboardLocked = false
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine"))
+    }
+
+    @Test fun homeAssistantPasConcerne() {
+        prefs.platform = Prefs.PLATFORM_HA
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine"))
+    }
+
+    @Test fun pleinEcran() {
+        assertEquals("/dashboard/salon?fullscreen=force", withFullscreen("/dashboard/salon"))
+        assertEquals("/dashboard/salon?a=1&fullscreen=force", withFullscreen("/dashboard/salon?a=1"))
+        assertEquals("/dashboard/salon?fullscreen=force", withFullscreen("/dashboard/salon?"))
+        assertEquals("/dashboard/salon?fullscreen=force#bas", withFullscreen("/dashboard/salon#bas"))
+    }
+}
