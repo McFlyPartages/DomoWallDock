@@ -25,13 +25,13 @@ Später gelangst du so zu den Einstellungen: Tippe auf den kleinen Griff **▲**
 
 ![Das geöffnete Dock auf dem Hauptbildschirm](images/tuto-gladys/de/00-dock.png)
 
-Ganz oben: die **Sprache der App** (die des Tablets oder Französisch, Englisch, Deutsch, Spanisch; die App startet neu, um sie zu übernehmen). Danach sind die Einstellungen in drei Teile gegliedert, jederzeit über die obere Leiste erreichbar. **Speichern** (oben rechts) speichert, ohne die Einstellungen zu verlassen; die Schaltfläche ganz unten speichert und schließt sie.
+Die Einstellungen sind in fünf Tabs gegliedert: **Verbindungen**, **Allgemein**, **Dienste**, **HA-Dienste** und **Dock-Apps**. In der oberen Leiste finden sich außerdem die **Sprache der App** (🌐: die des Tablets oder Französisch, Englisch, Deutsch, Spanisch; die App startet beim Speichern neu, um sie zu übernehmen), **Speichern** (speichert, ohne zu verlassen) und **Beenden** (schließt die Einstellungen ohne zu speichern).
 
 ![Obere Leiste der Einstellungen](images/tuto-gladys/de/01-barre.png)
 
 ---
 
-## 2. Mit Gladys verbinden (Teil „Verbindung“)
+## 2. Mit Gladys verbinden (Tab „Verbindungen“)
 
 ![Verbindung zu Gladys](images/tuto-gladys/de/02-connexion.png)
 
@@ -42,14 +42,14 @@ Ganz oben: die **Sprache der App** (die des Tablets oder Französisch, Englisch,
    - **Beides**: Die App nimmt die lokale Adresse, wenn sie antwortet, sonst die externe (ein Tablet, das das Haus verlässt).
 3. **Lokale Adresse**: HTTP (oder HTTPS, wenn deine Gladys es nutzt), die **IP** von Gladys und der **Port** (standardmäßig 80).
 4. **E-Mail-Adresse und Passwort** eines Gladys-Kontos: Das Tablet meldet sich selbst an, wenn die Anmeldeseite erscheint. Tipp: Lege in Gladys ein eigenes Konto für das Tablet an, ohne Administratorrechte.
-5. **Standard-Dashboard** (optional): die anzuzeigende Seite, z. B. `/dashboard/wohnzimmer`. Kreuzen Sie **Sperren** an, damit das Tablet nur diese Seite zeigt, und tippen Sie auf **Vollbild**, um `?fullscreen=force` hinzuzufügen (Gladys ohne Menü und ohne Schaltfläche zum Beenden).
+5. **Standard-Dashboard** (optional): die anzuzeigende Seite, z. B. `/dashboard/wohnzimmer`. Kreuzen Sie **Sperren** an, damit das Tablet nur diese Seite zeigt, und kreuzen Sie **Vollbild** an, um `?fullscreen=force` hinzuzufügen (Gladys ohne Menü und ohne Schaltfläche zum Beenden).
 6. Tippe auf **Anmeldung testen**: ein ✅ pro eingerichteter Adresse. Andernfalls sagt die Meldung, woran es hakt (Server nicht erreichbar, Konto abgelehnt…).
 
 > **Netzwerk**: Ist das Tablet in einem anderen WLAN oder VLAN als Gladys (Netz für smarte Geräte, Gäste…), muss deine Firewall ihm erlauben, Gladys zu erreichen (Port 80 oder der Port deiner Gladys) und, für Schritt 5, den MQTT-Broker (Port 1883).
 
 ---
 
-## 3. Allgemeine Einstellungen
+## 3. Allgemeine Einstellungen (Tab „Allgemein“)
 
 ![Allgemeine Einstellungen](images/tuto-gladys/de/03-communs.png)
 
@@ -73,13 +73,13 @@ Ganz oben: die **Sprache der App** (die des Tablets oder Französisch, Englisch,
 
 ![Berechtigungen](images/tuto-gladys/de/07-autorisations.png)
 
-Im selben Teil: **Sicherung / Wiederherstellung** der Einstellungen in einer Datei und die Liste der **Dock-Apps** (eingeklappt; tippe auf „Apps anzeigen“ und hake die gewünschten an).
+Im selben Tab: **Sicherung / Wiederherstellung** der Einstellungen in einer Datei. Die gewünschten Apps werden im Tab **Dock-Apps** angehakt.
 
 Schalte außerdem die **Akku-Optimierung** von Android für DomoWallDock ab, sonst kann das System die App beenden ([dontkillmyapp.com](https://dontkillmyapp.com) beschreibt jede Marke).
 
 ---
 
-## 4. Der Gladys-Kalender
+## 4. Der Gladys-Kalender (Tab „Dienste“)
 
 ![Kalender](images/tuto-gladys/de/08-calendrier.png)
 
@@ -95,7 +95,7 @@ Das Tablet meldet sich per MQTT selbst bei Gladys an und erscheint dort als Ger�
 
 ![MQTT-Einstellungen](images/tuto-gladys/de/10-mqtt.png)
 
-1. Unter **Zusatzdienste → MQTT** hake **Tablet mit einem MQTT-Broker verbinden** an.
+1. Im Tab **Dienste → MQTT** hake **Tablet mit einem MQTT-Broker verbinden** an.
 2. Trage **Broker-Adresse**, **Port** (1883), **Benutzer** und **Passwort** ein.
 3. Tippe auf **MQTT-Verbindung testen**: ✅ erwartet.
 4. **Speichern**.
@@ -123,7 +123,7 @@ Ein dauerhaft auf 100 % gehaltener Akku verschleißt und kann sich aufblähen. A
 ![Ladesteuerung](images/tuto-gladys/de/09-batterie.png)
 
 1. Stecke das Ladegerät des Tablets in eine smarte Steckdose, die Gladys bereits steuert.
-2. Hake unter **Zusatzdienste → Akku** **Laden steuern** an (MQTT muss aktiv sein). Stelle die Schwellen ein: Laden unter 30 %, Stopp bei 80 % (Standard).
+2. Hake im Tab **Dienste → Akku** **Laden steuern** an (MQTT muss aktiv sein). Stelle die Schwellen ein: Laden unter 30 %, Stopp bei 80 % (Standard).
 3. Lege in Gladys zwei Szenen an, die bei einer Zustandsänderung von **„Laden gewünscht“** auslösen:
    - wechselt auf **1** → Steckdose des Ladegeräts **einschalten**;
    - wechselt auf **0** → Steckdose **ausschalten**.
@@ -146,7 +146,7 @@ Statt der Uhr kann der Bildschirmschoner Folgendes zeigen:
 
 ## 8. Weitere Dienste
 
-Wählst du Gladys, wählt die App den **Bluetooth-Proxy** und den Sprachassistenten **Jarvis** (sie laufen über Home Assistant) sowie den **Music-Assistant**-Player selbst ab. Du kannst sie wieder anwählen: etwa wenn du auch Home Assistant nutzt oder einen Music-Assistant-Server (er funktioniert mit oder ohne Home Assistant).
+Wählst du Gladys, wählt die App den **Bluetooth-Proxy** und den Sprachassistenten **Jarvis** (sie laufen über Home Assistant) sowie den **Music-Assistant**-Player selbst ab (Tab **HA-Dienste**). Du kannst sie wieder anwählen: etwa wenn du auch Home Assistant nutzt oder einen Music-Assistant-Server (er funktioniert mit oder ohne Home Assistant).
 
 ---
 
@@ -155,4 +155,4 @@ Wählst du Gladys, wählt die App den **Bluetooth-Proxy** und den Sprachassisten
 - Der Griff **▲** öffnet das Dock: deine Apps, der Kalender, die Seite **Neu laden**, **Einstellungen**.
 - Antwortet Gladys nicht mehr, zeigt ein Notfallbildschirm die Uhrzeit; das Dashboard kommt von selbst zurück.
 - **Update**: das neue APK über das alte installieren, die Einstellungen bleiben erhalten.
-- Vor einer großen Änderung: **Einstellungen sichern…** in den allgemeinen Einstellungen.
+- Vor einer großen Änderung: **Einstellungen sichern…** im Tab Allgemein.

@@ -326,7 +326,6 @@
     <string name="settings_ha_dashboard_hint">/lovelace/0?kiosk</string>
     <string name="settings_gladys_dashboard_hint">/dashboard/salon</string>
     <string name="settings_autologin_help">Con un usuario y una contraseña, la tableta inicia sesión sola cuando aparece la página de inicio de sesión. Consejo: usa una cuenta dedicada a la tableta, sin derechos de administración.</string>
-    <string name="settings_common">Ajustes comunes</string>
     <string name="settings_photos_title">Salvapantallas: fotos (Immich o una carpeta) o una página de Home Assistant / Gladys</string>
     <string name="error_url_platform">%1$s: la dirección debe empezar por http:// o https://</string>
     <string name="autologin_error">Inicio de sesión automático imposible: %1$s</string>
@@ -361,13 +360,9 @@
     <string name="test_immich_album">álbum no encontrado, o la clave no tiene acceso</string>
     <string name="test_failed">❌ Error: %1$s</string>
     <string name="test_timeout">sin respuesta en 12 segundos</string>
-    <string name="settings_section_connection">Conexión</string>
-    <string name="settings_section_services">Servicios adicionales</string>
+    <string name="settings_section_connection">Conexiones</string>
     <string name="settings_schedule_title">Pantalla apagada cada noche</string>
     <string name="settings_motion_title">Detección de movimiento (cámara frontal)</string>
-    <string name="dock_show">Mostrar las apps (%1$d instaladas, %2$d en el dock)</string>
-    <string name="dock_hide">Ocultar la lista de apps</string>
-    <string name="settings_save_quit">Guardar y salir de los ajustes</string>
     <string name="server_access">Acceso</string>
     <string name="server_access_local">Local</string>
     <string name="server_access_external">Externo</string>
@@ -390,5 +385,10 @@
     <string name="page_locked">Bloqueado: en esta tableta solo se muestra el panel</string>
     <string name="error_gladys_lock">Introduzca la ruta del panel predeterminado para bloquear la pantalla en él</string>
     <string name="fullscreen_empty">Introduzca primero la ruta del panel</string>
-    <string name="fullscreen_already">La pantalla completa ya está en la dirección</string>
+    <string name="settings_tab_general">Generales</string>
+    <string name="settings_tab_services">Servicios</string>
+    <string name="settings_tab_services_ha">Servicios HA</string>
+    <string name="settings_quit">Salir</string>
+    <string name="settings_services_ha_help">Jarvis y el proxy Bluetooth pasan por Home Assistant (integración ESPHome); Music Assistant funciona con o sin él. Se desmarcan al elegir Gladys; vuelva a marcarlos si los usa.</string>
+    <string name="settings_tab_dock">Apps del dock</string>
 </resources>

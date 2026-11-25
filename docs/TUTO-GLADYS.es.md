@@ -25,13 +25,13 @@ Más tarde, para volver a los ajustes: toca la pequeña asa **▲** (abajo a la 
 
 ![El dock abierto en la pantalla principal](images/tuto-gladys/es/00-dock.png)
 
-Arriba del todo: el **idioma de la app** (el de la tableta, o francés, inglés, alemán, español; la app se reinicia para aplicarlo). Después, los ajustes se dividen en tres partes, accesibles en todo momento desde la barra superior. **Guardar** (arriba a la derecha) guarda sin salir; el botón del final guarda y cierra los ajustes.
+Los ajustes se dividen en cinco pestañas: **Conexiones**, **Generales**, **Servicios**, **Servicios HA** y **Apps del dock**. La barra superior también ofrece el **idioma de la app** (🌐: el de la tableta, o francés, inglés, alemán, español; la app se reinicia al guardar para aplicarlo), **Guardar** (guarda sin salir) y **Salir** (cierra los ajustes sin guardar).
 
 ![Barra superior de los ajustes](images/tuto-gladys/es/01-barre.png)
 
 ---
 
-## 2. Conectarse a Gladys (parte «Conexión»)
+## 2. Conectarse a Gladys (pestaña «Conexiones»)
 
 ![Conexión a Gladys](images/tuto-gladys/es/02-connexion.png)
 
@@ -42,14 +42,14 @@ Arriba del todo: el **idioma de la app** (el de la tableta, o francés, inglés,
    - **Ambos**: la app usa la dirección local cuando responde y, si no, la externa (una tableta que sale de casa).
 3. **Dirección local**: HTTP (o HTTPS si tu Gladys lo usa), la **IP** de Gladys y el **puerto** (80 por defecto).
 4. **Correo electrónico y contraseña** de una cuenta de Gladys: la tableta inicia sesión sola cuando aparece la página de inicio de sesión. Consejo: crea en Gladys una cuenta dedicada a la tableta, sin derechos de administración.
-5. **Panel predeterminado** (opcional): la página que mostrar, por ejemplo `/dashboard/salon`. Marque **Bloquear** para que la tableta solo muestre esa página y toque **Pantalla completa** para añadir `?fullscreen=force` (Gladys sin menú ni botón de salida).
+5. **Panel predeterminado** (opcional): la página que mostrar, por ejemplo `/dashboard/salon`. Marque **Bloquear** para que la tableta solo muestre esa página y marque **Pantalla completa** para añadir `?fullscreen=force` (Gladys sin menú ni botón de salida).
 6. Toca **Probar el inicio de sesión**: un ✅ por cada dirección configurada. Si no, el mensaje dice qué falla (servidor inaccesible, cuenta rechazada…).
 
 > **Red**: si la tableta está en otra red Wi-Fi u otra VLAN que Gladys (red de objetos conectados, invitados…), tu cortafuegos debe dejarla llegar a Gladys (puerto 80, o el de tu Gladys) y, para el paso 5, al broker MQTT (puerto 1883).
 
 ---
 
-## 3. Ajustes comunes
+## 3. Ajustes generales (pestaña «Generales»)
 
 ![Ajustes comunes](images/tuto-gladys/es/03-communs.png)
 
@@ -73,13 +73,13 @@ Arriba del todo: el **idioma de la app** (el de la tableta, o francés, inglés,
 
 ![Permisos](images/tuto-gladys/es/07-autorisations.png)
 
-En la misma parte: **copia de seguridad / restauración** de los ajustes en un archivo, y la lista de **apps del dock** (plegada; toca «Mostrar las apps» y marca las que quieras tener a mano).
+En la misma pestaña: **copia de seguridad / restauración** de los ajustes en un archivo. Las apps que quieras tener a mano se marcan en la pestaña **Apps del dock**.
 
 Desactiva también la **optimización de batería** de Android para DomoWallDock; si no, el sistema puede cerrar la app ([dontkillmyapp.com](https://dontkillmyapp.com) detalla cada marca).
 
 ---
 
-## 4. El calendario de Gladys
+## 4. El calendario de Gladys (pestaña «Servicios»)
 
 ![Calendario](images/tuto-gladys/es/08-calendrier.png)
 
@@ -95,7 +95,7 @@ La tableta se anuncia sola a Gladys por MQTT y aparece allí como un dispositivo
 
 ![Ajustes MQTT](images/tuto-gladys/es/10-mqtt.png)
 
-1. En **Servicios adicionales → MQTT**, marca **Conectar la tableta a un broker MQTT**.
+1. En la pestaña **Servicios → MQTT**, marca **Conectar la tableta a un broker MQTT**.
 2. Rellena la **dirección del broker**, el **puerto** (1883), el **usuario** y la **contraseña**.
 3. Toca **Probar la conexión MQTT**: se espera ✅.
 4. **Guardar**.
@@ -123,7 +123,7 @@ Una batería mantenida al 100 % todo el tiempo se desgasta y puede hincharse. An
 ![Gestión de la carga](images/tuto-gladys/es/09-batterie.png)
 
 1. Enchufa el cargador de la tableta en un enchufe inteligente ya gestionado por Gladys.
-2. En **Servicios adicionales → Batería**, marca **Gestionar la carga** (MQTT debe estar activo). Ajusta los umbrales: carga por debajo del 30 %, parada al 80 % por defecto.
+2. En la pestaña **Servicios → Batería**, marca **Gestionar la carga** (MQTT debe estar activo). Ajusta los umbrales: carga por debajo del 30 %, parada al 80 % por defecto.
 3. En Gladys, crea dos escenas que se activen con el cambio de estado de **«Carga solicitada»**:
    - pasa a **1** → **encender** el enchufe del cargador;
    - pasa a **0** → **apagar** el enchufe.
@@ -146,7 +146,7 @@ En lugar del reloj, el salvapantallas puede mostrar:
 
 ## 8. Los demás servicios
 
-Cuando eliges Gladys, la app desmarca sola el **proxy Bluetooth** y el asistente de voz **Jarvis** (pasan por Home Assistant), así como el reproductor de **Music Assistant**. Puedes volver a marcarlos: por ejemplo si también usas Home Assistant, o un servidor Music Assistant (funciona con o sin Home Assistant).
+Cuando eliges Gladys, la app desmarca sola el **proxy Bluetooth** y el asistente de voz **Jarvis** (pasan por Home Assistant), así como el reproductor de **Music Assistant** (pestaña **Servicios HA**). Puedes volver a marcarlos: por ejemplo si también usas Home Assistant, o un servidor Music Assistant (funciona con o sin Home Assistant).
 
 ---
 
@@ -155,4 +155,4 @@ Cuando eliges Gladys, la app desmarca sola el **proxy Bluetooth** y el asistente
 - El asa **▲** abre el dock: tus apps, el calendario, **Recargar** la página, **Ajustes**.
 - Si Gladys deja de responder, una pantalla de emergencia muestra la hora; el panel vuelve solo.
 - **Actualización**: instala el nuevo APK encima del anterior, se conservan los ajustes.
-- Antes de un cambio importante: **Guardar los ajustes…** en los ajustes comunes.
+- Antes de un cambio importante: **Guardar los ajustes…** en la pestaña Generales.

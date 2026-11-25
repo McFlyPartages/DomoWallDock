@@ -25,13 +25,13 @@ Plus tard, pour revenir aux réglages : touchez la petite poignée **▲** (en b
 
 ![Le dock ouvert sur l'écran principal](images/tuto-gladys/fr/00-dock.png)
 
-Tout en haut : la **langue de l'appli** (celle de la tablette, ou français, anglais, allemand, espagnol ; l'appli redémarre pour l'appliquer). Les réglages sont ensuite rangés en trois parties, accessibles à tout moment par la barre du haut. **Enregistrer** (en haut à droite) enregistre sans quitter ; le bouton tout en bas enregistre et ferme les réglages.
+Les réglages sont rangés en cinq onglets : **Connexions**, **Généraux**, **Services**, **Services HA** et **Applis Dock**. La barre du haut donne aussi le choix de la **langue de l'appli** (🌐 : celle de la tablette, ou français, anglais, allemand, espagnol ; l'appli redémarre pour l'appliquer à l'enregistrement), **Enregistrer** (enregistre sans quitter) et **Quitter** (ferme les réglages sans enregistrer).
 
 ![Barre du haut des réglages](images/tuto-gladys/fr/01-barre.png)
 
 ---
 
-## 2. Se connecter à Gladys (partie « Connexion »)
+## 2. Se connecter à Gladys (onglet « Connexions »)
 
 ![Connexion à Gladys](images/tuto-gladys/fr/02-connexion.png)
 
@@ -42,16 +42,16 @@ Tout en haut : la **langue de l'appli** (celle de la tablette, ou français, ang
    - **Les deux** : l'appli prend l'adresse locale quand elle répond, sinon l'externe (tablette qui sort de la maison).
 3. **Adresse locale** : HTTP (ou HTTPS si votre Gladys l'utilise), l'**IP** de Gladys et le **port** (80 par défaut).
 4. **Adresse e-mail et mot de passe** d'un compte Gladys : la tablette se connecte toute seule quand la page de connexion s'affiche. Conseil : créez dans Gladys un compte dédié à la tablette, sans droits d'administration.
-5. **Tableau de bord par défaut** (facultatif) : la page à afficher, par exemple `/dashboard/salon`. Cochez **Verrouiller** pour que la tablette n'affiche que cette page, et touchez **Plein écran** pour ajouter `?fullscreen=force` (Gladys sans menu ni bouton de sortie).
+5. **Tableau de bord par défaut** (facultatif) : la page à afficher, par exemple `/dashboard/salon`. Cochez **Verrouiller** pour que la tablette n'affiche que cette page, et cochez **Plein écran** pour ajouter `?fullscreen=force` (Gladys sans menu ni bouton de sortie).
 6. Touchez **Tester la connexion** : un ✅ par adresse configurée. Sinon, le message dit ce qui bloque (serveur injoignable, compte refusé…).
 
 > **Réseau** : si la tablette est sur un autre réseau Wi-Fi ou un autre VLAN que Gladys (réseau « objets connectés », invités…), votre pare-feu doit la laisser joindre Gladys (port 80, ou celui de votre Gladys) et, pour l'étape 5, le broker MQTT (port 1883).
 
 ---
 
-## 3. Réglages communs
+## 3. Réglages généraux (onglet « Généraux »)
 
-![Réglages communs](images/tuto-gladys/fr/03-communs.png)
+![Réglages généraux](images/tuto-gladys/fr/03-communs.png)
 
 - **Code administrateur** (4 chiffres minimum) : il protège les réglages.
 - **Retour au tableau de bord** après quelques secondes sans toucher l'écran, quand une autre appli du dock est ouverte.
@@ -73,13 +73,13 @@ Tout en haut : la **langue de l'appli** (celle de la tablette, ou français, ang
 
 ![Autorisations](images/tuto-gladys/fr/07-autorisations.png)
 
-Dans la même partie : **sauvegarde / restauration** des réglages dans un fichier, et la liste des **applis du dock** (repliée ; touchez « Afficher les applis » puis cochez celles à garder sous la main).
+Dans le même onglet : **sauvegarde / restauration** des réglages dans un fichier. Les applis à garder sous la main se cochent dans l'onglet **Applis Dock**.
 
 Pensez aussi à désactiver l'**optimisation de batterie** d'Android pour DomoWallDock, sinon le système peut couper l'appli ([dontkillmyapp.com](https://dontkillmyapp.com) détaille chaque marque).
 
 ---
 
-## 4. Le calendrier de Gladys
+## 4. Le calendrier de Gladys (onglet « Services »)
 
 ![Calendrier](images/tuto-gladys/fr/08-calendrier.png)
 
@@ -95,7 +95,7 @@ La tablette s'annonce toute seule à Gladys par MQTT et y apparaît comme un app
 
 ![Réglages MQTT](images/tuto-gladys/fr/10-mqtt.png)
 
-1. Dans **Services annexes → MQTT**, cochez **Connecter la tablette à un broker MQTT**.
+1. Dans l'onglet **Services → MQTT**, cochez **Connecter la tablette à un broker MQTT**.
 2. Renseignez l'**adresse du broker**, le **port** (1883), l'**utilisateur** et le **mot de passe**.
 3. Touchez **Tester la connexion MQTT** : ✅ attendu.
 4. **Enregistrer**.
@@ -123,7 +123,7 @@ Une batterie gardée à 100 % en permanence s'abîme et peut gonfler. Android in
 ![Gestion de la charge](images/tuto-gladys/fr/09-batterie.png)
 
 1. Branchez le chargeur de la tablette sur une prise connectée déjà gérée par Gladys.
-2. Dans **Services annexes → Batterie**, cochez **Gérer la charge** (MQTT doit être actif). Réglez les seuils : recharge sous 30 %, arrêt à 80 % par défaut.
+2. Dans l'onglet **Services → Batterie**, cochez **Gérer la charge** (MQTT doit être actif). Réglez les seuils : recharge sous 30 %, arrêt à 80 % par défaut.
 3. Dans Gladys, créez deux scènes déclenchées par le changement d'état de **« Charge demandée »** :
    - passe à **1** → **allumer** la prise du chargeur ;
    - passe à **0** → **éteindre** la prise.
@@ -146,7 +146,7 @@ Au lieu de l'horloge, l'écran de veille peut afficher :
 
 ## 8. Les autres services
 
-Quand vous choisissez Gladys, l'appli décoche d'elle-même le **proxy Bluetooth** et l'assistant vocal **Jarvis** (ils passent par Home Assistant), ainsi que le lecteur **Music Assistant**. Vous pouvez les recocher : par exemple si vous utilisez aussi Home Assistant, ou un serveur Music Assistant (il fonctionne avec ou sans Home Assistant).
+Quand vous choisissez Gladys, l'appli décoche d'elle-même le **proxy Bluetooth** et l'assistant vocal **Jarvis** (ils passent par Home Assistant), ainsi que le lecteur **Music Assistant** (onglet **Services HA**). Vous pouvez les recocher : par exemple si vous utilisez aussi Home Assistant, ou un serveur Music Assistant (il fonctionne avec ou sans Home Assistant).
 
 ---
 
@@ -155,4 +155,4 @@ Quand vous choisissez Gladys, l'appli décoche d'elle-même le **proxy Bluetooth
 - La poignée **▲** ouvre le dock : vos applis, le calendrier, **Recharger** la page, **Réglages**.
 - Si Gladys ne répond plus, un écran de secours affiche l'heure ; le tableau de bord revient tout seul.
 - **Mise à jour** : installez le nouvel APK par-dessus l'ancien, les réglages sont conservés.
-- Avant un gros changement : **Sauvegarder les réglages…** dans les réglages communs.
+- Avant un gros changement : **Sauvegarder les réglages…** dans l'onglet Généraux.
