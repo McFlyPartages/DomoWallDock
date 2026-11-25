@@ -19,6 +19,16 @@ DomoWallDock (früher GladysWallDock) ist ein Fork von [WallDock](https://github
 > Die App gibt es auf Französisch, Englisch, Deutsch und Spanisch: standardmäßig in der Sprache des Tablets oder nach Wahl in den Einstellungen.
 
 <a id="download"></a>
+## Vorschau
+
+<p align="center">
+  <img src="docs/images/readme/de/reglages-connexions.png" width="49%" alt="Einstellungen, Tab Verbindungen">
+  <img src="docs/images/readme/de/reglages-services.png" width="49%" alt="Einstellungen, Tab Dienste">
+</p>
+<p align="center">
+  <img src="docs/images/tuto-gladys/de/00-dock.png" width="98%" alt="Das geöffnete Dock auf dem Dashboard">
+</p>
+
 ## Download
 
 Die signierten APKs liegen unter [**Releases**](https://github.com/McFlyPartages/DomoWallDock/releases) (nimm die neueste; es sind Vorabversionen).
@@ -56,7 +66,7 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 ## Was DomoWallDock kann
 
 **Home Assistant oder Gladys, nach Wahl**
-- Einstellungen → „Angezeigtes Dashboard“: Ein Optionsfeld wählt die gestartete Plattform. Jede hat ihre Spalte (nebeneinander auf einem breiten Bildschirm oder einem Tablet im Querformat, sonst untereinander): Adresse, Konto, Passwort und Standard-Dashboard (optional, z. B. `/lovelace/0?kiosk` oder `/dashboard/wohnzimmer`). Bei Gladys beschränkt das Kästchen **Sperren** die Anzeige auf diese Seite (andere Gladys-Seiten und Links führen dorthin zurück), und die Schaltfläche **Vollbild** fügt `?fullscreen=force` hinzu (oder `&fullscreen=force`, wenn die Adresse schon einen Parameter hat): Gladys öffnet im Vollbild, ohne Menü und ohne Schaltfläche zum Beenden.
+- Einstellungen → Tab **Verbindungen** → „Angezeigtes Dashboard“: Ein Optionsfeld wählt die gestartete Plattform. Jede hat ihre Spalte (nebeneinander auf einem breiten Bildschirm oder einem Tablet im Querformat, sonst untereinander): Adresse, Konto, Passwort und Standard-Dashboard (optional, z. B. `/lovelace/0?kiosk` oder `/dashboard/wohnzimmer`). Bei Gladys beschränkt das Kästchen **Sperren** die Anzeige auf diese Seite (andere Gladys-Seiten und Links führen dorthin zurück), und das Kästchen **Vollbild** fügt `?fullscreen=force` hinzu (oder `&fullscreen=force`, wenn die Adresse schon einen Parameter hat): Gladys öffnet im Vollbild, ohne Menü und ohne Schaltfläche zum Beenden.
 - **Zugriff Lokal / Extern / Beides** für jede Plattform: lokale Adresse (HTTP oder HTTPS, IP und Port) und externe Adresse (HTTPS). Mit „Beides“ nimmt die App die lokale Adresse, wenn sie antwortet, sonst die externe: Das Tablet funktioniert auch unterwegs, etwa hinter einem Reverse Proxy. Eine Zustandsprüfung testet jede Adresse.
 - **Automatische Anmeldung**: Mit Benutzer und Passwort meldet sich das Tablet selbst an, wenn die Anmeldeseite erscheint (Home Assistant: wie „Angemeldet bleiben“; nicht mit Zwei-Faktor-Authentifizierung). Tipp: ein eigenes Konto für das Tablet, ohne Administratorrechte.
 - Funktionen über Home Assistant (Jarvis, Bluetooth-Proxy, Kameras, Töne) bleiben verfügbar, wenn Gladys angezeigt wird, solange die HA-Adresse ausgefüllt ist.
@@ -79,6 +89,7 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 
 **Kiosk** (von WallDock übernommen)
 - Vollbild, ausgeblendete Systemleisten, Bildschirm immer an, Einstellungen per Code geschützt.
+- Einstellungen in fünf Tabs (**Verbindungen**, **Allgemein**, **Dienste**, **HA-Dienste**, **Dock-Apps**); obere Leiste mit der Sprache der App, **Speichern** (ohne zu verlassen) und **Beenden** (ohne zu speichern).
 - Dock erlaubter Apps (die Jarvis-Taste erscheint nur, wenn Jarvis aktiviert ist), automatische Rückkehr zum Dashboard nach Inaktivität.
 - Kann der Startbildschirm des Tablets werden; startet beim Hochfahren neu (Stromausfall).
 - Dashboard-Zoom (50 bis 200 %), Bildschirmschoner (Uhr, beliebige Seite, Immich-Diashow oder Fotoordner).
@@ -107,8 +118,8 @@ Wählst du Gladys, wählt die App Jarvis, den Bluetooth-Proxy und Music Assistan
 ## Installation
 
 1. Das passende APK für dein Tablet herunterladen (siehe [Download](#download)) und installieren (Installation aus dieser Quelle erlauben). Die App hat eine eigene Kennung (`fr.mcflypartages.domowalldock`): Sie kann neben WallDock bestehen.
-2. Beim ersten Start: Plattform (Home Assistant oder Gladys), ihre Adresse (und bei Bedarf Konto, Passwort, Dashboard), Admin-Code, Dock-Apps, dann **Speichern**.
-3. In den Einstellungen: Startbildschirm, Einblenden über anderen Apps, Kamera (Bewegungserkennung), dann den MQTT-Teil.
+2. Beim ersten Start: Plattform (Home Assistant oder Gladys), ihre Adresse (und bei Bedarf Konto, Passwort, Dashboard), Admin-Code (Tab Allgemein), Dock-Apps (Tab Dock-Apps), dann **Speichern**.
+3. In den Einstellungen: Startbildschirm, Einblenden über anderen Apps, Kamera (Bewegungserkennung), dann den Tab Dienste → MQTT.
 4. Die Akku-Optimierung von Android für DomoWallDock abschalten, sonst kann das System die App beenden ([dontkillmyapp.com](https://dontkillmyapp.com) beschreibt jede Marke).
 
 **Updates**: von Hand, indem das neue APK über das alte installiert wird (gleicher Signaturschlüssel, Einstellungen bleiben erhalten). Die App aktualisiert sich nicht selbst.
