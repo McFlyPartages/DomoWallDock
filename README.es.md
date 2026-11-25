@@ -55,7 +55,7 @@ Cuando eliges Gladys, la app desmarca sola Jarvis, el proxy Bluetooth y Music As
 ## Qué hace DomoWallDock
 
 **Home Assistant o Gladys, a elegir**
-- Ajustes → «Panel mostrado»: un botón de opción elige la plataforma que se inicia. Cada una tiene su columna (una al lado de la otra en una pantalla ancha o una tableta en horizontal, una debajo de la otra si no): dirección, cuenta, contraseña y panel predeterminado (opcional, p. ej. `/lovelace/0?kiosk` o `/dashboard/salon`). En Gladys, la casilla **Bloquear** limita la pantalla a esa página (las demás páginas de Gladys y los enlaces vuelven a ella) y el botón **Pantalla completa** añade `?fullscreen=force` (o `&fullscreen=force` si la dirección ya tiene un parámetro): Gladys se abre en pantalla completa, sin menú ni botón para salir.
+- Ajustes → pestaña **Conexiones** → «Panel mostrado»: un botón de opción elige la plataforma que se inicia. Cada una tiene su columna (una al lado de la otra en una pantalla ancha o una tableta en horizontal, una debajo de la otra si no): dirección, cuenta, contraseña y panel predeterminado (opcional, p. ej. `/lovelace/0?kiosk` o `/dashboard/salon`). En Gladys, la casilla **Bloquear** limita la pantalla a esa página (las demás páginas de Gladys y los enlaces vuelven a ella) y la casilla **Pantalla completa** añade `?fullscreen=force` (o `&fullscreen=force` si la dirección ya tiene un parámetro): Gladys se abre en pantalla completa, sin menú ni botón para salir.
 - **Acceso Local / Externo / Ambos** para cada plataforma: dirección local (HTTP o HTTPS, IP y puerto) y dirección externa (HTTPS). Con «Ambos», la app usa la dirección local si responde y, si no, la externa: la tableta funciona también fuera de casa, por ejemplo detrás de un proxy inverso. Una comprobación de estado prueba cada dirección.
 - **Inicio de sesión automático**: con un usuario y una contraseña, la tableta inicia sesión sola cuando aparece la página de inicio de sesión (Home Assistant: como «Mantener la sesión iniciada»; no con la autenticación en dos pasos). Consejo: una cuenta dedicada a la tableta, sin derechos de administración.
 - Las funciones que pasan por Home Assistant (Jarvis, proxy Bluetooth, cámaras, sonidos) siguen disponibles cuando se muestra Gladys, mientras la dirección de HA esté rellenada.
@@ -78,6 +78,7 @@ Cuando eliges Gladys, la app desmarca sola Jarvis, el proxy Bluetooth y Music As
 
 **Quiosco** (heredado de WallDock)
 - Pantalla completa, barras del sistema ocultas, pantalla siempre encendida, ajustes protegidos por un código.
+- Ajustes en cinco pestañas (**Conexiones**, **Generales**, **Servicios**, **Servicios HA**, **Apps del dock**); barra superior con el idioma de la app, **Guardar** (sin salir) y **Salir** (sin guardar).
 - Dock de apps permitidas (el botón de Jarvis solo aparece si Jarvis está activado), vuelta automática al panel tras la inactividad.
 - Puede ser la pantalla de inicio de la tableta; se vuelve a iniciar al arrancar (corte de luz).
 - Zoom del panel (de 50 a 200 %), salvapantallas (reloj, página a elegir, presentación de Immich o carpeta de fotos).
@@ -106,8 +107,8 @@ Cuando eliges Gladys, la app desmarca sola Jarvis, el proxy Bluetooth y Music As
 ## Instalación
 
 1. Descarga el APK adecuado para tu tableta (ver [Descarga](#descarga)) e instálalo (permite la instalación desde este origen). La app tiene su propio identificador (`fr.mcflypartages.domowalldock`): puede convivir con WallDock.
-2. En el primer inicio: plataforma (Home Assistant o Gladys), su dirección (y si hace falta cuenta, contraseña, panel), código de administrador, apps del dock y luego **Guardar**.
-3. En los ajustes: pantalla de inicio, mostrar sobre otras apps, cámara (detección de movimiento) y luego la parte MQTT.
+2. En el primer inicio: plataforma (Home Assistant o Gladys), su dirección (y si hace falta cuenta, contraseña, panel), código de administrador (pestaña Generales), apps del dock (pestaña Apps del dock) y luego **Guardar**.
+3. En los ajustes: pantalla de inicio, mostrar sobre otras apps, cámara (detección de movimiento) y luego la pestaña Servicios → MQTT.
 4. Desactiva la optimización de batería de Android para DomoWallDock; si no, el sistema puede cerrar la app ([dontkillmyapp.com](https://dontkillmyapp.com) detalla cada marca).
 
 **Actualizaciones**: a mano, instalando el nuevo APK encima del anterior (misma clave de firma, se conservan los ajustes). La app no se actualiza sola.
