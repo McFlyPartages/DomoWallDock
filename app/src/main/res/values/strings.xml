@@ -388,4 +388,11 @@
     <string name="settings_language">App language</string>
     <string name="language_system">Tablet language</string>
     <string name="language_restart">Language changed: the app restarts…</string>
+    <string name="settings_gladys_lock">Lock</string>
+    <string name="settings_gladys_fullscreen">Full screen</string>
+    <string name="settings_gladys_lock_help">Lock: the tablet only shows this page (other Gladys pages and links lead back to it). Full screen adds ?fullscreen=force: Gladys hides its menu and its exit button.</string>
+    <string name="page_locked">Locked: only the dashboard is shown on this tablet</string>
+    <string name="error_gladys_lock">Enter the default dashboard path to lock the display on it</string>
+    <string name="fullscreen_empty">Enter the dashboard path first</string>
+    <string name="fullscreen_already">Full screen is already in the address</string>
 </resources>

@@ -83,6 +83,20 @@ class MainActivity : Activity(), DashboardController {
     }
 
     private var loadedUrl = ""
+    private var lastLockReturn = 0L
+
+    /** Verrouillage Gladys : toute autre page du serveur ramène au tableau de bord choisi. */
+    private fun enforceLockedPage(view: WebView, url: String?) {
+        if (!prefs.isOutsideLockedPage(url) || !prefs.isOnGladysServer(url)) return
+        // Une fois toutes les 5 s au plus : si Gladys redirige elle-même la page choisie
+        // (chemin inconnu…), on évite une boucle de rechargements
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastLockReturn != 0L && now - lastLockReturn < 5_000) return
+        lastLockReturn = now
+        toast(tr(R.string.page_locked))
+        view.loadUrl(prefs.dashboardUrl)
+    }
+
     private val autoLogin by lazy { AutoLogin(prefs) { toast(tr(R.string.autologin_error, it)) } }
     private val handler = Handler(Looper.getMainLooper())
     private val autoHideDock = Runnable { setDockVisible(false) }
@@ -106,6 +120,10 @@ class MainActivity : Activity(), DashboardController {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (!request.isForMainFrame) return false
                 val url = request.url.toString()
+                if (prefs.isOutsideLockedPage(url)) {
+                    toast(tr(R.string.page_locked))
+                    return true
+                }
                 if (prefs.isUrlAllowed(url)) return false
                 toast(tr(R.string.url_blocked, request.url.host ?: url))
                 return true
@@ -115,7 +133,11 @@ class MainActivity : Activity(), DashboardController {
             override fun onPageFinished(view: WebView, url: String?) = autoLogin.onPage(view, url)
 
             // Gladys change d'adresse sans recharger la page (/dashboard → /login)
-            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) = autoLogin.onPage(view, url)
+            // et page verrouillée : Gladys navigue sans recharger, on ramène à la page choisie
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+                autoLogin.onPage(view, url)
+                enforceLockedPage(view, url)
+            }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
                 // Seule la page principale compte (pas une image ou un script)

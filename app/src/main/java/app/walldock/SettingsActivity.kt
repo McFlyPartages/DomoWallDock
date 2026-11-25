@@ -41,6 +41,7 @@ class SettingsActivity : Activity() {
     private lateinit var gladysUserField: EditText
     private lateinit var gladysPasswordField: EditText
     private lateinit var gladysDashboardField: EditText
+    private lateinit var gladysLockCheck: CheckBox
     private lateinit var haPanel: LinearLayout
     private lateinit var gladysPanel: LinearLayout
     private lateinit var bleCheck: CheckBox
@@ -194,7 +195,19 @@ class SettingsActivity : Activity() {
         gladysPanel.addView(secret(gladysPasswordField))
         gladysPanel.addView(label(tr(R.string.settings_dashboard_default)))
         gladysDashboardField = field(prefs.gladysDashboard, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
-        gladysPanel.addView(gladysDashboardField)
+        // Case « Verrouiller » à côté du chemin, bouton « Plein écran » dessous
+        val gladysDashboardRow = LinearLayout(this)
+        gladysDashboardRow.orientation = LinearLayout.HORIZONTAL
+        gladysDashboardRow.gravity = Gravity.CENTER_VERTICAL
+        gladysDashboardRow.addView(gladysDashboardField, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        gladysLockCheck = CheckBox(this)
+        gladysLockCheck.text = tr(R.string.settings_gladys_lock)
+        gladysLockCheck.setTextColor(Color.WHITE)
+        gladysLockCheck.isChecked = prefs.gladysDashboardLocked
+        gladysDashboardRow.addView(gladysLockCheck)
+        gladysPanel.addView(gladysDashboardRow)
+        gladysPanel.addView(button(tr(R.string.settings_gladys_fullscreen)) { addFullscreen(gladysDashboardField) })
+        gladysPanel.addView(label(tr(R.string.settings_gladys_lock_help)))
         gladysPanel.addView(testButton(true))
 
         if (wide) {
@@ -776,6 +789,7 @@ class SettingsActivity : Activity() {
             saverCheck.isChecked && saverSeconds < 10 -> toast(tr(R.string.error_saver_delay))
             haProblem != null -> toast(tr(R.string.platform_ha) + " : " + haProblem)
             gladysProblem != null -> toast(tr(R.string.platform_gladys) + " : " + gladysProblem)
+            gladysLockCheck.isChecked && gladysDashboardField.text.isBlank() -> toast(tr(R.string.error_gladys_lock))
             pin.length < 4 -> toast(tr(R.string.error_pin))
             delay < 10 -> toast(tr(R.string.error_delay))
             else -> {
@@ -790,6 +804,7 @@ class SettingsActivity : Activity() {
                 prefs.gladysUser = gladysUserField.text.toString().trim()
                 prefs.gladysPassword = gladysPasswordField.text.toString()
                 prefs.gladysDashboard = gladysDashboardField.text.toString().trim()
+                prefs.gladysDashboardLocked = gladysLockCheck.isChecked
                 val bleChanged = prefs.bleProxyEnabled != bleCheck.isChecked
                 prefs.bleProxyEnabled = bleCheck.isChecked
                 if (bleCheck.isChecked && !BleProxy.hasPermissions(this)) requestBlePermissions()
@@ -1026,6 +1041,19 @@ class SettingsActivity : Activity() {
     private fun showResult(title: String, message: String) {
         if (isFinishing) return
         AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton("OK", null).show()
+    }
+
+    /** Bouton « Plein écran » : ajoute le paramètre plein écran de Gladys au chemin saisi. */
+    private fun addFullscreen(field: EditText) {
+        val current = field.text.toString().trim()
+        when {
+            current.isEmpty() -> toast(tr(R.string.fullscreen_empty))
+            current.contains("fullscreen=") -> toast(tr(R.string.fullscreen_already))
+            else -> {
+                field.setText(withFullscreen(current))
+                field.setSelection(field.text.length)
+            }
+        }
     }
 
     /** Champ secret avec un œil pour afficher ou masquer ce qui est saisi. */
@@ -1266,4 +1294,21 @@ class SettingsActivity : Activity() {
         /** Repère des titres de section (captures du tutoriel). */
         const val HEADING_TAG = "settings_heading"
     }
+}
+
+/**
+ * Ajoute « fullscreen=force » (plein écran de Gladys, sans bouton pour en sortir) à [address] :
+ * « ?fullscreen=force » s'il n'y a pas encore de paramètre, sinon « &fullscreen=force » ;
+ * toujours avant une éventuelle ancre (#…).
+ */
+fun withFullscreen(address: String): String {
+    val anchor = address.indexOf('#')
+    val base = if (anchor >= 0) address.substring(0, anchor) else address
+    val fragment = if (anchor >= 0) address.substring(anchor) else ""
+    val separator = when {
+        !base.contains('?') -> "?"
+        base.endsWith("?") || base.endsWith("&") -> ""
+        else -> "&"
+    }
+    return base + separator + "fullscreen=force" + fragment
 }

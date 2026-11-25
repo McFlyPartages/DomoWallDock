@@ -57,6 +57,38 @@ class Prefs(context: Context) {
     var gladysDashboard: String
         get() = sp.getString("gladys_dashboard", "") ?: ""
         set(value) = sp.edit().putString("gladys_dashboard", value).apply()
+    /** Verrouillage : la tablette n'affiche que le tableau de bord par défaut de Gladys. */
+    var gladysDashboardLocked: Boolean
+        get() = sp.getBoolean("gladys_dashboard_locked", false)
+        set(value) = sp.edit().putBoolean("gladys_dashboard_locked", value).apply()
+
+    /** Verrouillage actif : Gladys choisie, case cochée et chemin saisi. */
+    val pageLocked: Boolean
+        get() = isGladys && gladysDashboardLocked && gladysDashboard.isNotBlank()
+
+    /**
+     * Avec le verrouillage, true si [url] n'est pas la page verrouillée (même serveur, même
+     * chemin ; les paramètres comme ?fullscreen=force ne comptent pas). Les pages de connexion
+     * de Gladys restent permises, sinon impossible de se connecter à la main.
+     */
+    fun isOutsideLockedPage(url: String?): Boolean {
+        if (!pageLocked || url.isNullOrBlank()) return false
+        if (url.startsWith("about:") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("javascript:")) return false
+        val page = android.net.Uri.parse(url)
+        val target = android.net.Uri.parse(dashboardUrl)
+        if (!page.host.equals(target.host, ignoreCase = true) || page.port != target.port) return true
+        val path = (page.path ?: "").trimEnd('/')
+        if (path == "/login" || path == "/forgot-password" || path.startsWith("/reset-password")) return false
+        return path != (target.path ?: "").trimEnd('/')
+    }
+
+    /** Est-ce une page du serveur Gladys en cours (pour ramener à la page verrouillée) ? */
+    fun isOnGladysServer(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val page = android.net.Uri.parse(url)
+        val target = android.net.Uri.parse(dashboardUrl)
+        return page.host.equals(target.host, ignoreCase = true) && page.port == target.port
+    }
 
     /** Adresse du serveur de la plateforme choisie. */
     val serverUrl: String
