@@ -10,7 +10,8 @@ import java.util.concurrent.Executors
 /**
  * Passerelle MQTT pour Gladys Assistant (et tout ce qui comprend la « découverte MQTT » de
  * Home Assistant) : la tablette s'annonce toute seule sur le broker, publie batterie, charge,
- * mouvement et état de l'écran, et reçoit les commandes (écran, recharger, tableau de bord).
+ * mouvement et état de l'écran, et reçoit les commandes (écran, caméra partagée, recharger,
+ * tableau de bord).
  *
  * Dans Gladys : Intégrations → MQTT → appareils découverts (Home Assistant), la tablette
  * apparaît sous le nom « DomoWallDock … ».
@@ -31,6 +32,7 @@ class MqttBridge(
         fun setScreen(on: Boolean)
         fun reload()
         fun showDashboard()
+        fun setCameraShare(on: Boolean)
     }
 
     private class Item(
@@ -48,6 +50,7 @@ class MqttBridge(
         Item("binary_sensor", CHARGE_WANTED, R.string.entity_charge_wanted),
         Item("binary_sensor", MOTION, R.string.entity_motion, "motion"),
         Item("switch", SCREEN, R.string.entity_ecran),
+        Item("switch", CAMERA_SHARE, R.string.entity_camera_share),
         Item("button", RELOAD, R.string.entity_recharger),
         Item("button", DASHBOARD, R.string.entity_retour_tableau_de_bord)
     )
@@ -179,6 +182,10 @@ class MqttBridge(
                     ON, "1", "TRUE" -> commands.setScreen(true)
                     OFF, "0", "FALSE" -> commands.setScreen(false)
                 }
+                CAMERA_SHARE -> when (value) {
+                    ON, "1", "TRUE" -> commands.setCameraShare(true)
+                    OFF, "0", "FALSE" -> commands.setCameraShare(false)
+                }
                 RELOAD -> commands.reload()
                 DASHBOARD -> commands.showDashboard()
             }
@@ -192,6 +199,7 @@ class MqttBridge(
         const val CHARGE_WANTED = "charge_wanted"
         const val MOTION = "motion"
         const val SCREEN = "screen"
+        const val CAMERA_SHARE = "camera_share"
         const val RELOAD = "reload"
         const val DASHBOARD = "dashboard"
         private const val ON = "ON"

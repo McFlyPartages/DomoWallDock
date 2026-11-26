@@ -108,6 +108,7 @@ class TutoScreenshotsTest {
         crop("09-batterie", services, tr(R.string.settings_charge_title))
         crop("10-mqtt", services, tr(R.string.settings_mqtt_title))
         crop("11-photos", services, tr(R.string.settings_photos_title))
+        crop("12-camera", services, tr(R.string.settings_camera_title))
     }
 
     /** Écran principal, dock ouvert (la page Gladys elle-même n'est pas dessinée : pas de navigateur ici). */

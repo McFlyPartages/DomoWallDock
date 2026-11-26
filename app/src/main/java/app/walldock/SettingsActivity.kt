@@ -78,6 +78,9 @@ class SettingsActivity : Activity() {
     private lateinit var onDeviceCheck: CheckBox
     private lateinit var motionCheck: CheckBox
     private lateinit var motionOffField: EditText
+    private lateinit var cameraShareCheck: CheckBox
+    private lateinit var cameraTokenField: EditText
+    private var cameraRotation = -1
     private lateinit var mqttCheck: CheckBox
     private lateinit var mqttHostField: EditText
     private lateinit var mqttPortField: EditText
@@ -425,6 +428,57 @@ class SettingsActivity : Activity() {
                 showResult("MQTT", message)
             }
         })
+
+        // Caméra partagée : flux et photo pour Home Assistant et Gladys
+        column.addView(heading(tr(R.string.settings_camera_title), 18f))
+        cameraShareCheck = CheckBox(this)
+        cameraShareCheck.text = tr(R.string.settings_camera_share)
+        cameraShareCheck.setTextColor(Color.WHITE)
+        cameraShareCheck.isChecked = prefs.cameraShareEnabled
+        column.addView(cameraShareCheck)
+        column.addView(label(tr(R.string.settings_camera_help)))
+        ApiService.instance?.cameraShareError?.let { column.addView(label("⚠ $it")) }
+        column.addView(label(tr(R.string.settings_camera_token)))
+        cameraTokenField = field(prefs.cameraToken, "", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        column.addView(secret(cameraTokenField))
+        column.addView(button(tr(R.string.settings_camera_new_token)) {
+            cameraTokenField.setText(prefs.newCameraToken())
+            toast(tr(R.string.settings_camera_token_changed))
+        })
+        cameraRotation = prefs.cameraRotation
+        val rotationButton = button("") {}
+        fun showRotation() {
+            rotationButton.text = tr(
+                R.string.settings_camera_rotation,
+                if (cameraRotation < 0) tr(R.string.settings_camera_rotation_auto) else "$cameraRotation°"
+            )
+        }
+        showRotation()
+        rotationButton.setOnClickListener {
+            val steps = listOf(-1, 0, 90, 180, 270)
+            cameraRotation = steps[(steps.indexOf(cameraRotation) + 1) % steps.size]
+            showRotation()
+        }
+        column.addView(rotationButton)
+        val cameraUrls = label("")
+        fun showCameraUrls() {
+            val ip = localIpAddress() ?: "<IP>"
+            cameraUrls.text = tr(
+                R.string.settings_camera_urls,
+                CameraServer.streamUrl(ip, "…"), CameraServer.snapshotUrl(ip, "…")
+            )
+        }
+        showCameraUrls()
+        column.addView(cameraUrls)
+        val copyRow = LinearLayout(this)
+        copyRow.orientation = LinearLayout.HORIZONTAL
+        copyRow.addView(button(tr(R.string.settings_camera_copy_stream)) {
+            copyText(CameraServer.streamUrl(localIpAddress() ?: "<IP>", cameraTokenField.text.toString().trim()))
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        copyRow.addView(button(tr(R.string.settings_camera_copy_snapshot)) {
+            copyText(CameraServer.snapshotUrl(localIpAddress() ?: "<IP>", cameraTokenField.text.toString().trim()))
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        column.addView(copyRow)
 
         // Écran de veille photos
         column.addView(heading(tr(R.string.settings_photos_title), 18f))
@@ -884,7 +938,20 @@ class SettingsActivity : Activity() {
                     requestPermissions(arrayOf(android.Manifest.permission.CAMERA), MainActivity.REQUEST_CAMERA)
                 }
                 prefs.motionOffSeconds = motionOffField.text.toString().trim().toIntOrNull() ?: 0
-                ApiService.instance?.applyMotionSettings()
+                cameraTokenField.text.toString().trim().let { if (it.length >= MIN_TOKEN_LENGTH) prefs.cameraToken = it }
+                prefs.cameraRotation = cameraRotation
+                if (cameraShareCheck.isChecked && !motionCheck.isChecked &&
+                    checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissions(arrayOf(android.Manifest.permission.CAMERA), MainActivity.REQUEST_CAMERA)
+                }
+                val service = ApiService.instance
+                if (service != null && prefs.cameraShareEnabled != cameraShareCheck.isChecked) {
+                    service.setCameraShare(cameraShareCheck.isChecked)
+                } else {
+                    prefs.cameraShareEnabled = cameraShareCheck.isChecked
+                    service?.applyMotionSettings()
+                }
                 prefs.mqttEnabled = mqttCheck.isChecked
                 prefs.mqttHost = mqttHost
                 mqttPortField.text.toString().trim().toIntOrNull()?.let { prefs.mqttPort = it }
@@ -1071,6 +1138,13 @@ class SettingsActivity : Activity() {
             }
         }
         next(0)
+    }
+
+    /** Copie une adresse (avec son jeton) pour la coller dans Home Assistant ou Gladys. */
+    private fun copyText(text: String) {
+        val clipboard = getSystemService(android.content.ClipboardManager::class.java) ?: return
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("DomoWallDock", text))
+        toast(tr(R.string.settings_camera_copied))
     }
 
     private fun showResult(title: String, message: String) {
@@ -1353,6 +1427,8 @@ class SettingsActivity : Activity() {
         const val HEADING_TAG = "settings_heading"
         /** Début du chemin d'un tableau de bord Gladys, prérempli dans le champ. */
         const val GLADYS_DASHBOARD_PREFIX = "/dashboard/"
+        /** Jeton saisi à la main : assez long pour ne pas se deviner. */
+        private const val MIN_TOKEN_LENGTH = 12
         const val TAB_CONNECTION = 0
         const val TAB_GENERAL = 1
         const val TAB_SERVICES = 2

@@ -209,7 +209,7 @@
     <string name="motion_camera_error">Camera error %1$d, retrying in 1 min</string>
     <string name="motion_camera_error_text">Camera error (%1$s), retrying in 1 min</string>
     <string name="settings_motion">Motion detection with the front camera</string>
-    <string name="settings_motion_help">Turns the screen on when someone passes and gives a “Motion” sensor to Home Assistant and Gladys. Images stay on the tablet and are never recorded. Sensitivity can be set from Home Assistant.</string>
+    <string name="settings_motion_help">Turns the screen on when someone passes and gives a “Motion” sensor to Home Assistant and Gladys. Images are never recorded and only leave the tablet if “Shared camera” is on. Sensitivity can be set from Home Assistant.</string>
     <string name="sensitivity_low">Low (noisy room, TV nearby: fewer false triggers)</string>
     <string name="sens_short_low">Low</string>
     <string name="entity_battery_temp">Battery temperature</string>
@@ -295,7 +295,7 @@
     <string name="settings_motion_off">Turn the screen off after this many seconds without motion or touch (0 = never turn it off)</string>
     <string name="settings_mqtt_title">MQTT (Gladys Assistant, Home Assistant…)</string>
     <string name="settings_mqtt_enable">Connect the tablet to an MQTT broker</string>
-    <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “DomoWallDock …”. You get battery, charging, motion, the screen (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
+    <string name="settings_mqtt_help">The tablet announces itself: in Gladys, Integrations → MQTT → discovered devices (Home Assistant), add “DomoWallDock …”. You get battery, charging, motion, the screen and the shared camera (on, off) and two buttons (reload, back to the dashboard). Also works with any MQTT broker that understands Home Assistant discovery.</string>
     <string name="settings_mqtt_host">MQTT broker address (e.g. 192.168.1.10)</string>
     <string name="settings_mqtt_user">MQTT user (if the broker asks for one)</string>
     <string name="settings_mqtt_password">MQTT password</string>
@@ -395,4 +395,17 @@
     <string name="settings_quit">Quit</string>
     <string name="settings_services_ha_help">Jarvis and the Bluetooth proxy go through Home Assistant (ESPHome integration); Music Assistant works with or without it. They are unticked when Gladys is chosen; tick them again if you use them.</string>
     <string name="settings_tab_dock">Dock apps</string>
+    <string name="entity_camera_share">Shared camera</string>
+    <string name="settings_camera_title">Shared camera (Home Assistant and Gladys)</string>
+    <string name="settings_camera_share">Share the front camera on the network</string>
+    <string name="settings_camera_help">Off by default. When on, Home Assistant and Gladys can show the live feed (MJPEG, about 6 images per second) and take a photo, for example on motion while you are away. Images are only encoded while someone asks for them and are never recorded on the tablet. Every address contains the token below: keep it secret. The switch “Shared camera” can be turned on and off from Home Assistant and Gladys (MQTT), for example only when the alarm is armed. No infrared: nothing useful in the dark. Your firewall must let Home Assistant and Gladys reach this tablet on port 8081.</string>
+    <string name="settings_camera_token">Token (required in the addresses)</string>
+    <string name="settings_camera_new_token">New token (old addresses stop working)</string>
+    <string name="settings_camera_token_changed">New token saved: update the addresses in Home Assistant and Gladys</string>
+    <string name="settings_camera_rotation">Image rotation: %1$s</string>
+    <string name="settings_camera_rotation_auto">automatic</string>
+    <string name="settings_camera_urls">Live feed: %1$s\nPhoto: %2$s\n(… = the token: use the buttons below to copy the full address)</string>
+    <string name="settings_camera_copy_stream">Copy feed address</string>
+    <string name="settings_camera_copy_snapshot">Copy photo address</string>
+    <string name="settings_camera_copied">Address copied</string>
 </resources>

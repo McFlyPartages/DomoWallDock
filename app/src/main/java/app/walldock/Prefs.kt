@@ -194,6 +194,32 @@ class Prefs(context: Context) {
         else sp.getInt("motion_off_minutes", 0) * 60
         set(value) = sp.edit().putInt("motion_off_seconds", value.coerceIn(0, 43_200)).remove("motion_off_minutes").apply()
 
+    // ---- Caméra partagée (flux et photo pour Home Assistant et Gladys) ----
+
+    /** Partager l'image de la caméra frontale sur le réseau (désactivé par défaut). */
+    var cameraShareEnabled: Boolean
+        get() = sp.getBoolean("camera_share_enabled", false)
+        set(value) = sp.edit().putBoolean("camera_share_enabled", value).apply()
+
+    /** Jeton exigé dans les adresses de la caméra ; créé au premier usage. */
+    var cameraToken: String
+        get() = sp.getString("camera_token", null)?.takeIf { it.isNotBlank() } ?: newCameraToken()
+        set(value) = sp.edit().putString("camera_token", value.trim()).apply()
+
+    /** Crée et enregistre un nouveau jeton aléatoire (les anciennes adresses ne marchent plus). */
+    fun newCameraToken(): String {
+        val bytes = ByteArray(16)
+        java.security.SecureRandom().nextBytes(bytes)
+        val token = bytes.joinToString("") { "%02x".format(it) }
+        sp.edit().putString("camera_token", token).apply()
+        return token
+    }
+
+    /** Rotation de l'image partagée : -1 automatique, sinon 0, 90, 180 ou 270 degrés. */
+    var cameraRotation: Int
+        get() = sp.getInt("camera_rotation", -1)
+        set(value) = sp.edit().putInt("camera_rotation", if (value in listOf(0, 90, 180, 270)) value else -1).apply()
+
     // ---- MQTT : Gladys Assistant (ou tout broker) ----
     var mqttEnabled: Boolean
         get() = sp.getBoolean("mqtt_enabled", false)
