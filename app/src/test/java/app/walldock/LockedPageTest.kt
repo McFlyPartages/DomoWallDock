@@ -43,6 +43,16 @@ class LockedPageTest {
         assertTrue(prefs.isOutsideLockedPage("https://exemple.fr/"))
     }
 
+    @Test fun autresTableauxAutorises() {
+        prefs.gladysAllowedDashboards = listOf("/dashboard/cuisine", "/dashboard/chambre?fullscreen=force", "  ")
+        assertEquals(listOf("/dashboard/cuisine", "/dashboard/chambre?fullscreen=force"), prefs.gladysAllowedDashboards)
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine"))
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/chambre/"))
+        assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/salon"))
+        assertTrue(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/bureau"))
+        assertTrue(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine/edit"))
+    }
+
     @Test fun sansCaseRienNestBloque() {
         prefs.gladysDashboardLocked = false
         assertFalse(prefs.isOutsideLockedPage("http://192.168.80.11/dashboard/cuisine"))

@@ -384,7 +384,10 @@
     <string name="language_restart">Langue changée : l’appli redémarre…</string>
     <string name="settings_gladys_lock">Verrouiller</string>
     <string name="settings_gladys_fullscreen">Plein écran</string>
-    <string name="settings_gladys_lock_help">Verrouiller : la tablette n’affiche que cette page (les autres pages de Gladys et les liens y ramènent). Plein écran ajoute ?fullscreen=force : Gladys masque son menu et son bouton de sortie.</string>
+    <string name="settings_gladys_lock_help">Verrouiller : la tablette n’affiche que cette page et les tableaux de bord listés ci-dessous (les autres pages de Gladys et les liens ramènent à la première). Plein écran ajoute ?fullscreen=force : Gladys masque son menu et son bouton de sortie.</string>
+    <string name="settings_gladys_allowed">Autres tableaux de bord autorisés</string>
+    <string name="settings_gladys_allowed_add">Ajouter un tableau de bord</string>
+    <string name="settings_gladys_allowed_remove">Retirer ce tableau de bord</string>
     <string name="page_locked">Verrouillé : seul le tableau de bord s’affiche sur cette tablette</string>
     <string name="error_gladys_lock">Saisissez le chemin du tableau de bord par défaut pour y verrouiller l’affichage</string>
     <string name="fullscreen_empty">Saisissez d’abord le chemin du tableau de bord</string>
