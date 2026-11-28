@@ -62,6 +62,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("gladys_dashboard_locked", false)
         set(value) = sp.edit().putBoolean("gladys_dashboard_locked", value).apply()
 
+    /** Autres tableaux de bord autorisés avec le verrouillage (chemins comme /dashboard/cuisine). */
+    var gladysAllowedDashboards: List<String>
+        get() = (sp.getString("gladys_dashboards_allowed", "") ?: "").split('\n').map { it.trim() }.filter { it.isNotEmpty() }
+        set(value) = sp.edit().putString("gladys_dashboards_allowed", value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString("\n")).apply()
+
     /** Verrouillage actif : Gladys choisie, case cochée et chemin saisi. */
     val pageLocked: Boolean
         get() = isGladys && gladysDashboardLocked && gladysDashboard.isNotBlank()
@@ -79,7 +84,11 @@ class Prefs(context: Context) {
         if (!page.host.equals(target.host, ignoreCase = true) || page.port != target.port) return true
         val path = (page.path ?: "").trimEnd('/')
         if (path == "/login" || path == "/forgot-password" || path.startsWith("/reset-password")) return false
-        return path != (target.path ?: "").trimEnd('/')
+        if (path == (target.path ?: "").trimEnd('/')) return false
+        // Autres tableaux de bord autorisés (le chemin seul compte, pas les paramètres)
+        return gladysAllowedDashboards.none {
+            (android.net.Uri.parse(absoluteUrl(it, serverUrl)).path ?: "").trimEnd('/') == path
+        }
     }
 
     /** Est-ce une page du serveur Gladys en cours (pour ramener à la page verrouillée) ? */

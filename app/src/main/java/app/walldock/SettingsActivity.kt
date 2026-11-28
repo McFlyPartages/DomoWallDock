@@ -44,6 +44,7 @@ class SettingsActivity : Activity() {
     private lateinit var gladysPasswordField: EditText
     private lateinit var gladysDashboardField: EditText
     private lateinit var gladysLockCheck: CheckBox
+    private lateinit var gladysAllowedBox: LinearLayout
     private lateinit var gladysFullscreenCheck: CheckBox
     private lateinit var haPanel: LinearLayout
     private lateinit var gladysPanel: LinearLayout
@@ -196,6 +197,26 @@ class SettingsActivity : Activity() {
         gladysDashboardRow.addView(gladysFullscreenCheck)
         gladysPanel.addView(gladysDashboardRow)
         gladysPanel.addView(label(tr(R.string.settings_gladys_lock_help)))
+        // Autres tableaux de bord autorisés : une ligne par chemin, « + » pour en ajouter
+        val allowedHead = LinearLayout(this)
+        allowedHead.orientation = LinearLayout.HORIZONTAL
+        allowedHead.gravity = Gravity.CENTER_VERTICAL
+        val allowedLabel = label(tr(R.string.settings_gladys_allowed))
+        allowedHead.addView(allowedLabel, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val addAllowed = TextView(this)
+        addAllowed.text = "+"
+        addAllowed.textSize = 28f
+        addAllowed.setTextColor(Color.WHITE)
+        addAllowed.gravity = Gravity.CENTER
+        addAllowed.setPadding(dp(16), 0, dp(16), 0)
+        addAllowed.contentDescription = tr(R.string.settings_gladys_allowed_add)
+        gladysAllowedBox = LinearLayout(this)
+        gladysAllowedBox.orientation = LinearLayout.VERTICAL
+        addAllowed.setOnClickListener { addAllowedRow(GLADYS_DASHBOARD_PREFIX).requestFocus() }
+        allowedHead.addView(addAllowed)
+        gladysPanel.addView(allowedHead)
+        gladysPanel.addView(gladysAllowedBox)
+        prefs.gladysAllowedDashboards.forEach { addAllowedRow(it) }
         gladysPanel.addView(testButton(true))
 
         if (wide) {
@@ -894,6 +915,7 @@ class SettingsActivity : Activity() {
                 prefs.gladysPassword = gladysPasswordField.text.toString()
                 prefs.gladysDashboard = gladysDashboardPath()
                 prefs.gladysDashboardLocked = gladysLockCheck.isChecked
+                prefs.gladysAllowedDashboards = gladysAllowedPaths()
                 val bleChanged = prefs.bleProxyEnabled != bleCheck.isChecked
                 prefs.bleProxyEnabled = bleCheck.isChecked
                 if (bleCheck.isChecked && !BleProxy.hasPermissions(this)) requestBlePermissions()
@@ -1187,6 +1209,33 @@ class SettingsActivity : Activity() {
         })
         return check
     }
+
+    /** Ajoute une ligne (champ + croix pour la retirer) à la liste des tableaux de bord autorisés. */
+    private fun addAllowedRow(value: String): EditText {
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        val input = field(value, tr(R.string.settings_gladys_dashboard_hint), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        row.addView(input, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val remove = TextView(this)
+        remove.text = "✕"
+        remove.textSize = 20f
+        remove.setTextColor(Color.WHITE)
+        remove.alpha = 0.6f
+        remove.setPadding(dp(16), dp(6), dp(16), dp(6))
+        remove.contentDescription = tr(R.string.settings_gladys_allowed_remove)
+        remove.setOnClickListener { gladysAllowedBox.removeView(row) }
+        row.addView(remove)
+        gladysAllowedBox.addView(row)
+        return input
+    }
+
+    /** Chemins saisis dans la liste ; lignes vides ou « /dashboard/ » seul ignorées. */
+    private fun gladysAllowedPaths(): List<String> =
+        (0 until gladysAllowedBox.childCount).mapNotNull { i ->
+            ((gladysAllowedBox.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
+                .takeIf { it.isNotEmpty() && it.trimEnd('/') != GLADYS_DASHBOARD_PREFIX.trimEnd('/') }
+        }.distinct()
 
     /** Chemin du tableau de bord Gladys ; « /dashboard/ » seul (préremplissage non complété) compte pour vide. */
     private fun gladysDashboardPath(): String {
