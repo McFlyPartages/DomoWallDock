@@ -42,7 +42,7 @@ The settings are split into five tabs: **Connections**, **General**, **Services*
    - **Both**: the app uses the local address when it answers, otherwise the external one (a tablet that leaves the house).
 3. **Local address**: HTTP (or HTTPS if your Gladys uses it), the Gladys **IP** and the **port** (80 by default).
 4. **E-mail address and password** of a Gladys account: the tablet signs in by itself when the login page shows. Tip: create a Gladys account dedicated to the tablet, without admin rights.
-5. **Default dashboard** (optional): the page to show, for instance `/dashboard/living-room`: the field already starts with `/dashboard/`, just add the dashboard name (clear it to let Gladys choose). Tick **Lock** so the tablet only shows that page, and tick **Full screen** to add `?fullscreen=force` (Gladys with no menu and no exit button).
+5. **Default dashboard** (optional): the page to show, for instance `/dashboard/living-room`: the field already starts with `/dashboard/`, just add the dashboard name (clear it to let Gladys choose). Tick **Lock** so the tablet only shows that page, and tick **Full screen** to add `?fullscreen=force` (Gladys with no menu and no exit button). With the lock, the **Other allowed dashboards** section lets you keep other dashboards reachable: tap **+** to add a line (for instance `/dashboard/kitchen`), ✕ to remove it.
 6. Tap **Test the sign-in**: one ✅ per configured address. Otherwise, the message says what is wrong (server not reachable, account refused…).
 
 > **Network**: if the tablet is on another Wi-Fi network or VLAN than Gladys ("IoT" network, guests…), your firewall must let it reach Gladys (port 80, or your Gladys port) and, for step 5, the MQTT broker (port 1883).

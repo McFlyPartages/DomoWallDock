@@ -48,7 +48,7 @@ class SettingsPreviewTest {
     private fun shoot(name: String) {
         val prefs = Prefs(RuntimeEnvironment.getApplication())
         prefs.pin = "1234"
-        prefs.platform = Prefs.PLATFORM_HA
+        prefs.platform = Prefs.PLATFORM_GLADYS
         prefs.ha.access = Prefs.ACCESS_BOTH
         prefs.ha.ip = "192.168.1.10"
         prefs.ha.external = "https://ha.exemple.fr"
@@ -57,6 +57,9 @@ class SettingsPreviewTest {
         prefs.gladys.ip = "192.168.1.20"
         prefs.gladysUser = "tablette@exemple.fr"
         prefs.gladysPassword = "secret"
+        prefs.gladysDashboard = "/dashboard/salon?fullscreen=force"
+        prefs.gladysDashboardLocked = true
+        prefs.gladysAllowedDashboards = listOf("/dashboard/cuisine", "/dashboard/chambre")
 
         // Quelques applis d'exemple pour l'onglet « Applis Dock » (Robolectric n'en a aucune)
         val shadowPm = org.robolectric.Shadows.shadowOf(RuntimeEnvironment.getApplication().packageManager)

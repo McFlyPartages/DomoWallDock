@@ -27,17 +27,17 @@ import java.io.File
 @Config(sdk = [34])
 class TutoScreenshotsTest {
 
-    @Test @Config(qualifiers = "fr-w800dp-h1280dp-port-mdpi") fun gladysFr() = gladys("fr", "tablette@exemple.fr", "/dashboard/salon", "/dashboard/veille")
-    @Test @Config(qualifiers = "en-w800dp-h1280dp-port-mdpi") fun gladysEn() = gladys("en", "tablet@example.com", "/dashboard/living-room", "/dashboard/screensaver")
-    @Test @Config(qualifiers = "de-w800dp-h1280dp-port-mdpi") fun gladysDe() = gladys("de", "tablet@beispiel.de", "/dashboard/wohnzimmer", "/dashboard/bildschirmschoner")
-    @Test @Config(qualifiers = "es-w800dp-h1280dp-port-mdpi") fun gladysEs() = gladys("es", "tableta@ejemplo.es", "/dashboard/salon", "/dashboard/salvapantallas")
+    @Test @Config(qualifiers = "fr-w800dp-h1280dp-port-mdpi") fun gladysFr() = gladys("fr", "tablette@exemple.fr", "/dashboard/salon", "/dashboard/veille", "cuisine")
+    @Test @Config(qualifiers = "en-w800dp-h1280dp-port-mdpi") fun gladysEn() = gladys("en", "tablet@example.com", "/dashboard/living-room", "/dashboard/screensaver", "kitchen")
+    @Test @Config(qualifiers = "de-w800dp-h1280dp-port-mdpi") fun gladysDe() = gladys("de", "tablet@beispiel.de", "/dashboard/wohnzimmer", "/dashboard/bildschirmschoner", "kueche")
+    @Test @Config(qualifiers = "es-w800dp-h1280dp-port-mdpi") fun gladysEs() = gladys("es", "tableta@ejemplo.es", "/dashboard/salon", "/dashboard/salvapantallas", "cocina")
 
     @Test @Config(qualifiers = "fr-w1280dp-h800dp-land-mdpi") fun dockFr() = dock("fr")
     @Test @Config(qualifiers = "en-w1280dp-h800dp-land-mdpi") fun dockEn() = dock("en")
     @Test @Config(qualifiers = "de-w1280dp-h800dp-land-mdpi") fun dockDe() = dock("de")
     @Test @Config(qualifiers = "es-w1280dp-h800dp-land-mdpi") fun dockEs() = dock("es")
 
-    private fun gladys(lang: String, email: String, dashboard: String, saver: String) {
+    private fun gladys(lang: String, email: String, dashboard: String, saver: String, allowed: String) {
         val app = RuntimeEnvironment.getApplication()
         val prefs = Prefs(app)
         prefs.pin = "1234"
@@ -48,6 +48,8 @@ class TutoScreenshotsTest {
         prefs.gladysUser = email
         prefs.gladysPassword = "motdepasse"
         prefs.gladysDashboard = dashboard
+        prefs.gladysDashboardLocked = true
+        prefs.gladysAllowedDashboards = listOf(dashboard.substringBeforeLast('/') + "/" + allowed)
         prefs.mqttEnabled = true
         prefs.mqttHost = "192.168.1.20"
         prefs.mqttUser = "tablet"

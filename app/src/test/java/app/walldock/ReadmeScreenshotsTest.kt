@@ -49,6 +49,7 @@ class ReadmeScreenshotsTest {
         prefs.gladysPassword = "password"
         prefs.gladysDashboard = withFullscreen(dashboard)
         prefs.gladysDashboardLocked = true
+        prefs.gladysAllowedDashboards = listOf(dashboard.substringBeforeLast('/') + "/cuisine")
         prefs.calendarInDock = true
         prefs.chargeEnabled = true
         prefs.mqttEnabled = true
